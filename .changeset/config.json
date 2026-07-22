@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@2.3.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "@xray-network/xray-base",
+      "@xray-network/xray-cardano",
+      "@xray-network/xray-cardano-wasm",
+      "@xray-network/xray-cardano-mini-app",
+      "@xray-network/xray-bitcoin",
+      "@xray-network/xray-midnight",
+      "@xray-network/xray-js"
+    ]
+  ],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": []
+}

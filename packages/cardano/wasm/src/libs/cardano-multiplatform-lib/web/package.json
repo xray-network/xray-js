@@ -1,0 +1,24 @@
+{
+  "name": "cardano-multiplatform-lib",
+  "type": "module",
+  "description": "Multiplatform WASM SDK containing the most common CML crates for Cardano blockchain functionality",
+  "version": "6.2.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dcSpark/cardano-multiplatform-lib"
+  },
+  "files": [
+    "cardano_multiplatform_lib_bg.wasm",
+    "cardano_multiplatform_lib.js",
+    "cardano_multiplatform_lib.d.ts"
+  ],
+  "main": "cardano_multiplatform_lib.js",
+  "types": "cardano_multiplatform_lib.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ],
+  "keywords": [
+    "cardano"
+  ]
+}

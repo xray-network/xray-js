@@ -1,0 +1,25 @@
+[package]
+name = "uplc-wasm"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+error = "0.1.9"
+uplc = "1.1.17"
+wasm-bindgen = "0.2.93"
+js-sys = "0.3.70"
+wee_alloc = "0.4.5"
+getrandom = { version = "0.2", features = ["js"] }
+
+[profile.release]
+codegen-units = 1
+opt-level = "z"
+lto = true
+debug = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ['-Oz']

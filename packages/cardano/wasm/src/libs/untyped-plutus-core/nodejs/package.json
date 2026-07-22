@@ -1,0 +1,12 @@
+{
+  "name": "uplc-wasm",
+  "version": "0.2.0",
+  "license": "MIT",
+  "files": [
+    "uplc_wasm_bg.wasm",
+    "uplc_wasm.js",
+    "uplc_wasm.d.ts"
+  ],
+  "main": "uplc_wasm.js",
+  "types": "uplc_wasm.d.ts"
+}

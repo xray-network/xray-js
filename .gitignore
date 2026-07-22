@@ -10,7 +10,8 @@
 # production
 /build
 /publish
-/dist
+dist/
+.turbo/
 
 # misc
 .DS_Store

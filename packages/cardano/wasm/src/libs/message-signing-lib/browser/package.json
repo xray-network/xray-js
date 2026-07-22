@@ -1,0 +1,20 @@
+{
+  "name": "cardano-message-signing",
+  "type": "module",
+  "collaborators": [
+    "EMURGO"
+  ],
+  "version": "1.1.0",
+  "files": [
+    "cardano_message_signing_bg.wasm",
+    "cardano_message_signing.js",
+    "cardano_message_signing_bg.js",
+    "cardano_message_signing.d.ts"
+  ],
+  "main": "cardano_message_signing.js",
+  "types": "cardano_message_signing.d.ts",
+  "sideEffects": [
+    "./cardano_message_signing.js",
+    "./snippets/*"
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "name": "@xray-network/xray-cardano",
+  "version": "3.0.0",
+  "description": "Cardano SDK for XRAY/Network",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/nodejs/index.cjs",
+  "module": "./dist/nodejs/index.js",
+  "types": "./dist/nodejs/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/nodejs/index.d.ts",
+      "browser": "./dist/browser/index.js",
+      "node": {
+        "import": "./dist/nodejs/index.js",
+        "require": "./dist/nodejs/index.cjs"
+      },
+      "import": "./dist/nodejs/index.js",
+      "require": "./dist/nodejs/index.cjs",
+      "default": "./dist/nodejs/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser/index.d.ts",
+      "import": "./dist/browser/index.js"
+    },
+    "./web": {
+      "types": "./dist/web/index.d.ts",
+      "import": "./dist/web/index.js"
+    },
+    "./nodejs": {
+      "types": "./dist/nodejs/index.d.ts",
+      "import": "./dist/nodejs/index.js",
+      "require": "./dist/nodejs/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsx test/__dev.ts",
+    "build": "tsup",
+    "test": "vitest run test/data.spec.ts test/message.spec.ts test/utils.spec.ts",
+    "test:integration": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.32.31",
+    "@xray-network/xray-base": "3.0.0",
+    "@xray-network/xray-cardano-wasm": "3.0.0",
+    "bech32": "^2.0.0",
+    "blake2b": "^2.1.4",
+    "buffer": "^6.0.3",
+    "cardano-koios-client": "^1.0.10",
+    "cardano-kupo-client": "^1.0.1",
+    "cardano-nftcdn-client": "^1.0.6",
+    "cardano-ogmios-client": "^1.0.0",
+    "cbor-x": "^1.6.0",
+    "js-sha256": "^0.11.0"
+  },
+  "devDependencies": {
+    "@espcom/esbuild-plugin-replace": "^1.2.0",
+    "@types/blake2b": "^2.1.3",
+    "esbuild": "^0.25.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.15.1"
+  }
+}

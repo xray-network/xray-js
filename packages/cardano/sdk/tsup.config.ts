@@ -20,8 +20,8 @@ export default defineConfig([
       pluginReplace([
         {
           filter: /\.ts$/,
-          replace: "cardano-wasm-libs/nodejs",
-          replacer: () => "cardano-wasm-libs/browser",
+          replace: "@xray-network/xray-cardano-wasm/nodejs",
+          replacer: () => "@xray-network/xray-cardano-wasm/browser",
         },
       ]),
     ],
@@ -37,8 +37,8 @@ export default defineConfig([
       pluginReplace([
         {
           filter: /\.ts$/,
-          replace: "cardano-wasm-libs/nodejs",
-          replacer: () => "cardano-wasm-libs/web",
+          replace: "@xray-network/xray-cardano-wasm/nodejs",
+          replacer: () => "@xray-network/xray-cardano-wasm/web",
         },
       ]),
     ],

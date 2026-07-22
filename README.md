@@ -1,112 +1,89 @@
-<a href="https://discord.gg/WhZmm46APN"><img alt="Discord" src="https://img.shields.io/discord/852538978946383893?style=for-the-badge&logo=discord&label=Discord&labelColor=%231940ED&color=%233FCB9B"></a>
-<a href="https://www.npmjs.com/package/cardano-web3-js"><img alt="NPM" src="https://img.shields.io/npm/v/cardano-web3-js/latest?style=for-the-badge&logo=npm&labelColor=%231940ED&color=%233FCB9B"></a>
-<a href="https://github.com/ray-network/cardano-web3-js/actions"><img alt="CODEQL" src="https://img.shields.io/github/actions/workflow/status/xray-network/cardano-web3-js/codeql.yml?label=CodeQL&logo=github&style=for-the-badge&labelColor=%231940ED&color=%233FCB9B"></a>
+# XRAY JavaScript SDK
 
-  
-# 🛠 Cardano Web3 JavaScript SDK
-
-CardanoWeb3js is a versatile TypeScript library designed for seamless integration with the Cardano blockchain. It supports both Node.js and browser environments, streamlining transaction creation, smart contract deployment, and data exploration. Ideal for developers, this toolkit simplifies Cardano cryptographic operations and API interactions
+`@xray-network/xray-js` is the multi-chain JavaScript SDK for XRAY/Network. The repository uses Yarn Classic workspaces and keeps blockchain implementations isolated behind one public package.
 
 ## Installation
 
-To install with Yarn, run:
-
-```TypeScript
-yarn install cardano-web3-js
+```bash
+yarn add @xray-network/xray-js
 ```
 
-To install with NPM, run:
+Use chain subpaths in application code so bundlers only include the selected implementation:
 
-```TypeScript
-npm i cardano-web3-js
+```ts
+import { CardanoWeb3 } from "@xray-network/xray-js/cardano"
+import { CML } from "@xray-network/xray-js/cardano/wasm"
+
+import { BITCOIN_CHAIN } from "@xray-network/xray-js/bitcoin"
+import { MIDNIGHT_CHAIN } from "@xray-network/xray-js/midnight"
 ```
 
-## Documentation
+The root entry provides namespaces for discovery and scripts:
 
-* Docs: [https://cardano-web3-js.org](https://cardano-web3-js.org)
-* Typedoc API: [https://cardano-web3-js.org/api](https://cardano-web3-js.org/api)
-* Playground: [https://cardano-web3-js.org/playground](https://cardano-web3-js.org/playground)
+```ts
+import { Cardano, Bitcoin, Midnight } from "@xray-network/xray-js"
 
-## Basic Usage
-
-Check [/test](/test) folder for detailed usage examples. Or read the documentation to learn how to create a transaction of any complexity
-
-``` ts
-import { CardanoWeb3 } from "cardano-web3-js"
-
-const web3 = new CardanoWeb3()
-
-const mnemonic = web3.utils.keys.mnemonicGenerate()
-const account = web3.account.fromMnemonic(mnemonic)
-const state = await account.getState() // update balance & delegation info
-
-console.log(mnemonic) // generated mnemonic
-console.log(account.__config) // account info (xpub, changeAddress, creds, etc)
-console.log(state) // balance & delegation info
-
-const tx = await web3
-  .createTx()
-  .addInputs(state.utxos)
-  .addOutput(
-    {
-      address: "addr1qxpm2aqmn48he8dtp9p8hk9gtew6cypy6ra3mgs8xkn86qmd3vtjzheq22w8mmfhm8agpmywnlu2rsxgkdrctv7mcc3s9anhjz",
-      value: 2000000n,
-    },
-  )
-  .applyAndBuild()
-
-const tx_hash = await tx_unsigned
-  .signWithAccount(account)
-  .applyAndSubmit() // submit tx
-
-console.log(tx_hash)
+const web3 = new Cardano.CardanoWeb3()
 ```
 
-## Web3 Configuration Parameteres
+## Packages
 
-<details>
-  <summary>Configuration Parameters</summary>
-  
-``` ts
-import { CardanoWeb3, KoiosProvider, KupmiosProvider, BlockfrostProvider } from "cardano-web3-js"
+| Workspace                   | Purpose                                         |
+| --------------------------- | ----------------------------------------------- |
+| `packages/xray-js`          | Public `@xray-network/xray-js` umbrella package |
+| `packages/base/core`        | Chain-neutral errors and request primitives     |
+| `packages/cardano/sdk`      | Cardano SDK, previously `cardano-web3-js`       |
+| `packages/cardano/wasm`     | Cardano WASM libraries and Rust build scripts   |
+| `packages/cardano/mini-app` | XRAY Mini App and CIP-30 APIs                   |
+| `packages/bitcoin/sdk`      | Bitcoin SDK workspace scaffold                  |
+| `packages/midnight/sdk`     | Midnight SDK workspace scaffold                 |
 
-const providerHeaders = {
-  "x-api-key": "YOUR_API_KEY_01",
-}
+Chain packages may depend on `base`, but must not depend on another chain package.
 
-const koiosHeaders = {
-  "x-api-key": "YOUR_API_KEY_02",
-}
+## Mini-app imports
 
-const web3 = new CardanoWeb3({
-  network: "preprod", // "mainnet" | "preprod" | "preview" | "custom"
-  protocolParams: {...}, // override protocolParams, eg. in case of custom network
-  ttl: 900, // 900 secs = 15 minutes
-  provider: new KoiosProvider("https://api.koios.rest/api/v1", providerHeaders),
-  explorer: {
-    koios: {
-      headers: koiosHeaders,
-      url: "https://preprod.koios.rest/api/v1",
-    },
-    nftcdn: {
-      headers: {},
-      url: "https://graph.xray.app/output/nftcdn/preprod/api/v1",
-    },
-    pricing: {
-      headers: {},
-      url: "https://graph.xray.app/output/pricing/mainnet/api/v1", // only mainnet available
-    },
-  }
-})
-
-console.log(web3.__config) // web3 instance config
+```ts
+import { miniAppClient } from "@xray-network/xray-js/cardano/mini-app/client"
+import { miniAppHost } from "@xray-network/xray-js/cardano/mini-app/host"
+import { MiniAppProvider } from "@xray-network/xray-js/cardano/mini-app/react"
 ```
-</details>
 
-## Test
+React is an optional peer dependency and is only needed for the `/react` entry.
 
-Check [/test](/test) folder for available tests
+## Development
 
-```TypeScript
+This repository requires Yarn 1.22.x.
+
+```bash
+yarn install
+yarn build
+yarn typecheck
 yarn test
+```
+
+`yarn test` runs the deterministic offline suite. Cardano explorer and provider tests call live XRAY endpoints and are available separately:
+
+```bash
+yarn test:integration
+```
+
+## Cardano WASM
+
+Generated Node, browser, and web WASM artifacts are committed under `packages/cardano/wasm/src`. To rebuild them, initialize the Rust submodules first:
+
+```bash
+git submodule update --init --recursive
+yarn workspace @xray-network/xray-cardano-wasm cml-build
+yarn workspace @xray-network/xray-cardano-wasm msl-build
+yarn workspace @xray-network/xray-cardano-wasm uplc-build
+```
+
+## Releasing
+
+All public workspaces use a fixed Changesets version group.
+
+```bash
+yarn changeset
+yarn version-packages
+yarn release
 ```
