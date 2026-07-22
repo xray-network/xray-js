@@ -1,6 +1,6 @@
-[submodule "packages/cardano/wasm/rust/cardano-multiplatform-lib"]
-	path = packages/cardano/wasm/rust/cardano-multiplatform-lib
+[submodule "packages/cardano-wasm/rust/cardano-multiplatform-lib"]
+	path = packages/cardano-wasm/rust/cardano-multiplatform-lib
 	url = https://github.com/dcSpark/cardano-multiplatform-lib.git
-[submodule "packages/cardano/wasm/rust/message-signing-lib"]
-	path = packages/cardano/wasm/rust/message-signing-lib
+[submodule "packages/cardano-wasm/rust/message-signing-lib"]
+	path = packages/cardano-wasm/rust/message-signing-lib
 	url = https://github.com/Emurgo/message-signing.git

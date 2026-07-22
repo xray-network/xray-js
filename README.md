@@ -32,18 +32,18 @@ const web3 = new Cardano.CardanoWeb3()
 | Workspace                   | Purpose                                         |
 | --------------------------- | ----------------------------------------------- |
 | `packages/xray-js`          | Public `@xray-network/xray-js` umbrella package |
-| `packages/cardano/sdk`      | Cardano SDK, previously `cardano-web3-js`       |
-| `packages/cardano/wasm`     | Cardano WASM libraries and Rust build scripts   |
-| `packages/cardano/mini-app` | XRAY Mini App and CIP-30 APIs                   |
-| `packages/bitcoin/sdk`      | Bitcoin SDK workspace scaffold                  |
-| `packages/base/sdk`         | Base blockchain SDK workspace scaffold          |
-| `packages/midnight/sdk`     | Midnight SDK workspace scaffold                 |
+| `packages/cardano-sdk`      | Cardano SDK, previously `cardano-web3-js`       |
+| `packages/cardano-wasm`     | Cardano WASM libraries and Rust build scripts   |
+| `packages/cardano-mini-app` | XRAY Mini App and CIP-30 APIs                   |
+| `packages/bitcoin-sdk`      | Bitcoin SDK workspace scaffold                  |
+| `packages/base-sdk`         | Base blockchain SDK workspace scaffold          |
+| `packages/midnight-sdk`     | Midnight SDK workspace scaffold                 |
 
-Chain-neutral errors and request primitives live directly in `packages/xray-js`. `packages/base/sdk` refers to the Base L2 blockchain. Chain packages must not depend on another chain package.
+Chain-neutral errors and request primitives live directly in `packages/xray-js`. `packages/base-sdk` refers to the Base L2 blockchain. Chain packages must not depend on another chain package.
 
 ## Base blockchain
 
-The Base blockchain implementation lives in `packages/base/sdk` and is exposed publicly through the umbrella package:
+The Base blockchain implementation lives in `packages/base-sdk` and is exposed publicly through the umbrella package:
 
 ```ts
 import { BASE_CHAIN, type BaseNetwork } from "@xray-network/xray-js/base"
@@ -69,6 +69,8 @@ import { XrayError, type XrayChain, type RequestOptions } from "@xray-network/xr
 ```
 
 ## Mini-app imports
+
+Mini-app protocols are owned by their blockchain package. Cardano-specific handshake capabilities and post-handshake payloads live in `packages/cardano-mini-app`; future integrations should use flat workspaces such as `packages/bitcoin-mini-app` and `packages/base-mini-app`.
 
 ```ts
 import { miniAppClient } from "@xray-network/xray-js/cardano/mini-app/client"
@@ -97,7 +99,7 @@ yarn test:integration
 
 ## Cardano WASM
 
-Generated Node, browser, and web WASM artifacts are committed under `packages/cardano/wasm/src`. To rebuild them, initialize the Rust submodules first:
+Generated Node, browser, and web WASM artifacts are committed under `packages/cardano-wasm/src`. To rebuild them, initialize the Rust submodules first:
 
 ```bash
 git submodule update --init --recursive
