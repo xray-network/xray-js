@@ -25,9 +25,6 @@
     "test:integration": "node -e \"process.exit(0)\"",
     "clean": "rm -rf dist"
   },
-  "dependencies": {
-    "@xray-network/xray-base": "3.0.0"
-  },
   "devDependencies": {
     "tsup": "^8.5.0"
   }

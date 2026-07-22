@@ -47,7 +47,6 @@
   },
   "dependencies": {
     "@sinclair/typebox": "^0.32.31",
-    "@xray-network/xray-base": "3.0.0",
     "@xray-network/xray-cardano-wasm": "3.0.0",
     "bech32": "^2.0.0",
     "blake2b": "^2.1.4",

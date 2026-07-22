@@ -1,4 +1,4 @@
-export type XrayChain = "cardano" | "bitcoin" | "midnight"
+export type XrayChain = "base" | "cardano" | "bitcoin" | "midnight"
 
 export interface XrayErrorOptions {
   cause?: unknown

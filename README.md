@@ -15,13 +15,14 @@ import { CardanoWeb3 } from "@xray-network/xray-js/cardano"
 import { CML } from "@xray-network/xray-js/cardano/wasm"
 
 import { BITCOIN_CHAIN } from "@xray-network/xray-js/bitcoin"
+import { BASE_CHAIN } from "@xray-network/xray-js/base"
 import { MIDNIGHT_CHAIN } from "@xray-network/xray-js/midnight"
 ```
 
 The root entry provides namespaces for discovery and scripts:
 
 ```ts
-import { Cardano, Bitcoin, Midnight } from "@xray-network/xray-js"
+import { Cardano, Bitcoin, Base, Midnight } from "@xray-network/xray-js"
 
 const web3 = new Cardano.CardanoWeb3()
 ```
@@ -31,14 +32,41 @@ const web3 = new Cardano.CardanoWeb3()
 | Workspace                   | Purpose                                         |
 | --------------------------- | ----------------------------------------------- |
 | `packages/xray-js`          | Public `@xray-network/xray-js` umbrella package |
-| `packages/base/core`        | Chain-neutral errors and request primitives     |
 | `packages/cardano/sdk`      | Cardano SDK, previously `cardano-web3-js`       |
 | `packages/cardano/wasm`     | Cardano WASM libraries and Rust build scripts   |
 | `packages/cardano/mini-app` | XRAY Mini App and CIP-30 APIs                   |
 | `packages/bitcoin/sdk`      | Bitcoin SDK workspace scaffold                  |
+| `packages/base/sdk`         | Base blockchain SDK workspace scaffold          |
 | `packages/midnight/sdk`     | Midnight SDK workspace scaffold                 |
 
-Chain packages may depend on `base`, but must not depend on another chain package.
+Chain-neutral errors and request primitives live directly in `packages/xray-js`. `packages/base/sdk` refers to the Base L2 blockchain. Chain packages must not depend on another chain package.
+
+## Base blockchain
+
+The Base blockchain implementation lives in `packages/base/sdk` and is exposed publicly through the umbrella package:
+
+```ts
+import { BASE_CHAIN, type BaseNetwork } from "@xray-network/xray-js/base"
+
+const chain = BASE_CHAIN // "base"
+const network: BaseNetwork = "mainnet" // "mainnet" | "sepolia"
+```
+
+It is also available from the root namespace:
+
+```ts
+import { Base } from "@xray-network/xray-js"
+
+console.log(Base.BASE_CHAIN)
+```
+
+The Base package is currently a scaffold, like the Bitcoin and Midnight packages. Providers, accounts, and transaction APIs will be added without changing the `@xray-network/xray-js/base` import path.
+
+Shared XRAY primitives are not part of the Base blockchain namespace. Import them from the package root:
+
+```ts
+import { XrayError, type XrayChain, type RequestOptions } from "@xray-network/xray-js"
+```
 
 ## Mini-app imports
 

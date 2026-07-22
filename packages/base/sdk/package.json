@@ -1,7 +1,7 @@
 {
   "name": "@xray-network/xray-base",
   "version": "3.0.0",
-  "description": "Chain-neutral primitives for XRAY JavaScript SDKs",
+  "description": "Base blockchain SDK for XRAY/Network",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",

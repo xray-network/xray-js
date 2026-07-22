@@ -16,7 +16,7 @@ export default defineConfig({
     midnight: "src/midnight.ts",
   },
   format: ["esm", "cjs"],
-  dts: true,
+  dts: false,
   clean: true,
   splitting: false,
 })

@@ -45,7 +45,6 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@xray-network/xray-base": "3.0.0",
     "zod": "^3.24.1"
   },
   "peerDependencies": {
