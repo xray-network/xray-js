@@ -1,1 +1,1 @@
-export * from "@xray-network/xray-cardano"
+export * from "@xray-network/xray-js-cardano"

@@ -1,5 +1,5 @@
 {
-  "name": "@xray-network/xray-cardano-mini-app",
+  "name": "@xray-network/xray-js-cardano-mini-app",
   "version": "3.0.0",
   "description": "XRAY Mini App SDK and Cardano CIP-30 bridge",
   "license": "MIT",

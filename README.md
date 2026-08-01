@@ -103,9 +103,9 @@ Generated Node, browser, and web WASM artifacts are committed under `packages/ca
 
 ```bash
 git submodule update --init --recursive
-yarn workspace @xray-network/xray-cardano-wasm cml-build
-yarn workspace @xray-network/xray-cardano-wasm msl-build
-yarn workspace @xray-network/xray-cardano-wasm uplc-build
+yarn workspace @xray-network/xray-js-cardano-wasm cml-build
+yarn workspace @xray-network/xray-js-cardano-wasm msl-build
+yarn workspace @xray-network/xray-js-cardano-wasm uplc-build
 ```
 
 ## Releasing

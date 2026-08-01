@@ -1,1 +1,1 @@
-export * from "@xray-network/xray-cardano-wasm"
+export * from "@xray-network/xray-js-cardano-wasm"

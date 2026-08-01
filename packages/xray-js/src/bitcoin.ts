@@ -1,1 +1,1 @@
-export * from "@xray-network/xray-bitcoin"
+export * from "@xray-network/xray-js-bitcoin"

@@ -95,12 +95,12 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@xray-network/xray-base": "3.0.0",
-    "@xray-network/xray-bitcoin": "3.0.0",
-    "@xray-network/xray-cardano": "3.0.0",
-    "@xray-network/xray-cardano-mini-app": "3.0.0",
-    "@xray-network/xray-cardano-wasm": "3.0.0",
-    "@xray-network/xray-midnight": "3.0.0"
+    "@xray-network/xray-js-base": "3.0.0",
+    "@xray-network/xray-js-bitcoin": "3.0.0",
+    "@xray-network/xray-js-cardano": "3.0.0",
+    "@xray-network/xray-js-cardano-mini-app": "3.0.0",
+    "@xray-network/xray-js-cardano-wasm": "3.0.0",
+    "@xray-network/xray-js-midnight": "3.0.0"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"

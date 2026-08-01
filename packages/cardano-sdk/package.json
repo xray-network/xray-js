@@ -1,5 +1,5 @@
 {
-  "name": "@xray-network/xray-cardano",
+  "name": "@xray-network/xray-js-cardano",
   "version": "3.0.0",
   "description": "Cardano SDK for XRAY/Network",
   "license": "MIT",
@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@sinclair/typebox": "^0.32.31",
-    "@xray-network/xray-cardano-wasm": "3.0.0",
+    "@xray-network/xray-js-cardano-wasm": "3.0.0",
     "bech32": "^2.0.0",
     "blake2b": "^2.1.4",
     "buffer": "^6.0.3",

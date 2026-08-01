@@ -1,5 +1,5 @@
 {
-  "name": "@xray-network/xray-cardano-wasm",
+  "name": "@xray-network/xray-js-cardano-wasm",
   "version": "3.0.0",
   "description": "Cardano Rust libraries compiled to WebAssembly",
   "license": "MIT",

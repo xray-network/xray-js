@@ -1,1 +1,1 @@
-export * from "@xray-network/xray-midnight"
+export * from "@xray-network/xray-js-midnight"

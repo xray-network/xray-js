@@ -1,5 +1,5 @@
 {
-  "name": "@xray-network/xray-base",
+  "name": "@xray-network/xray-js-base",
   "version": "3.0.0",
   "description": "Base blockchain SDK for XRAY/Network",
   "license": "MIT",

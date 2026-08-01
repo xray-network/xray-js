@@ -4,12 +4,12 @@
   "commit": false,
   "fixed": [
     [
-      "@xray-network/xray-base",
-      "@xray-network/xray-cardano",
-      "@xray-network/xray-cardano-wasm",
-      "@xray-network/xray-cardano-mini-app",
-      "@xray-network/xray-bitcoin",
-      "@xray-network/xray-midnight",
+      "@xray-network/xray-js-base",
+      "@xray-network/xray-js-cardano",
+      "@xray-network/xray-js-cardano-wasm",
+      "@xray-network/xray-js-cardano-mini-app",
+      "@xray-network/xray-js-bitcoin",
+      "@xray-network/xray-js-midnight",
       "@xray-network/xray-js"
     ]
   ],

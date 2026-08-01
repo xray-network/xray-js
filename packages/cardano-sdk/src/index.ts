@@ -1,7 +1,7 @@
 export { CardanoWeb3 } from "@/core/cw3"
 export type * as CW3Types from "@/types"
 
-export { CML, MSL, UPLC } from "@xray-network/xray-cardano-wasm/nodejs"
+export { CML, MSL, UPLC } from "@xray-network/xray-js-cardano-wasm/nodejs"
 export { Data as PlutusData, Constr as PlutusConstr } from "@/libs/plutusData"
 export { Message } from "@/libs/messageSigning"
 export { default as utils } from "@/utils"
