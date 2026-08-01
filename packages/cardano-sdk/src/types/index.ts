@@ -175,6 +175,7 @@ export type NativeScriptType =
   | { ScriptAny: { native_scripts: ReadonlyArray<NativeScriptType> } }
   | { ScriptNOfK: { n: number; native_scripts: ReadonlyArray<NativeScriptType> } }
 export type ProtocolParameters = {
+  protocolMajorVersion: number
   minFeeA: number
   minFeeB: number
   maxTxSize: number

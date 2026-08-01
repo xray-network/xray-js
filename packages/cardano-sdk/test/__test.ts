@@ -10,9 +10,9 @@ export const testData = {
     "xprv1mqxe3f9anrqpuwh80nypu5twu7m0fryp834p49es3x5wyln5heyys5lt2ezl2v4dsdc4uxeacfm0ugj2nj4jcjt9vjtjv8emnrv3ek0ksr9mfp82hzza3zfu8h30gmr9rxa6std89kmyylf2y55c0xmytsld3s4n",
   accountPath: [1852, 1815, 0] as CW3Types.AccountDerivationPath,
   addressPath: [0, 0] as CW3Types.AddressDerivationPath,
-  checksumId: "DXLZ-4647",
+  checksumId: "XPPX-4012",
   checksumImage:
-    "ebe486ccfac1bac1501692ae96d2e492b8d0b88d9863985ff224efd03d565782a93cbebd21870376b42b34e5f4c698de727de9d512c30938f764c3da08b686ab",
+    "5751762ac8c0e9005efc68e624d3323e917109b1ab77b484baf2c256cb57ababca6b0879cbe753ed403b3b22971f81e1a4c6c7f4dd02977be41c41050a57f0f2",
   paymentAddress:
     "addr_test1qzd2ulz7jx0zn3t90vep26f7gl9wkj03lx0w5ca0vhnl5u6nfathe437695m4cwzlgn959uswtm56dkkmvxjx6h6mfssh7t4zy",
   paymentAddressEnterprise: "addr_test1vzd2ulz7jx0zn3t90vep26f7gl9wkj03lx0w5ca0vhnl5uc34x82v",

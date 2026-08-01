@@ -19,7 +19,7 @@ describe("Data", async () => {
     */
     const MyDatumSchema = PlutusData.Integer()
     type MyDatum = PlutusData.Static<typeof MyDatumSchema>
-    const MyDatum = MyDatumSchema as unknown as MyDatum
+    const MyDatum = MyDatumSchema
 
     const datum: MyDatum = 1234n
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
@@ -38,7 +38,7 @@ describe("Data", async () => {
     */
     const MyDatumSchema = PlutusData.Bytes()
     type MyDatum = PlutusData.Static<typeof MyDatumSchema>
-    const MyDatum = MyDatumSchema as unknown as MyDatum
+    const MyDatum = MyDatumSchema
 
     const datum: MyDatum = "31313131" //hex
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
@@ -57,7 +57,7 @@ describe("Data", async () => {
     */
     const MyDatumSchema = PlutusData.Boolean()
     type MyDatum = PlutusData.Static<typeof MyDatumSchema>
-    const MyDatum = MyDatumSchema as unknown as MyDatum
+    const MyDatum = MyDatumSchema
 
     const datum: MyDatum = true
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
@@ -85,7 +85,7 @@ describe("Data", async () => {
       myVariableB: PlutusData.Nullable(PlutusData.Integer()),
     })
     type MyDatum = PlutusData.Static<typeof MyDatumSchema>
-    const MyDatum = MyDatumSchema as unknown as MyDatum
+    const MyDatum = MyDatumSchema
 
     const datum: MyDatum = {
       myVariableA: "313131",
@@ -118,7 +118,7 @@ describe("Data", async () => {
       maxItems: 4,
     })
     type MyDatum = PlutusData.Static<typeof MyDatumSchema>
-    const MyDatum = MyDatumSchema as unknown as MyDatum
+    const MyDatum = MyDatumSchema
 
     const datum: MyDatum = [45n, 100n, 9994n, 4281958210985912095n]
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
@@ -137,7 +137,7 @@ describe("Data", async () => {
     */
     const MyDatumSchema = PlutusData.Map(PlutusData.Integer(), PlutusData.Bytes())
     type MyDatum = PlutusData.Static<typeof MyDatumSchema>
-    const MyDatum = MyDatumSchema as unknown as MyDatum
+    const MyDatum = MyDatumSchema
 
     const datum: MyDatum = new Map([
       [3209n, "3131"],
@@ -170,7 +170,7 @@ describe("Data", async () => {
     ])
 
     type MyDatum = PlutusData.Static<typeof MyDatumSchema>
-    const MyDatum = MyDatumSchema as unknown as MyDatum
+    const MyDatum = MyDatumSchema
 
     const datumLeft: MyDatum = "Left"
     const newDatumLeft = PlutusData.from(PlutusData.to(datumLeft, MyDatum), MyDatum)
@@ -203,7 +203,7 @@ describe("Data", async () => {
       PlutusData.Object({ Up: PlutusData.Object({ x: PlutusData.Integer(), y: PlutusData.Bytes() }) }),
     ])
     type MyDatum = PlutusData.Static<typeof MyDatumSchema>
-    const MyDatum = MyDatumSchema as unknown as MyDatum
+    const MyDatum = MyDatumSchema
 
     const datumLeft: MyDatum = "Left"
     const newDatumLeft = PlutusData.from(PlutusData.to(datumLeft, MyDatum), MyDatum)
@@ -227,12 +227,10 @@ describe("Data", async () => {
   
       type MyDatum = Data
     */
-    const datum: PlutusData = new PlutusConstr(0, [])
-    const newDatum = PlutusData.from(
-      PlutusData.to(datum, PlutusData.Any() as unknown as PlutusData),
-      PlutusData.Any() as unknown as PlutusData
-    )
-    expect(datum as PlutusData).toEqual(newDatum)
+    const datum = new PlutusConstr(0, [])
+    const schema = PlutusData.Any()
+    const newDatum = PlutusData.from(PlutusData.to(datum, schema), schema)
+    expect(datum).toEqual(newDatum)
   })
 
   it("Roundtrip data void", () => {
@@ -245,10 +243,8 @@ describe("Data", async () => {
   
       type MyDatum = Void
     */
-    const MyDatum = {
-      anyOf: [{ dataType: "constructor", index: 0, fields: [] }],
-    } as unknown as MyDatum
-    type MyDatum = undefined
+    const MyDatum = PlutusData.Void()
+    type MyDatum = PlutusData.Static<typeof MyDatum>
     const datum: MyDatum = void 0
     const newDatum = PlutusData.from(PlutusData.to(void 0, MyDatum), MyDatum)
     expect(datum).toEqual(newDatum)
@@ -266,7 +262,7 @@ describe("Data", async () => {
     */
     const MyDatumSchema = PlutusData.Tuple([PlutusData.Integer(), PlutusData.Bytes()])
     type MyDatum = PlutusData.Static<typeof MyDatumSchema>
-    const MyDatum = MyDatumSchema as unknown as MyDatum
+    const MyDatum = MyDatumSchema
     const datum: MyDatum = [123n, "313131"]
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
     expect(datum).toEqual(newDatum)
@@ -303,7 +299,7 @@ describe("Data", async () => {
       PlutusData.Literal("Down"),
     ])
     type MyDatum = PlutusData.Static<typeof MyDatumSchema>
-    const MyDatum = MyDatumSchema as unknown as MyDatum
+    const MyDatum = MyDatumSchema
     const datum: MyDatum = {
       Up: [
         [
@@ -326,7 +322,7 @@ describe("Data", async () => {
     try {
       const mintingPolicy = {
         type: "PlutusV2",
-        script: applyParamsToScript(script, [10n], PlutusData.Tuple([PlutusData.Integer()]) as unknown as [bigint]),
+        script: applyParamsToScript(script, [10n], PlutusData.Tuple([PlutusData.Integer()])),
       }
       expect(mintingPolicy).toBeTruthy()
     } catch (e) {
@@ -337,8 +333,8 @@ describe("Data", async () => {
         type: "PlutusV2",
         script: applyParamsToScript(
           script,
-          [10n, "3131"],
-          PlutusData.Tuple([PlutusData.Integer()]) as unknown as unknown[]
+          [10n, "3131"] as unknown as [bigint],
+          PlutusData.Tuple([PlutusData.Integer()])
         ),
       }
       expect(!mintingPolicy).toBeTruthy()

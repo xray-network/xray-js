@@ -7,11 +7,10 @@
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": true,
     "sourceMap": false,
-    "baseUrl": ".",
     "outDir": "dist",
     "paths": {
-      "@": ["src"],
-      "@/*": ["src/*"]
+      "@": ["./src/index.ts"],
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts", "test"]

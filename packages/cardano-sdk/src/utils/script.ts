@@ -1,21 +1,50 @@
-import * as CBOR from "cbor-x"
-import { CML, UPLC, CW3Types } from "@"
-import { Data as PlutusData, Constr as PlutusConstr } from "../libs/plutusData"
+import {
+  Data as PlutusData,
+  type DataSchema,
+  type PlutusDataValue,
+  type StaticSchema,
+} from "@xray-network/xray-cardano-lib"
+import { decodeCbor, encodeCbor } from "@xray-network/xray-cardano-lib-core"
+import { CardanoLib, UPLC, CW3Types } from "@"
 import { fromHex, toHex } from "./misc"
 
-export const scriptToScriptRef = (script: CW3Types.Script): CML.Script => {
-  switch (script.language) {
-    case "Native":
-      return CML.Script.new_native(CML.NativeScript.from_cbor_hex(script.script))
-    case "PlutusV1":
-      return CML.Script.new_plutus_v1(CML.PlutusV1Script.from_cbor_hex(applyDoubleCborEncoding(script.script)))
-    case "PlutusV2":
-      return CML.Script.new_plutus_v2(CML.PlutusV2Script.from_cbor_hex(applyDoubleCborEncoding(script.script)))
-    case "PlutusV3":
-      return CML.Script.new_plutus_v3(CML.PlutusV3Script.from_cbor_hex(applyDoubleCborEncoding(script.script)))
-    default:
-      throw new Error("scriptToScriptRef: Wrong script language")
-  }
+export const scriptToScriptRef = (script: CW3Types.Script): CardanoLib.ScriptRef => {
+  const coreScript = (() => {
+    switch (script.language) {
+      case "Native":
+        return CardanoLib.Script.new(0n, CardanoLib.NativeScript.from_cbor_hex(script.script))
+      case "PlutusV1":
+        return CardanoLib.Script.new(
+          1n,
+          CardanoLib.PlutusV1Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
+        )
+      case "PlutusV2":
+        return CardanoLib.Script.new(
+          2n,
+          CardanoLib.PlutusV2Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
+        )
+      case "PlutusV3":
+        return CardanoLib.Script.new(
+          3n,
+          CardanoLib.PlutusV3Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
+        )
+      default:
+        throw new Error("scriptToScriptRef: Wrong script language")
+    }
+  })()
+
+  return CardanoLib.ScriptRef.from_cbor_bytes(
+    encodeCbor({
+      kind: "tag",
+      tag: 24n,
+      value: {
+        kind: "bytes",
+        value: coreScript.to_cbor_bytes(),
+        encoding: { kind: "definite", width: 0 },
+      },
+      encoding: { width: 0 },
+    })
+  )
 }
 
 export const scriptToAddress = (
@@ -25,30 +54,39 @@ export const scriptToAddress = (
 ): string => {
   const validatorHash = scriptToScriptHash(script)
   if (stakeCredential) {
-    return CML.BaseAddress.new(
+    return CardanoLib.BaseAddress.new(
       netoworkId,
-      CML.Credential.new_script(CML.ScriptHash.from_hex(validatorHash)),
+      CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(validatorHash)),
       stakeCredential.type === "key"
-        ? CML.Credential.new_pub_key(CML.Ed25519KeyHash.from_hex(stakeCredential.hash))
-        : CML.Credential.new_script(CML.ScriptHash.from_hex(stakeCredential.hash))
+        ? CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakeCredential.hash))
+        : CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakeCredential.hash))
     )
       .to_address()
       .to_bech32(undefined)
   } else {
-    return CML.EnterpriseAddress.new(netoworkId, CML.Credential.new_script(CML.ScriptHash.from_hex(validatorHash)))
+    return CardanoLib.EnterpriseAddress.new(
+      netoworkId,
+      CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(validatorHash))
+    )
       .to_address()
       .to_bech32(undefined)
   }
 }
 
-export const scriptToPlutusScript = (script: CW3Types.Script): CML.PlutusScript => {
+export const scriptToPlutusScript = (script: CW3Types.Script): CardanoLib.PlutusScript => {
   switch (script.language) {
     case "PlutusV1":
-      return CML.PlutusScript.from_v1(CML.PlutusV1Script.from_cbor_hex(applyDoubleCborEncoding(script.script)))
+      return CardanoLib.PlutusScript.from_v1(
+        CardanoLib.PlutusV1Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
+      )
     case "PlutusV2":
-      return CML.PlutusScript.from_v2(CML.PlutusV2Script.from_cbor_hex(applyDoubleCborEncoding(script.script)))
+      return CardanoLib.PlutusScript.from_v2(
+        CardanoLib.PlutusV2Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
+      )
     case "PlutusV3":
-      return CML.PlutusScript.from_v3(CML.PlutusV3Script.from_cbor_hex(applyDoubleCborEncoding(script.script)))
+      return CardanoLib.PlutusScript.from_v3(
+        CardanoLib.PlutusV3Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
+      )
     default:
       throw new Error("scriptToPlutusScript: Wrong script language")
   }
@@ -57,17 +95,23 @@ export const scriptToPlutusScript = (script: CW3Types.Script): CML.PlutusScript 
 export const scriptToScriptHash = (script: CW3Types.Script): string => {
   switch (script.language) {
     case "Native":
-      return CML.NativeScript.from_cbor_hex(script.script).hash().to_hex()
+      return CardanoLib.NativeScript.from_cbor_hex(script.script).hash().to_hex()
     case "PlutusV1":
-      return CML.PlutusScript.from_v1(CML.PlutusV1Script.from_cbor_hex(applyDoubleCborEncoding(script.script)))
+      return CardanoLib.PlutusScript.from_v1(
+        CardanoLib.PlutusV1Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
+      )
         .hash()
         .to_hex()
     case "PlutusV2":
-      return CML.PlutusScript.from_v2(CML.PlutusV2Script.from_cbor_hex(applyDoubleCborEncoding(script.script)))
+      return CardanoLib.PlutusScript.from_v2(
+        CardanoLib.PlutusV2Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
+      )
         .hash()
         .to_hex()
     case "PlutusV3":
-      return CML.PlutusScript.from_v3(CML.PlutusV3Script.from_cbor_hex(applyDoubleCborEncoding(script.script)))
+      return CardanoLib.PlutusScript.from_v3(
+        CardanoLib.PlutusV3Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
+      )
         .hash()
         .to_hex()
     default:
@@ -75,23 +119,36 @@ export const scriptToScriptHash = (script: CW3Types.Script): string => {
   }
 }
 
-export const partialPlutusWitness = (script: CML.PlutusScript, redeemer: string): CML.PartialPlutusWitness => {
-  return CML.PartialPlutusWitness.new(
-    CML.PlutusScriptWitness.new_script(script),
-    CML.PlutusData.from_cbor_hex(redeemer)
+export const partialPlutusWitness = (
+  script: CardanoLib.PlutusScript,
+  redeemer: string
+): CardanoLib.PartialPlutusWitness => {
+  return CardanoLib.PartialPlutusWitness.new(
+    CardanoLib.PlutusScriptWitness.new_script(script),
+    CardanoLib.PlutusData.from_cbor_hex(redeemer)
   )
 }
 
 export const applyDoubleCborEncoding = (script: string): string => {
+  const scriptBytes = fromHex(script)
+  const encodeBytes = (bytes: Uint8Array): Uint8Array =>
+    encodeCbor({
+      kind: "bytes",
+      value: bytes,
+      encoding: { kind: "definite", width: 0 },
+    })
+
   try {
-    CBOR.decode(CBOR.decode(fromHex(script)))
+    const outer = decodeCbor(scriptBytes)
+    if (outer.kind !== "bytes") throw new TypeError("CBOR value is not a byte string")
+    decodeCbor(outer.value)
     return script
   } catch {
     try {
-      CBOR.decode(fromHex(script))
-      return toHex(Uint8Array.from(CBOR.encode(fromHex(script).buffer)))
+      decodeCbor(scriptBytes)
+      return toHex(encodeBytes(scriptBytes))
     } catch {
-      return toHex(Uint8Array.from(CBOR.encode(CBOR.encode(fromHex(script).buffer))))
+      return toHex(encodeBytes(encodeBytes(scriptBytes)))
     }
   }
 }
@@ -105,25 +162,25 @@ export const nativeScriptFromJson = (
   const parseNativeScript = (json: CW3Types.NativeConfig) => {
     switch (json.type) {
       case "sig":
-        return CML.NativeScript.new_script_pubkey(CML.Ed25519KeyHash.from_hex(json.keyHash))
+        return CardanoLib.NativeScript.new_script_pubkey(CardanoLib.Ed25519KeyHash.from_hex(json.keyHash))
       case "before":
-        return CML.NativeScript.new_script_invalid_hereafter(BigInt(json.slot))
+        return CardanoLib.NativeScript.new_script_invalid_hereafter(BigInt(json.slot))
       case "after":
-        return CML.NativeScript.new_script_invalid_before(BigInt(json.slot))
+        return CardanoLib.NativeScript.new_script_invalid_before(BigInt(json.slot))
       case "all": {
-        const nativeList = CML.NativeScriptList.new()
+        const nativeList = CardanoLib.NativeScriptList.new()
         json.scripts.map((script) => nativeList.add(parseNativeScript(script)))
-        return CML.NativeScript.new_script_all(nativeList)
+        return CardanoLib.NativeScript.new_script_all(nativeList)
       }
       case "any": {
-        const nativeList = CML.NativeScriptList.new()
+        const nativeList = CardanoLib.NativeScriptList.new()
         json.scripts.map((script) => nativeList.add(parseNativeScript(script)))
-        return CML.NativeScript.new_script_any(nativeList)
+        return CardanoLib.NativeScript.new_script_any(nativeList)
       }
       case "atLeast": {
-        const nativeList = CML.NativeScriptList.new()
+        const nativeList = CardanoLib.NativeScriptList.new()
         json.scripts.map((script) => nativeList.add(parseNativeScript(script)))
-        return CML.NativeScript.new_script_n_of_k(BigInt(json.required), nativeList)
+        return CardanoLib.NativeScript.new_script_n_of_k(BigInt(json.required), nativeList)
       }
     }
   }
@@ -138,11 +195,24 @@ export const nativeScriptFromJson = (
   }
 }
 
-export const applyParamsToScript = <T extends unknown[] = PlutusData[]>(
+export function applyParamsToScript<S extends DataSchema>(
   plutusScript: string,
-  params: CW3Types.Exact<[...T]>,
-  type?: T
-): string => {
-  const p = (type ? PlutusData.castTo<T>(params, type) : params) as PlutusData[]
-  return toHex(UPLC.apply_params_to_script(fromHex(PlutusData.to(p)), fromHex(plutusScript)))
+  params: CW3Types.Exact<StaticSchema<S>>,
+  type: S
+): string
+export function applyParamsToScript(plutusScript: string, params: PlutusDataValue[]): string
+export function applyParamsToScript(plutusScript: string, params: unknown, type?: DataSchema): string {
+  const p = type ? PlutusData.castTo(params as never, type) : params
+  if (!Array.isArray(p)) throw new TypeError("Script parameters must encode as a Plutus Data list")
+  const scriptBytes = fromHex(plutusScript)
+  const outer = decodeCbor(scriptBytes)
+  const normalizedScript = (() => {
+    if (outer.kind !== "bytes") return scriptBytes
+    try {
+      return decodeCbor(outer.value).kind === "bytes" ? outer.value : scriptBytes
+    } catch {
+      return scriptBytes
+    }
+  })()
+  return toHex(UPLC.applyParamsToScript(fromHex(PlutusData.to(p as PlutusDataValue[])), normalizedScript))
 }

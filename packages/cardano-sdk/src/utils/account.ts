@@ -1,4 +1,4 @@
-import { CML, CW3Types } from "@"
+import { CardanoLib, CW3Types } from "@"
 import cip4 from "../libs/cip4"
 import { getFingerprint, assetNameToAssetNameAscii } from "./asset"
 import { deriveBase, getCredentials, getStakingAddress } from "./address"

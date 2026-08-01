@@ -1,6 +1,6 @@
 # XRAY JavaScript SDK
 
-`@xray-network/xray-js` is the multi-chain JavaScript SDK for XRAY/Network. The repository uses Yarn Classic workspaces and keeps blockchain implementations isolated behind one public package.
+`@xray-network/xray-js` is the JavaScript SDK for XRAY/Network. The current release contains the Cardano SDK and cross-chain mini-app APIs behind one public package.
 
 ## Installation
 
@@ -8,61 +8,30 @@
 yarn add @xray-network/xray-js
 ```
 
-Use chain subpaths in application code so bundlers only include the selected implementation:
+Use the Cardano subpaths in application code:
 
 ```ts
 import { CardanoWeb3 } from "@xray-network/xray-js/cardano"
-import { CML } from "@xray-network/xray-js/cardano/wasm"
-
-import { BITCOIN_CHAIN } from "@xray-network/xray-js/bitcoin"
-import { BASE_CHAIN } from "@xray-network/xray-js/base"
-import { MIDNIGHT_CHAIN } from "@xray-network/xray-js/midnight"
+import { Address } from "@xray-network/xray-js/cardano/lib"
 ```
 
 The root entry provides namespaces for discovery and scripts:
 
 ```ts
-import { Cardano, Bitcoin, Base, Midnight } from "@xray-network/xray-js"
+import { Cardano } from "@xray-network/xray-js"
 
 const web3 = new Cardano.CardanoWeb3()
 ```
 
 ## Packages
 
-| Workspace                   | Purpose                                         |
-| --------------------------- | ----------------------------------------------- |
-| `packages/xray-js`          | Public `@xray-network/xray-js` umbrella package |
-| `packages/cardano-sdk`      | Cardano SDK, previously `cardano-web3-js`       |
-| `packages/cardano-wasm`     | Cardano WASM libraries and Rust build scripts   |
-| `packages/cardano-mini-app` | XRAY Mini App and CIP-30 APIs                   |
-| `packages/bitcoin-sdk`      | Bitcoin SDK workspace scaffold                  |
-| `packages/base-sdk`         | Base blockchain SDK workspace scaffold          |
-| `packages/midnight-sdk`     | Midnight SDK workspace scaffold                 |
+| Workspace              | Purpose                                         |
+| ---------------------- | ----------------------------------------------- |
+| `packages/runtime`     | Public `@xray-network/xray-js` runtime package  |
+| `packages/cardano-sdk` | Cardano SDK, previously `cardano-web3-js`       |
+| `packages/mini-app`    | Cross-chain XRAY Mini App SDK and CIP-30 bridge |
 
-Chain-neutral errors and request primitives live directly in `packages/xray-js`. `packages/base-sdk` refers to the Base L2 blockchain. Chain packages must not depend on another chain package.
-
-## Base blockchain
-
-The Base blockchain implementation lives in `packages/base-sdk` and is exposed publicly through the umbrella package:
-
-```ts
-import { BASE_CHAIN, type BaseNetwork } from "@xray-network/xray-js/base"
-
-const chain = BASE_CHAIN // "base"
-const network: BaseNetwork = "mainnet" // "mainnet" | "sepolia"
-```
-
-It is also available from the root namespace:
-
-```ts
-import { Base } from "@xray-network/xray-js"
-
-console.log(Base.BASE_CHAIN)
-```
-
-The Base package is currently a scaffold, like the Bitcoin and Midnight packages. Providers, accounts, and transaction APIs will be added without changing the `@xray-network/xray-js/base` import path.
-
-Shared XRAY primitives are not part of the Base blockchain namespace. Import them from the package root:
+Shared XRAY primitives are available from the package root:
 
 ```ts
 import { XrayError, type XrayChain, type RequestOptions } from "@xray-network/xray-js"
@@ -70,19 +39,19 @@ import { XrayError, type XrayChain, type RequestOptions } from "@xray-network/xr
 
 ## Mini-app imports
 
-Mini-app protocols are owned by their blockchain package. Cardano-specific handshake capabilities and post-handshake payloads live in `packages/cardano-mini-app`; future integrations should use flat workspaces such as `packages/bitcoin-mini-app` and `packages/base-mini-app`.
+The chain-neutral mini-app protocol lives in `packages/mini-app`, with Cardano support provided by its CIP-30 modules.
 
 ```ts
-import { miniAppClient } from "@xray-network/xray-js/cardano/mini-app/client"
-import { miniAppHost } from "@xray-network/xray-js/cardano/mini-app/host"
-import { MiniAppProvider } from "@xray-network/xray-js/cardano/mini-app/react"
+import { miniAppClient } from "@xray-network/xray-js/mini-app/client"
+import { miniAppHost } from "@xray-network/xray-js/mini-app/host"
+import { MiniAppProvider } from "@xray-network/xray-js/mini-app/react"
 ```
 
 React is an optional peer dependency and is only needed for the `/react` entry.
 
 ## Development
 
-This repository requires Yarn 1.22.x.
+This repository requires Node.js 20.19 or newer and Yarn 1.22.x.
 
 ```bash
 yarn install
@@ -97,15 +66,13 @@ yarn test
 yarn test:integration
 ```
 
-## Cardano WASM
+## Cardano library
 
-Generated Node, browser, and web WASM artifacts are committed under `packages/cardano-wasm/src`. To rebuild them, initialize the Rust submodules first:
+Cardano primitives, cryptography, ledger types, CIP implementations, transaction builders, Plutus Data, and UPLC are provided by the universal pure-JavaScript [`@xray-network/xray-cardano-lib`](https://github.com/xray-network/xray-cardano-lib) package. No WebAssembly initialization or environment-specific build is required.
 
-```bash
-git submodule update --init --recursive
-yarn workspace @xray-network/xray-js-cardano-wasm cml-build
-yarn workspace @xray-network/xray-js-cardano-wasm msl-build
-yarn workspace @xray-network/xray-js-cardano-wasm uplc-build
+```ts
+import { CardanoLib } from "@xray-network/xray-js/cardano"
+import { Address, TransactionBuilder } from "@xray-network/xray-js/cardano/lib"
 ```
 
 ## Releasing

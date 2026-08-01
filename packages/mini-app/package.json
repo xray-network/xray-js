@@ -1,0 +1,63 @@
+{
+  "name": "@xray-network/xray-js-mini-app",
+  "version": "3.0.0",
+  "description": "Cross-chain XRAY Mini App SDK with a Cardano CIP-30 bridge",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./protocol": {
+      "types": "./dist/protocol/index.d.ts",
+      "import": "./dist/protocol/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js"
+    },
+    "./host": {
+      "types": "./dist/host/index.d.ts",
+      "import": "./dist/host/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "import": "./dist/testing/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node -e \"process.exit(0)\"",
+    "test:integration": "node -e \"process.exit(0)\"",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "tsup": "^8.5.0"
+  }
+}

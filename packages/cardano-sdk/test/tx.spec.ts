@@ -58,7 +58,7 @@ describe("TX", async () => {
       myVariableB: PlutusData.Nullable(PlutusData.Integer()),
     })
     type MyDatum = PlutusData.Static<typeof MyDatumSchema>
-    const MyDatum = MyDatumSchema as unknown as MyDatum
+    const MyDatum = MyDatumSchema
     const datum = PlutusData.to(
       {
         myVariableA: "313131",

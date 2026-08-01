@@ -1,0 +1,94 @@
+{
+  "name": "@xray-network/xray-js",
+  "version": "3.0.0",
+  "description": "JavaScript SDK for XRAY/Network",
+  "author": "XRAY/Network <hello@xray.app>",
+  "license": "MIT",
+  "homepage": "https://xray.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xray-network/xray-js.git",
+    "directory": "packages/runtime"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./cardano": {
+      "types": "./dist/cardano.d.ts",
+      "browser": "./dist/cardano.js",
+      "node": {
+        "import": "./dist/cardano.js",
+        "require": "./dist/cardano.cjs"
+      },
+      "import": "./dist/cardano.js",
+      "require": "./dist/cardano.cjs"
+    },
+    "./cardano/lib": {
+      "types": "./dist/cardano-lib.d.ts",
+      "browser": "./dist/cardano-lib.js",
+      "import": "./dist/cardano-lib.js",
+      "default": "./dist/cardano-lib.js"
+    },
+    "./mini-app": {
+      "types": "./dist/mini-app.d.ts",
+      "import": "./dist/mini-app.js"
+    },
+    "./mini-app/protocol": {
+      "types": "./dist/mini-app-protocol.d.ts",
+      "import": "./dist/mini-app-protocol.js"
+    },
+    "./mini-app/client": {
+      "types": "./dist/mini-app-client.d.ts",
+      "import": "./dist/mini-app-client.js"
+    },
+    "./mini-app/host": {
+      "types": "./dist/mini-app-host.d.ts",
+      "import": "./dist/mini-app-host.js"
+    },
+    "./mini-app/react": {
+      "types": "./dist/mini-app-react.d.ts",
+      "import": "./dist/mini-app-react.js"
+    },
+    "./mini-app/testing": {
+      "types": "./dist/mini-app-testing.d.ts",
+      "import": "./dist/mini-app-testing.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && tsc --emitDeclarationOnly",
+    "typecheck": "tsc --noEmit",
+    "test": "node -e \"process.exit(0)\"",
+    "test:integration": "node -e \"process.exit(0)\"",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@xray-network/xray-cardano-lib": "0.1.0",
+    "@xray-network/xray-js-cardano": "3.0.0",
+    "@xray-network/xray-js-mini-app": "3.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0"
+  }
+}

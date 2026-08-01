@@ -1,30 +1,35 @@
-import * as Bech32 from "bech32"
-import { CML, CW3Types } from "@"
-import * as Bip39 from "../libs/bip39"
-import { fromHex, harden } from "./misc"
+import {
+  generateMnemonic,
+  mnemonicToEntropy,
+  validateMnemonic,
+} from "@scure/bip39"
+import { wordlist } from "@scure/bip39/wordlists/english.js"
+import { bech32 } from "@scure/base"
+import { CardanoLib, CW3Types } from "@"
+import { harden } from "./misc"
 
 export const mnemonicGenerate = (length: 12 | 15 | 24 = 24): string => {
-  return Bip39.generateMnemonic((32 * length) / 3)
+  return generateMnemonic(wordlist, (32 * length) / 3)
 }
 
 export const mnemonicValidate = (mnemonic: string): boolean => {
-  return Bip39.validateMnemonic(mnemonic)
+  return validateMnemonic(mnemonic, wordlist)
 }
 
 export const mnemonicToXprvKey = (mnemonic: string, password?: string): string => {
-  return CML.Bip32PrivateKey.from_bip39_entropy(
-    fromHex(Bip39.mnemonicToEntropy(mnemonic)),
+  return CardanoLib.Bip32PrivateKey.from_bip39_entropy(
+    mnemonicToEntropy(mnemonic, wordlist),
     password ? new TextEncoder().encode(password) : new Uint8Array()
   ).to_bech32()
 }
 
 export const xprvKeyGenerate = (): string => {
-  return CML.Bip32PrivateKey.generate_ed25519_bip32().to_bech32()
+  return CardanoLib.Bip32PrivateKey.generate_ed25519_bip32().to_bech32()
 }
 
 export const xprvKeyValidate = (xprvKey: string): boolean => {
   try {
-    CML.Bip32PrivateKey.from_bech32(xprvKey).to_bech32()
+    CardanoLib.Bip32PrivateKey.from_bech32(xprvKey).to_bech32()
     return true
   } catch {
     return false
@@ -36,7 +41,7 @@ export const xprvKeyToXpubKey = (
   accountPath?: CW3Types.AccountDerivationPath,
   addressPath?: CW3Types.AddressDerivationPath
 ): string => {
-  let key = CML.Bip32PrivateKey.from_bech32(xprvKey)
+  let key = CardanoLib.Bip32PrivateKey.from_bech32(xprvKey)
   if (accountPath) {
     for (const index of accountPath) {
       key = key.derive(harden(index))
@@ -55,7 +60,7 @@ export const xprvToVrfKey = (
   accountPath?: CW3Types.AccountDerivationPath,
   addressPath?: CW3Types.AddressDerivationPath
 ): string => {
-  let key = CML.Bip32PrivateKey.from_bech32(xprvKey)
+  let key = CardanoLib.Bip32PrivateKey.from_bech32(xprvKey)
   if (accountPath) {
     for (const index of accountPath) {
       key = key.derive(harden(index))
@@ -70,12 +75,12 @@ export const xprvToVrfKey = (
 }
 
 export const xvkKeyToXpubKey = (xvkKey: string): string => {
-  return Bech32.bech32.encode("xpub", Bech32.bech32.decode(xvkKey, 118).words, 114)
+  return bech32.encode("xpub", bech32.decode(xvkKey, 118).words, 114)
 }
 
 export const xpubKeyValidate = (pubKey: string): boolean => {
   try {
-    CML.Bip32PublicKey.from_bech32(pubKey)
+    CardanoLib.Bip32PublicKey.from_bech32(pubKey)
     return true
   } catch {
     return false

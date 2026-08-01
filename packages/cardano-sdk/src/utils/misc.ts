@@ -1,4 +1,4 @@
-import { CML, CW3Types } from "@"
+import { CardanoLib, CW3Types } from "@"
 import { Buffer } from "buffer"
 
 export const harden = (num: number): number => {
@@ -22,7 +22,7 @@ export const fromStringToHex = (text: string): string => {
 }
 
 export const encryptDataWithPass = (data: string, password: string): string => {
-  return CML.emip3_encrypt_with_password(
+  return CardanoLib.emip3_encrypt_with_password(
     Buffer.from(password).toString("hex"),
     Buffer.from(randomBytes(32)).toString("hex"),
     Buffer.from(randomBytes(12)).toString("hex"),
@@ -31,7 +31,10 @@ export const encryptDataWithPass = (data: string, password: string): string => {
 }
 
 export const decryptDataWithPass = (data: string, password: string): string => {
-  return Buffer.from(CML.emip3_decrypt_with_password(Buffer.from(password).toString("hex"), data), "hex").toString()
+  return Buffer.from(
+    CardanoLib.emip3_decrypt_with_password(Buffer.from(password).toString("hex"), data),
+    "hex"
+  ).toString()
 }
 
 export const randomBytes = (length: number): Uint8Array => {

@@ -280,6 +280,7 @@ const koiosProtocolParamsToProtocolParams = (
   pp: KoiosTypes.components["schemas"]["epoch_params"][number]
 ): CW3Types.ProtocolParameters => {
   return {
+    protocolMajorVersion: pp.protocol_major,
     minFeeA: pp.min_fee_a,
     minFeeB: pp.min_fee_b,
     maxTxSize: pp.max_tx_size,

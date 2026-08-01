@@ -291,6 +291,7 @@ const ogmiosProtocolParametersToProtocolParameters = (pp: any): CW3Types.Protoco
   const scriptExecutionPricesMemory = pp.scriptExecutionPrices.memory.split("/")
   const scriptExecutionPricesCpu = pp.scriptExecutionPrices.cpu.split("/")
   return {
+    protocolMajorVersion: Number(pp.version?.major ?? 9),
     minFeeA: parseInt(pp.minFeeCoefficient),
     minFeeB: parseInt(pp.minFeeConstant.ada.lovelace),
     maxTxSize: parseInt(pp.maxTransactionSize.bytes),

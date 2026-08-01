@@ -6,7 +6,7 @@ import {
   TTL,
 } from "@/config"
 
-import { CML, Message, utils, CW3Types } from "@"
+import { CardanoLib, Message, utils, CW3Types } from "@"
 import { TxBuilder } from "./txBuilder"
 import { TxFinalizer } from "./txFinalizer"
 import { Account } from "./account"
@@ -38,7 +38,8 @@ export class CardanoWeb3 {
    */
   constructor(config?: CW3Types.InitConfig) {
     const network = config?.network || "mainnet"
-    this.provider = config?.provider || new KoiosProvider(`https://graph.xray.app/output/services/koios/${network}/api/v1`)
+    this.provider =
+      config?.provider || new KoiosProvider(`https://graph.xray.app/output/services/koios/${network}/api/v1`)
     this.explorers = {
       koios: KoiosClient(
         config?.explorer?.koios?.url || `https://graph.xray.app/output/services/koios/${network}/api/v1`,
@@ -250,7 +251,7 @@ export class CardanoWeb3 {
         throw new Error("Can't sign TX with xpub account type")
       }
       if (account.__config.type === "connector") {
-        const hexAddress = CML.Address.from_bech32(account.__config.paymentAddress).to_hex()
+        const hexAddress = CardanoLib.Address.from_bech32(account.__config.paymentAddress).to_hex()
         const hexMessage = utils.misc.fromStringToHex(message)
         return await account.__config.connector.signData(hexAddress, hexMessage)
       }
@@ -270,10 +271,10 @@ export class CardanoWeb3 {
      * @returns Signed message
      */
     signWithVrfKey: (verificationKey: string, address: string, message: string): CW3Types.SignedMessage => {
-      const hexAddress = CML.Address.from_bech32(address).to_hex()
+      const hexAddress = CardanoLib.Address.from_bech32(address).to_hex()
       const hexMessage = utils.misc.fromStringToHex(message)
       const { paymentCred } = utils.address.getCredentials(address)
-      const hash = CML.PrivateKey.from_bech32(verificationKey).to_public().hash().to_hex()
+      const hash = CardanoLib.PrivateKey.from_bech32(verificationKey).to_public().hash().to_hex()
       if (!paymentCred?.hash || paymentCred?.hash !== hash)
         throw new Error("Verification key does not match the address")
       return Message.signData(hexAddress, hexMessage, verificationKey)
@@ -287,7 +288,7 @@ export class CardanoWeb3 {
      * @returns True if message is verified, false otherwise
      */
     verify: (address: string, message: string, signedMessage: CW3Types.SignedMessage): boolean => {
-      const hexAddress = CML.Address.from_bech32(address).to_hex()
+      const hexAddress = CardanoLib.Address.from_bech32(address).to_hex()
       const hexMessage = utils.misc.fromStringToHex(message)
       const { paymentCred, stakingCred } = utils.address.getCredentials(address)
       const hash = paymentCred?.hash || stakingCred?.hash

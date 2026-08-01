@@ -1,9 +1,11 @@
 export { CardanoWeb3 } from "@/core/cw3"
 export type * as CW3Types from "@/types"
 
-export { CML, MSL, UPLC } from "@xray-network/xray-js-cardano-wasm/nodejs"
-export { Data as PlutusData, Constr as PlutusConstr } from "@/libs/plutusData"
-export { Message } from "@/libs/messageSigning"
+export * as CardanoLib from "@xray-network/xray-cardano-lib"
+export * as CIP8 from "@xray-network/xray-cardano-lib"
+export * as UPLC from "@xray-network/xray-cardano-lib"
+export { Data as PlutusData, Constr as PlutusConstr } from "@xray-network/xray-cardano-lib"
+export { CIP8Message as Message } from "@xray-network/xray-cardano-lib"
 export { default as utils } from "@/utils"
 
 export * from "@/providers/koios"

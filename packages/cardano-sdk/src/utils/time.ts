@@ -1,4 +1,4 @@
-import { CML, CW3Types } from "@"
+import { CardanoLib, CW3Types } from "@"
 
 export const unixTimeToSlot = (unixTime: number, slotConfig: CW3Types.SlotConfig): number => {
   const timePassed = unixTime - slotConfig.zeroTime

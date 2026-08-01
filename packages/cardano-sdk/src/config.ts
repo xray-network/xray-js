@@ -44,6 +44,7 @@ export const DEFAULT_ADDRESS_DERIVATION_PATH: CW3Types.AddressDerivationPath = [
 ]
 
 export const DEFAULT_PROTOCOL_PARAMETERS: CW3Types.ProtocolParameters = {
+  protocolMajorVersion: 9,
   minFeeA: 44,
   minFeeB: 155381,
   maxTxSize: 16384,

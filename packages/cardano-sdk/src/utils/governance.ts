@@ -1,20 +1,20 @@
-import { CML, CW3Types } from "@"
-import * as Bech32 from "bech32"
+import { CardanoLib, CW3Types } from "@"
+import { bech32 } from "@scure/base"
 import { Buffer } from "buffer"
 
-export const toDRep = (drep: CW3Types.DRep): CML.DRep => {
+export const toDRep = (drep: CW3Types.DRep): CardanoLib.DRep => {
   if (drep === "AlwaysAbstain") {
-    return CML.DRep.new_always_abstain()
+    return CardanoLib.DRep.new(2n)
   } else if (drep === "AlwaysNoConfidence") {
-    return CML.DRep.new_always_no_confidence()
+    return CardanoLib.DRep.new(3n)
   } else {
     try {
       const drepCredentials = getDRepCredentials(drep)
       switch (drepCredentials.type) {
         case "key":
-          return CML.DRep.new_key(CML.Ed25519KeyHash.from_hex(drepCredentials.hash))
+          return CardanoLib.DRep.new(0n, CardanoLib.Ed25519KeyHash.from_hex(drepCredentials.hash).to_raw_bytes())
         case "script":
-          return CML.DRep.new_script(CML.ScriptHash.from_hex(drepCredentials.hash))
+          return CardanoLib.DRep.new(1n, CardanoLib.ScriptHash.from_hex(drepCredentials.hash).to_raw_bytes())
         default:
           throw new Error(`Unsupported DRep type: ${drepCredentials.type}`)
       }
@@ -25,8 +25,8 @@ export const toDRep = (drep: CW3Types.DRep): CML.DRep => {
 }
 
 export const getDRepCredentials = (drepBech32: string): CW3Types.Credential => {
-  const { words } = Bech32.bech32.decode(drepBech32)
-  const payload = Bech32.bech32.fromWords(words)
+  const { words } = bech32.decode(drepBech32, 1023)
+  const payload = bech32.fromWords(words)
   const header = payload[0]
   const hash = payload.slice(1)
   const isDrepGovCred = (header & 0x20) === 0x20

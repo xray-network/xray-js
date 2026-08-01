@@ -1,6 +1,7 @@
 import { TTL } from "@/config"
+import { decodeCbor } from "@xray-network/xray-cardano-lib-core"
 
-import { CardanoWeb3, CML, UPLC, utils, CW3Types } from "@"
+import { CardanoWeb3, CardanoLib, UPLC, utils, CW3Types } from "@"
 import { TxFinalizer } from "./txFinalizer"
 
 export class TxBuilder {
@@ -15,7 +16,7 @@ export class TxBuilder {
   private remoteProtocolParams: boolean = false
   private remoteTxEvaluate: boolean = false
   private coinSelection: number = 2 // Default: LargestFirstMultiAsset
-  __txBuilder: CML.TransactionBuilder
+  __txBuilder: CardanoLib.TransactionBuilder
 
   constructor(cw3: CardanoWeb3) {
     this.cw3 = cw3
@@ -70,13 +71,13 @@ export class TxBuilder {
         }
         this.collectInputs.set(`${utxo.index.toString()}@${utxo.transaction.id}`, utxo)
         const coreUtxo = utils.tx.utxoToCore(utxo)
-        const inputBuilder = CML.SingleInputBuilder.from_transaction_unspent_output(coreUtxo)
+        const inputBuilder = CardanoLib.SingleInputBuilder.from_transaction_unspent_output(coreUtxo)
         switch (script.language) {
           case "Native":
             this.__txBuilder.add_input(
               inputBuilder.native_script(
-                CML.NativeScript.from_cbor_hex(script.script),
-                CML.NativeScriptWitnessInfo.assume_signature_count()
+                CardanoLib.NativeScript.from_cbor_hex(script.script),
+                CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
               )
             )
             break
@@ -89,8 +90,8 @@ export class TxBuilder {
             this.__txBuilder.add_input(
               inputBuilder.plutus_script(
                 utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                CML.Ed25519KeyHashList.new(),
-                CML.PlutusData.from_cbor_hex(utxo.datum!)
+                CardanoLib.RequiredSigners.from_cbor_hex("d9010280"),
+                CardanoLib.PlutusData.from_cbor_hex(utxo.datum!)
               )
             )
             break
@@ -104,7 +105,7 @@ export class TxBuilder {
             this.__txBuilder.add_input(
               inputBuilder.plutus_script_inline_datum(
                 utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                CML.Ed25519KeyHashList.new()
+                CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
               )
             )
             break
@@ -124,7 +125,7 @@ export class TxBuilder {
       for (const utxo of utxos) {
         this.inputs.set(`${utxo.index.toString()}@${utxo.transaction.id}`, utxo)
         const coreUtxo = utils.tx.utxoToCore(utxo)
-        const inputBuilder = CML.SingleInputBuilder.from_transaction_unspent_output(coreUtxo)
+        const inputBuilder = CardanoLib.SingleInputBuilder.from_transaction_unspent_output(coreUtxo)
         this.__txBuilder.add_input(inputBuilder.payment_key())
       }
     })
@@ -252,7 +253,7 @@ export class TxBuilder {
       if (credential.type === "script") {
         throw new Error("Only key hash (not script) is allowed for required signer")
       }
-      this.__txBuilder.add_required_signer(CML.Ed25519KeyHash.from_hex(credential.hash))
+      this.__txBuilder.add_required_signer(CardanoLib.Ed25519KeyHash.from_hex(credential.hash))
     })
     return this
   }
@@ -264,7 +265,7 @@ export class TxBuilder {
    */
   addRequiredSignerByKeyHash = (keyHash: string) => {
     this.queue.push(() => {
-      this.__txBuilder.add_required_signer(CML.Ed25519KeyHash.from_hex(keyHash))
+      this.__txBuilder.add_required_signer(CardanoLib.Ed25519KeyHash.from_hex(keyHash))
     })
     return this
   }
@@ -278,10 +279,10 @@ export class TxBuilder {
   addMint = (assets: CW3Types.Asset[], redeemer?: string) => {
     this.queue.push(async () => {
       const policyId = assets[0].policyId
-      const mintAssets = CML.MapAssetNameToNonZeroInt64.new()
+      const mintAssets = CardanoLib.MapAssetNameToNonZeroInt64.new()
       for (const asset of assets) {
         if (asset.policyId !== policyId) throw new Error("All assets must have the same policyId")
-        mintAssets.insert(CML.AssetName.from_str(asset.assetName || ""), asset.quantity)
+        mintAssets.insert(CardanoLib.AssetName.from_str(asset.assetName || ""), asset.quantity)
       }
       const script = this.scripts.get(policyId)
       if (!script) {
@@ -289,13 +290,13 @@ export class TxBuilder {
           "Script is required for addMint() method. Attach script with attachScript() or readFrom() method"
         )
       }
-      const mintBuilder = CML.SingleMintBuilder.new(mintAssets)
+      const mintBuilder = CardanoLib.SingleMintBuilder.new(mintAssets)
       switch (script.language) {
         case "Native":
           this.__txBuilder.add_mint(
             mintBuilder.native_script(
-              CML.NativeScript.from_cbor_hex(script.script),
-              CML.NativeScriptWitnessInfo.assume_signature_count()
+              CardanoLib.NativeScript.from_cbor_hex(script.script),
+              CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
             )
           )
           break
@@ -310,7 +311,7 @@ export class TxBuilder {
           this.__txBuilder.add_mint(
             mintBuilder.plutus_script(
               utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-              CML.Ed25519KeyHashList.new()
+              CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
             )
           )
           break
@@ -327,11 +328,10 @@ export class TxBuilder {
    */
   addMetadataString = (label: number, metadata: CW3Types.Json) => {
     this.queue.push(async () => {
-      const metadatum = CML.TransactionMetadatum.new_text(JSON.stringify(metadata))
-      const metadataBuilder = CML.Metadata.new()
+      const metadatum = CardanoLib.TransactionMetadatum.new_text(JSON.stringify(metadata))
+      const metadataBuilder = CardanoLib.Metadata.new()
       metadataBuilder.set(BigInt(label), metadatum)
-      const aux = CML.AuxiliaryData.new()
-      aux.add_metadata(metadataBuilder)
+      const aux = CardanoLib.AuxiliaryData.new(metadataBuilder)
       this.__txBuilder.add_auxiliary_data(aux)
     })
     return this
@@ -346,11 +346,10 @@ export class TxBuilder {
    */
   addMetadataJson = (label: number, metadata: CW3Types.Json, conversion: 0 | 1 | 2 = 0) => {
     this.queue.push(async () => {
-      const metadatum = CML.encode_json_str_to_metadatum(JSON.stringify(metadata), conversion)
-      const metadataBuilder = CML.Metadata.new()
+      const metadatum = CardanoLib.encode_json_str_to_metadatum(JSON.stringify(metadata), conversion)
+      const metadataBuilder = CardanoLib.Metadata.new()
       metadataBuilder.set(BigInt(label), metadatum)
-      const aux = CML.AuxiliaryData.new()
-      aux.add_metadata(metadataBuilder)
+      const aux = CardanoLib.AuxiliaryData.new(metadataBuilder)
       this.__txBuilder.add_auxiliary_data(aux)
     })
     return this
@@ -378,8 +377,8 @@ export class TxBuilder {
       this.queue.push(async () => {
         const { stakingCred } = utils.address.getCredentials(rewardAddress)
         if (!stakingCred) throw new Error("Invalid address for rewards withdrawal (no staking credential)")
-        const withdrawBuilder = CML.SingleWithdrawalBuilder.new(
-          CML.RewardAddress.from_address(CML.Address.from_bech32(rewardAddress)),
+        const withdrawBuilder = CardanoLib.SingleWithdrawalBuilder.new(
+          CardanoLib.RewardAddress.from_address(CardanoLib.Address.from_bech32(rewardAddress)),
           amount
         )
         switch (stakingCred.type) {
@@ -398,8 +397,8 @@ export class TxBuilder {
               case "Native":
                 this.__txBuilder.add_withdrawal(
                   withdrawBuilder.native_script(
-                    CML.NativeScript.from_cbor_hex(script.script),
-                    CML.NativeScriptWitnessInfo.assume_signature_count()
+                    CardanoLib.NativeScript.from_cbor_hex(script.script),
+                    CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
               case "PlutusV1":
@@ -413,7 +412,7 @@ export class TxBuilder {
                 this.__txBuilder.add_withdrawal(
                   withdrawBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CML.Ed25519KeyHashList.new()
+                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
                   )
                 )
                 break
@@ -438,9 +437,9 @@ export class TxBuilder {
         if (!stakingCred) throw new Error("Invalid address for rewards delegation (no staking credential)")
         switch (stakingCred.type) {
           case "key": {
-            const credential = CML.Credential.new_pub_key(CML.Ed25519KeyHash.from_hex(stakingCred.hash))
-            const certificateBuilder = CML.SingleCertificateBuilder.new(
-              CML.Certificate.new_stake_delegation(credential, CML.Ed25519KeyHash.from_bech32(poolId))
+            const credential = CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
+            const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+              CardanoLib.Certificate.new(2n, credential, CardanoLib.Ed25519KeyHash.from_bech32(poolId).to_raw_bytes())
             )
             this.__txBuilder.add_cert(certificateBuilder.payment_key())
             break
@@ -452,16 +451,16 @@ export class TxBuilder {
                 "Script is required for stake.delegateTo() method. Attach script with attachScript() or readFrom() method"
               )
             }
-            const credential = CML.Credential.new_script(CML.ScriptHash.from_hex(stakingCred.hash))
-            const certificateBuilder = CML.SingleCertificateBuilder.new(
-              CML.Certificate.new_stake_delegation(credential, CML.Ed25519KeyHash.from_bech32(poolId))
+            const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+              CardanoLib.Certificate.new(2n, credential, CardanoLib.Ed25519KeyHash.from_bech32(poolId).to_raw_bytes())
             )
             switch (script.language) {
               case "Native":
                 this.__txBuilder.add_cert(
                   certificateBuilder.native_script(
-                    CML.NativeScript.from_cbor_hex(script.script),
-                    CML.NativeScriptWitnessInfo.assume_signature_count()
+                    CardanoLib.NativeScript.from_cbor_hex(script.script),
+                    CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
               case "PlutusV1":
@@ -475,7 +474,7 @@ export class TxBuilder {
                 this.__txBuilder.add_cert(
                   certificateBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CML.Ed25519KeyHashList.new()
+                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
                   )
                 )
                 break
@@ -497,9 +496,9 @@ export class TxBuilder {
         if (!stakingCred) throw new Error("Invalid address for rewards withdrawal (no staking credential)")
         const credential =
           stakingCred.type === "key"
-            ? CML.Credential.new_pub_key(CML.Ed25519KeyHash.from_hex(stakingCred.hash))
-            : CML.Credential.new_script(CML.ScriptHash.from_hex(stakingCred.hash))
-        const certificateBuilder = CML.SingleCertificateBuilder.new(CML.Certificate.new_stake_registration(credential))
+            ? CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
+            : CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+        const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(CardanoLib.Certificate.new(0n, credential))
         this.__txBuilder.add_cert(certificateBuilder.skip_witness())
       })
       return this
@@ -517,9 +516,9 @@ export class TxBuilder {
         if (!stakingCred) throw new Error("Invalid address for rewards deregistration (no staking credential)")
         switch (stakingCred.type) {
           case "key": {
-            const credential = CML.Credential.new_pub_key(CML.Ed25519KeyHash.from_hex(stakingCred.hash))
-            const certificateBuilder = CML.SingleCertificateBuilder.new(
-              CML.Certificate.new_stake_deregistration(credential)
+            const credential = CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
+            const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+              CardanoLib.Certificate.new(1n, credential)
             )
             this.__txBuilder.add_cert(certificateBuilder.payment_key())
             break
@@ -531,16 +530,16 @@ export class TxBuilder {
                 "Script is required for stake.deregister() method. Attach script with attachScript() or readFrom() method"
               )
             }
-            const credential = CML.Credential.new_script(CML.ScriptHash.from_hex(stakingCred.hash))
-            const certificateBuilder = CML.SingleCertificateBuilder.new(
-              CML.Certificate.new_stake_deregistration(credential)
+            const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+              CardanoLib.Certificate.new(1n, credential)
             )
             switch (script.language) {
               case "Native":
                 this.__txBuilder.add_cert(
                   certificateBuilder.native_script(
-                    CML.NativeScript.from_cbor_hex(script.script),
-                    CML.NativeScriptWitnessInfo.assume_signature_count()
+                    CardanoLib.NativeScript.from_cbor_hex(script.script),
+                    CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
               case "PlutusV1":
@@ -554,7 +553,7 @@ export class TxBuilder {
                 this.__txBuilder.add_cert(
                   certificateBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CML.Ed25519KeyHashList.new()
+                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
                   )
                 )
                 break
@@ -582,9 +581,9 @@ export class TxBuilder {
 
         switch (stakingCred.type) {
           case "key": {
-            const credential = CML.Credential.new_pub_key(CML.Ed25519KeyHash.from_hex(stakingCred.hash))
-            const certificateBuilder = CML.SingleCertificateBuilder.new(
-              CML.Certificate.new_vote_deleg_cert(credential, drepInstance)
+            const credential = CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
+            const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+              CardanoLib.Certificate.new(7n, credential, drepInstance)
             )
             this.__txBuilder.add_cert(certificateBuilder.payment_key())
             break
@@ -596,16 +595,16 @@ export class TxBuilder {
                 "Script is required for governance.delegateToDRep() method. Attach script with attachScript() or readFrom() method"
               )
             }
-            const credential = CML.Credential.new_script(CML.ScriptHash.from_hex(stakingCred.hash))
-            const certificateBuilder = CML.SingleCertificateBuilder.new(
-              CML.Certificate.new_vote_deleg_cert(credential, drepInstance)
+            const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+              CardanoLib.Certificate.new(7n, credential, drepInstance)
             )
             switch (script.language) {
               case "Native":
                 this.__txBuilder.add_cert(
                   certificateBuilder.native_script(
-                    CML.NativeScript.from_cbor_hex(script.script),
-                    CML.NativeScriptWitnessInfo.assume_signature_count()
+                    CardanoLib.NativeScript.from_cbor_hex(script.script),
+                    CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
               case "PlutusV1":
@@ -619,7 +618,7 @@ export class TxBuilder {
                 this.__txBuilder.add_cert(
                   certificateBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CML.Ed25519KeyHashList.new()
+                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
                   )
                 )
                 break
@@ -634,20 +633,21 @@ export class TxBuilder {
       this.queue.push(async () => {
         const { stakingCred } = utils.address.getCredentials(rewardAddress)
         const drepAnchorInstance = drepAnchor
-          ? CML.Anchor.new(
-              CML.Url.from_cbor_hex(utils.misc.fromStringToHex(drepAnchor.url)),
-              CML.AnchorDocHash.from_hex(drepAnchor.dataHash)
+          ? CardanoLib.Anchor.new(
+              CardanoLib.Url.new(drepAnchor.url),
+              CardanoLib.AnchorDocHash.from_hex(drepAnchor.dataHash)
             )
           : undefined
 
         switch (stakingCred.type) {
           case "key": {
-            const credential = CML.Credential.new_pub_key(CML.Ed25519KeyHash.from_hex(stakingCred.hash))
-            const certificateBuilder = CML.SingleCertificateBuilder.new(
-              CML.Certificate.new_reg_drep_cert(
+            const credential = CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
+            const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+              CardanoLib.Certificate.new(
+                14n,
                 credential,
                 this.cw3.__config.protocolParams.drepDeposit,
-                drepAnchorInstance
+                drepAnchorInstance ?? null
               )
             )
             this.__txBuilder.add_cert(certificateBuilder.payment_key())
@@ -660,20 +660,21 @@ export class TxBuilder {
                 "Script is required for governance.registerDRep() method. Attach script with attachScript() or readFrom() method"
               )
             }
-            const credential = CML.Credential.new_script(CML.ScriptHash.from_hex(stakingCred.hash))
-            const certificateBuilder = CML.SingleCertificateBuilder.new(
-              CML.Certificate.new_reg_drep_cert(
+            const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+              CardanoLib.Certificate.new(
+                14n,
                 credential,
                 this.cw3.__config.protocolParams.drepDeposit,
-                drepAnchorInstance
+                drepAnchorInstance ?? null
               )
             )
             switch (script.language) {
               case "Native":
                 this.__txBuilder.add_cert(
                   certificateBuilder.native_script(
-                    CML.NativeScript.from_cbor_hex(script.script),
-                    CML.NativeScriptWitnessInfo.assume_signature_count()
+                    CardanoLib.NativeScript.from_cbor_hex(script.script),
+                    CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
               case "PlutusV1":
@@ -687,7 +688,7 @@ export class TxBuilder {
                 this.__txBuilder.add_cert(
                   certificateBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CML.Ed25519KeyHashList.new()
+                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
                   )
                 )
                 break
@@ -704,9 +705,9 @@ export class TxBuilder {
 
         switch (stakingCred.type) {
           case "key": {
-            const credential = CML.Credential.new_pub_key(CML.Ed25519KeyHash.from_hex(stakingCred.hash))
-            const certificateBuilder = CML.SingleCertificateBuilder.new(
-              CML.Certificate.new_unreg_drep_cert(credential, this.cw3.__config.protocolParams.drepDeposit)
+            const credential = CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
+            const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+              CardanoLib.Certificate.new(15n, credential, this.cw3.__config.protocolParams.drepDeposit)
             )
             this.__txBuilder.add_cert(certificateBuilder.payment_key())
             break
@@ -718,16 +719,16 @@ export class TxBuilder {
                 "Script is required for governance.registerDRep() method. Attach script with attachScript() or readFrom() method"
               )
             }
-            const credential = CML.Credential.new_script(CML.ScriptHash.from_hex(stakingCred.hash))
-            const certificateBuilder = CML.SingleCertificateBuilder.new(
-              CML.Certificate.new_unreg_drep_cert(credential, this.cw3.__config.protocolParams.drepDeposit)
+            const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+              CardanoLib.Certificate.new(15n, credential, this.cw3.__config.protocolParams.drepDeposit)
             )
             switch (script.language) {
               case "Native":
                 this.__txBuilder.add_cert(
                   certificateBuilder.native_script(
-                    CML.NativeScript.from_cbor_hex(script.script),
-                    CML.NativeScriptWitnessInfo.assume_signature_count()
+                    CardanoLib.NativeScript.from_cbor_hex(script.script),
+                    CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
               case "PlutusV1":
@@ -741,7 +742,7 @@ export class TxBuilder {
                 this.__txBuilder.add_cert(
                   certificateBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CML.Ed25519KeyHashList.new()
+                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
                   )
                 )
                 break
@@ -756,14 +757,17 @@ export class TxBuilder {
       this.queue.push(async () => {
         const { stakingCred } = utils.address.getCredentials(rewardAddress)
         const drepAnchorInstance = drepAnchor
-          ? CML.Anchor.new(CML.Url.from_json(drepAnchor.url), CML.AnchorDocHash.from_hex(drepAnchor.dataHash))
+          ? CardanoLib.Anchor.new(
+              CardanoLib.Url.new(drepAnchor.url),
+              CardanoLib.AnchorDocHash.from_hex(drepAnchor.dataHash)
+            )
           : undefined
 
         switch (stakingCred.type) {
           case "key": {
-            const credential = CML.Credential.new_pub_key(CML.Ed25519KeyHash.from_hex(stakingCred.hash))
-            const certificateBuilder = CML.SingleCertificateBuilder.new(
-              CML.Certificate.new_update_drep_cert(credential, drepAnchorInstance)
+            const credential = CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
+            const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+              CardanoLib.Certificate.new(16n, credential, drepAnchorInstance ?? null)
             )
             this.__txBuilder.add_cert(certificateBuilder.payment_key())
             break
@@ -775,16 +779,16 @@ export class TxBuilder {
                 "Script is required for governance.registerDRep() method. Attach script with attachScript() or readFrom() method"
               )
             }
-            const credential = CML.Credential.new_script(CML.ScriptHash.from_hex(stakingCred.hash))
-            const certificateBuilder = CML.SingleCertificateBuilder.new(
-              CML.Certificate.new_update_drep_cert(credential, drepAnchorInstance)
+            const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+              CardanoLib.Certificate.new(16n, credential, drepAnchorInstance ?? null)
             )
             switch (script.language) {
               case "Native":
                 this.__txBuilder.add_cert(
                   certificateBuilder.native_script(
-                    CML.NativeScript.from_cbor_hex(script.script),
-                    CML.NativeScriptWitnessInfo.assume_signature_count()
+                    CardanoLib.NativeScript.from_cbor_hex(script.script),
+                    CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
               case "PlutusV1":
@@ -798,7 +802,7 @@ export class TxBuilder {
                 this.__txBuilder.add_cert(
                   certificateBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CML.Ed25519KeyHashList.new()
+                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
                   )
                 )
                 break
@@ -870,7 +874,7 @@ export class TxBuilder {
       this.__txBuilder = utils.tx.getTxBuilder(this.protocolParams)
       // Set Network ID
       this.__txBuilder.set_network_id(
-        this.cw3.__config.network.type === "mainnet" ? CML.NetworkId.mainnet() : CML.NetworkId.testnet()
+        this.cw3.__config.network.type === "mainnet" ? CardanoLib.NetworkId.mainnet() : CardanoLib.NetworkId.testnet()
       )
       // Set default TTL
       this.__txBuilder.set_ttl(BigInt(utils.time.unixTimeToSlot(Date.now() + TTL * 1000, this.cw3.__config.slotConfig)))
@@ -884,22 +888,24 @@ export class TxBuilder {
     // Set Collateral
     if (
       this.__txBuilder
-        .build_for_evaluation(CML.ChangeSelectionAlgo.Default, CML.Address.from_bech32(this.changeAddress))
-        .draft_tx()
-        .witness_set()
-        .redeemers()
+        .build_for_evaluation(
+          CardanoLib.ChangeSelectionAlgo.Default,
+          CardanoLib.Address.from_bech32(this.changeAddress)
+        )
+        .build()
+        .len() > 0
     ) {
       // TODO: Select up to maxCollateralInputs collaterals
       const collateral = [...this.inputs.values()].find((utxo) => utxo.value > 5_000_000)
       if (!collateral) throw new Error("Suitable collateral > 5 ADA not found")
       // Add Collateral
       this.__txBuilder.add_collateral(
-        CML.SingleInputBuilder.from_transaction_unspent_output(utils.tx.utxoToCore(collateral)).payment_key()
+        CardanoLib.SingleInputBuilder.from_transaction_unspent_output(utils.tx.utxoToCore(collateral)).payment_key()
       )
       // Add Collateral Return
       this.__txBuilder.set_collateral_return(
-        CML.TransactionOutputBuilder.new()
-          .with_address(CML.Address.from_bech32(this.changeAddress))
+        CardanoLib.TransactionOutputBuilder.new()
+          .with_address(CardanoLib.Address.from_bech32(this.changeAddress))
           .next()
           .with_value(utils.tx.assetsToValue(collateral.value - BigInt(3_000_000), collateral.assets))
           .build()
@@ -911,46 +917,44 @@ export class TxBuilder {
     if (this.coinSelection !== -1) this.__txBuilder.select_utxos(this.coinSelection)
 
     // Evaluate TX phase two execution cost and set ex_units
-    const draftTx = this.__txBuilder
-      .build_for_evaluation(CML.ChangeSelectionAlgo.Default, CML.Address.from_bech32(this.changeAddress))
-      .draft_tx()
-    const draftTxRedeemers = draftTx.witness_set().redeemers()
-    if (draftTxRedeemers) {
+    const evaluation = this.__txBuilder.build_for_evaluation(
+      CardanoLib.ChangeSelectionAlgo.Default,
+      CardanoLib.Address.from_bech32(this.changeAddress)
+    )
+    if (evaluation.build().len() > 0) {
       if (!this.remoteTxEvaluate) {
         const costModels = utils.tx.createCostModels(this.protocolParams.costModels)
         const slotConfig = this.cw3.__config.slotConfig
-        const zeroRedeemers = CML.LegacyRedeemerList.new()
-        for (let i = 0; i < draftTxRedeemers.as_arr_legacy_redeemer()!.len(); i++) {
-          const redeemer = draftTxRedeemers.as_arr_legacy_redeemer()!.get(i)
-          const zeroRedeemer = CML.LegacyRedeemer.new(
-            redeemer.tag(),
-            redeemer.index(),
-            redeemer.data(),
-            CML.ExUnits.new(0n, 0n)
-          )
-          zeroRedeemers.add(zeroRedeemer)
-        }
-        const draftTxWitnesses = draftTx.witness_set()
-        draftTxWitnesses.set_redeemers(CML.Redeemers.new_arr_legacy_redeemer(zeroRedeemers))
-        const newTx = CML.Transaction.new(draftTx.body(), draftTxWitnesses, true, draftTx.auxiliary_data())
         const allInputs = [...this.inputs.values(), ...this.readInputs.values(), ...this.collectInputs.values()]
-        const inputs = allInputs.map((utxo) => utils.tx.utxoToTransactionInput(utxo).to_cbor_bytes())
-        const outputs = allInputs.map((utxo) => utils.tx.utxoToTransactionOutput(utxo).to_cbor_bytes())
-        const uplcEvaluatedRedeemers = UPLC.eval_phase_two_raw(
-          newTx.to_cbor_bytes(),
-          inputs,
-          outputs,
+        const uplcEvaluatedRedeemers = UPLC.evaluatePhaseTwoRaw(
+          evaluation.draft_tx().to_cbor_bytes(),
+          allInputs.map(
+            (utxo) =>
+              [
+                utils.tx.utxoToTransactionInput(utxo).to_cbor_bytes(),
+                utils.tx.utxoToTransactionOutput(utxo).to_cbor_bytes(),
+              ] as const
+          ),
           costModels.to_cbor_bytes(),
-          this.protocolParams.maxTxExSteps,
-          this.protocolParams.maxTxExMem,
-          BigInt(slotConfig.zeroTime),
-          BigInt(slotConfig.zeroSlot),
-          slotConfig.slotDuration
+          [this.protocolParams.maxTxExSteps, this.protocolParams.maxTxExMem],
+          [BigInt(slotConfig.zeroTime), BigInt(slotConfig.zeroSlot), BigInt(slotConfig.slotDuration)],
+          this.protocolParams.protocolMajorVersion,
+          true
         )
-        for (const evaluatedRedeemer of uplcEvaluatedRedeemers) {
-          const redeemer = CML.LegacyRedeemer.from_cbor_bytes(evaluatedRedeemer)
-          const exUnits = CML.ExUnits.new(redeemer.ex_units().mem(), redeemer.ex_units().steps())
-          this.__txBuilder.set_exunits(CML.RedeemerWitnessKey.new(redeemer.tag(), redeemer.index()), exUnits)
+        for (const [redeemerBytes, result] of uplcEvaluatedRedeemers) {
+          const redeemer = decodeCbor(redeemerBytes)
+          if (
+            redeemer.kind !== "array" ||
+            redeemer.values[0]?.kind !== "unsigned" ||
+            redeemer.values[1]?.kind !== "unsigned"
+          ) {
+            throw new Error("UPLC evaluator returned an invalid redeemer")
+          }
+          const key = CardanoLib.RedeemerWitnessKey.new(
+            Number(redeemer.values[0].value) as CardanoLib.RedeemerTag,
+            redeemer.values[1].value
+          )
+          this.__txBuilder.set_exunits(key, CardanoLib.ExUnits.new(result.cost.memory, result.cost.cpu))
         }
       } else {
         throw new Error("Remote TX evaluation is not supported yet")
@@ -958,7 +962,7 @@ export class TxBuilder {
     }
 
     // Final calculations
-    this.__txBuilder.add_change_if_needed(CML.Address.from_bech32(this.changeAddress), true)
+    this.__txBuilder.add_change_if_needed(CardanoLib.Address.from_bech32(this.changeAddress), true)
 
     return this
   }
@@ -972,7 +976,7 @@ export class TxBuilder {
     return new TxFinalizer(
       this.cw3,
       this.__txBuilder
-        .build(CML.ChangeSelectionAlgo.Default, CML.Address.from_bech32(this.changeAddress))
+        .build(CardanoLib.ChangeSelectionAlgo.Default, CardanoLib.Address.from_bech32(this.changeAddress))
         .build_unchecked()
         .to_cbor_hex()
     )

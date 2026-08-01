@@ -1,4 +1,4 @@
-import { CardanoWeb3, CML, utils, CW3Types } from "@"
+import { CardanoWeb3, CardanoLib, utils, CW3Types } from "@"
 import { Connector } from "./connector"
 
 export class Account {
@@ -119,9 +119,9 @@ export class Account {
 
     const account = new Account()
     const mainAddress = (await connector.getUsedAddresses())?.[0] || (await connector.getUnusedAddresses())?.[0]
-    const paymentAddress = CML.Address.from_hex(mainAddress).to_bech32()
+    const paymentAddress = CardanoLib.Address.from_hex(mainAddress).to_bech32()
     const { paymentCred, stakingCred } = utils.address.getCredentials(paymentAddress)
-    const stakingAddress = CML.Address.from_hex((await connector.getRewardAddresses())[0]).to_bech32()
+    const stakingAddress = CardanoLib.Address.from_hex((await connector.getRewardAddresses())[0]).to_bech32()
 
     account.cw3 = cw3
     account.__config.accountPath = undefined
@@ -277,8 +277,8 @@ export class Account {
     // const getUtxosFromConnector = async (): Promise<CW3Types.Utxo[]> => {
     //   const utxosRaw = await this.__config.connector.getUtxos()
     //   const utxos = utxosRaw.map((utxoRaw) => {
-    //     const utxo = this.cw3.CML.TransactionUnspentOutput.from_cbor_hex(utxoRaw)
-    //     const input = this.cw3.CML.SingleInputBuilder.from_transaction_unspent_output(utxo)
+    //     const utxo = this.cw3.CardanoLib.TransactionUnspentOutput.from_cbor_hex(utxoRaw)
+    //     const input = this.cw3.CardanoLib.SingleInputBuilder.from_transaction_unspent_output(utxo)
     //     console.log(utxo)
     //     console.log(input)
     //     return {

@@ -1,22 +1,21 @@
-import { CML, CW3Types } from "@"
+import { bytesToHex, decodeCbor, type CborValue } from "@xray-network/xray-cardano-lib-core"
+import { CardanoLib, CW3Types } from "@"
 import { fromHex } from "./misc"
 import { getShelleyOrByronAddress, getCredentials } from "./address"
 import { scriptToScriptRef } from "./script"
 
-export const createCostModels = (costModels: CW3Types.CostModels): CML.CostModels => {
-  return CML.CostModels.from_json(
-    JSON.stringify({
-      0: costModels.PlutusV1,
-      1: costModels.PlutusV2,
-      2: costModels.PlutusV3,
-    })
-  )
+export const createCostModels = (costModels: CW3Types.CostModels): CardanoLib.CostModels => {
+  const models = CardanoLib.MapU64ToArrI64.new()
+  models.insert(0n, BigInt64Array.from(costModels.PlutusV1.map(BigInt)))
+  models.insert(1n, BigInt64Array.from(costModels.PlutusV2.map(BigInt)))
+  models.insert(2n, BigInt64Array.from(costModels.PlutusV3.map(BigInt)))
+  return CardanoLib.CostModels.new(models)
 }
 
-export const getTxBuilder = (protocolParams: CW3Types.ProtocolParameters): CML.TransactionBuilder => {
+export const getTxBuilder = (protocolParams: CW3Types.ProtocolParameters): CardanoLib.TransactionBuilder => {
   const pp = protocolParams
-  const txBuilderConfig = CML.TransactionBuilderConfigBuilder.new()
-    .fee_algo(CML.LinearFee.new(BigInt(pp.minFeeA), BigInt(pp.minFeeB), BigInt(pp.minFeeRefScriptCostPerByte)))
+  const txBuilderConfig = CardanoLib.TransactionBuilderConfigBuilder.new()
+    .fee_algo(CardanoLib.LinearFee.new(BigInt(pp.minFeeA), BigInt(pp.minFeeB), BigInt(pp.minFeeRefScriptCostPerByte)))
     .pool_deposit(BigInt(pp.poolDeposit))
     .key_deposit(BigInt(pp.keyDeposit))
     .coins_per_utxo_byte(BigInt(pp.coinsPerUtxoByte))
@@ -25,43 +24,43 @@ export const getTxBuilder = (protocolParams: CW3Types.ProtocolParameters): CML.T
     .collateral_percentage(pp.collateralPercentage)
     .max_collateral_inputs(pp.maxCollateralInputs)
     .ex_unit_prices(
-      CML.ExUnitPrices.new(
-        CML.Rational.new(BigInt(pp.priceMem * 100_000_000), 100_000_000n),
-        CML.Rational.new(BigInt(pp.priceStep * 100_000_000), 100_000_000n)
+      CardanoLib.ExUnitPrices.new(
+        CardanoLib.Rational.new(BigInt(pp.priceMem * 100_000_000), 100_000_000n),
+        CardanoLib.Rational.new(BigInt(pp.priceStep * 100_000_000), 100_000_000n)
       )
     )
     .prefer_pure_change(true)
     .cost_models(createCostModels(pp.costModels))
     .build()
 
-  return CML.TransactionBuilder.new(txBuilderConfig)
+  return CardanoLib.TransactionBuilder.new(txBuilderConfig)
 }
 
-export const assetsToValue = (value?: CW3Types.Value, assets?: CW3Types.Asset[]): CML.Value => {
-  const multiAsset = CML.MultiAsset.new()
+export const assetsToValue = (value?: CW3Types.Value, assets?: CW3Types.Asset[]): CardanoLib.Value => {
+  const multiAsset = CardanoLib.MultiAsset.new()
 
   if (assets) {
     for (const asset of assets) {
-      const policyId = CML.ScriptHash.from_hex(asset.policyId)
-      const assetName = CML.AssetName.from_raw_bytes(fromHex(asset.assetName || ""))
-      const policyAssets = multiAsset.get_assets(policyId) ?? CML.MapAssetNameToCoin.new()
+      const policyId = CardanoLib.ScriptHash.from_hex(asset.policyId)
+      const assetName = CardanoLib.AssetName.from_raw_bytes(fromHex(asset.assetName || ""))
+      const policyAssets = multiAsset.get_assets(policyId) ?? CardanoLib.MapAssetNameToCoin.new()
       policyAssets.insert(assetName, asset.quantity)
       multiAsset.insert_assets(policyId, policyAssets)
     }
   }
 
-  return CML.Value.new(value || 0n, multiAsset)
+  return CardanoLib.Value.new(value || 0n, multiAsset)
 }
 
-export const utxoToCore = (utxo: CW3Types.Utxo): CML.TransactionUnspentOutput => {
-  return CML.TransactionUnspentOutput.new(utxoToTransactionInput(utxo), utxoToTransactionOutput(utxo))
+export const utxoToCore = (utxo: CW3Types.Utxo): CardanoLib.TransactionUnspentOutput => {
+  return CardanoLib.TransactionUnspentOutput.new(utxoToTransactionInput(utxo), utxoToTransactionOutput(utxo))
 }
 
-export const utxoToTransactionInput = (utxo: CW3Types.Utxo): CML.TransactionInput => {
-  return CML.TransactionInput.new(CML.TransactionHash.from_hex(utxo.transaction.id), BigInt(utxo.index))
+export const utxoToTransactionInput = (utxo: CW3Types.Utxo): CardanoLib.TransactionInput => {
+  return CardanoLib.TransactionInput.new(CardanoLib.TransactionHash.from_hex(utxo.transaction.id), BigInt(utxo.index))
 }
 
-export const utxoToTransactionOutput = (utxo: CW3Types.Utxo): CML.TransactionOutput => {
+export const utxoToTransactionOutput = (utxo: CW3Types.Utxo): CardanoLib.TransactionOutput => {
   const value = assetsToValue(utxo.value, utxo.assets)
   const outputBuilder = outputToTransactionOutputBuilder(
     {
@@ -84,18 +83,18 @@ export const outputToTransactionOutputBuilder = (
   output: CW3Types.Output,
   datum?: CW3Types.DatumOutput,
   script?: CW3Types.Script
-): CML.TransactionOutputBuilder => {
+): CardanoLib.TransactionOutputBuilder => {
   const address = getShelleyOrByronAddress(output.address)
-  let outputBuilder = CML.TransactionOutputBuilder.new().with_address(address)
+  let outputBuilder = CardanoLib.TransactionOutputBuilder.new().with_address(address)
   if (datum) {
     if (datum.type === "inline") {
-      const data = CML.PlutusData.from_cbor_hex(datum.datum)
-      const datumOption = CML.DatumOption.new_datum(data)
+      const data = CardanoLib.PlutusData.from_cbor_hex(datum.datum)
+      const datumOption = CardanoLib.DatumOption.new(1n, data)
       outputBuilder = outputBuilder.with_data(datumOption)
     }
     if (datum.type === "hash") {
       // TODO: Check if hash datums is set correctly in the UTXO (witness set)
-      const data = CML.PlutusData.from_cbor_hex(datum.datum)
+      const data = CardanoLib.PlutusData.from_cbor_hex(datum.datum)
       outputBuilder = outputBuilder.with_communication_data(data)
     }
   }
@@ -103,24 +102,35 @@ export const outputToTransactionOutputBuilder = (
 }
 
 export const discoverOwnUsedTxKeyHashes = (
-  tx: CML.Transaction,
+  tx: CardanoLib.Transaction,
   ownKeyHashes: string[],
   ownUtxos: CW3Types.Utxo[]
 ): string[] => {
   const usedKeyHashes: string[] = []
-  const body = tx.body()
-  const inputs = body.inputs()
-  const collaterals = body.collateral_inputs()
-  const certs = body.certs()
-  const withdrawals = body.withdrawals()
-  const signers = body.required_signers()
-  const scripts = tx.witness_set().native_scripts()
+  const transaction = decodeCbor(tx.to_cbor_bytes())
+  if (transaction.kind !== "array" || transaction.values[0]?.kind !== "map") {
+    throw new TypeError("Invalid Cardano transaction")
+  }
+  const body = transaction.values[0]
+  const witnesses = transaction.values[1]
+  const bodyField = (field: bigint): CborValue | undefined =>
+    body.entries.find(([key]) => key.kind === "unsigned" && key.value === field)?.[1]
+  const witnessField = (field: bigint): CborValue | undefined =>
+    witnesses?.kind === "map"
+      ? witnesses.entries.find(([key]) => key.kind === "unsigned" && key.value === field)?.[1]
+      : undefined
+  const collectionValues = (value: CborValue | undefined): readonly CborValue[] => {
+    const collection = value?.kind === "tag" && value.tag === 258n ? value.value : value
+    return collection?.kind === "array" ? collection.values : []
+  }
 
-  if (inputs && inputs.len() > 0) {
-    for (let i = 0; i < inputs.len(); i++) {
-      const input = inputs.get(i)
-      const txId = input.transaction_id().to_hex()
-      const txIndex = Number(input.index())
+  for (const inputs of [bodyField(0n), bodyField(13n)]) {
+    for (const input of collectionValues(inputs)) {
+      if (input.kind !== "array" || input.values[0]?.kind !== "bytes" || input.values[1]?.kind !== "unsigned") {
+        continue
+      }
+      const txId = bytesToHex(input.values[0].value)
+      const txIndex = Number(input.values[1].value)
       const utxo = ownUtxos.find((utxo) => utxo.transaction.id === txId && utxo.index === txIndex)
       if (utxo) {
         const { paymentCred } = getCredentials(utxo.address)
@@ -129,118 +139,54 @@ export const discoverOwnUsedTxKeyHashes = (
     }
   }
 
-  if (collaterals && collaterals.len() > 0) {
-    for (let i = 0; i < collaterals.len(); i++) {
-      const input = collaterals.get(i)
-      const txId = input.transaction_id().to_hex()
-      const txIndex = Number(input.index())
-      const utxo = ownUtxos.find((utxo) => utxo.transaction.id === txId && utxo.index === txIndex)
-      if (utxo) {
-        const { paymentCred } = getCredentials(utxo.address)
-        usedKeyHashes.push(paymentCred.hash)
+  for (const certificate of collectionValues(bodyField(4n))) {
+    if (certificate.kind !== "array" || certificate.values[0]?.kind !== "unsigned") continue
+    const kind = Number(certificate.values[0].value)
+    if (kind === 3 && certificate.values[1]?.kind === "array") {
+      const pool = certificate.values[1]
+      if (pool.values[0]?.kind === "bytes") usedKeyHashes.push(bytesToHex(pool.values[0].value))
+      for (const owner of collectionValues(pool.values[6])) {
+        if (owner.kind === "bytes") usedKeyHashes.push(bytesToHex(owner.value))
+      }
+    } else if (kind === 4 && certificate.values[1]?.kind === "bytes") {
+      usedKeyHashes.push(bytesToHex(certificate.values[1].value))
+    } else if (kind !== 0) {
+      const credential = certificate.values[1]
+      if (credential?.kind === "array" && credential.values[1]?.kind === "bytes") {
+        usedKeyHashes.push(bytesToHex(credential.values[1].value))
       }
     }
   }
 
-  if (certs && certs.len() > 0) {
-    for (let i = 0; i < certs.len(); i++) {
-      const cert = certs.get(i)
-      switch (cert.kind()) {
-        case 0:
-          // Not needed for registration
-          break
-        case 1: {
-          const credential = cert.as_stake_deregistration()?.stake_credential()
-          if (credential?.kind() === 0) {
-            usedKeyHashes.push(credential.as_pub_key()?.to_hex())
-          }
-          if (credential?.kind() === 0) {
-            usedKeyHashes.push(credential.as_script()?.to_hex())
-          }
-          break
-        }
-        case 2: {
-          const credential = cert.as_stake_delegation()?.stake_credential()
-          if (credential?.kind() === 0) {
-            usedKeyHashes.push(credential.as_pub_key()?.to_hex())
-          }
-          if (credential?.kind() === 1) {
-            usedKeyHashes.push(credential.as_script()?.to_hex())
-          }
-          break
-        }
-        case 3: {
-          const poolParams = cert.as_pool_registration()?.pool_params()!
-          const owners = poolParams?.pool_owners()
-          if (!owners) break
-          for (let i = 0; i < owners.len(); i++) {
-            const keyHash = owners.get(i).to_hex()
-            usedKeyHashes.push(keyHash)
-          }
-          const operator = poolParams.operator().to_hex()
-          usedKeyHashes.push(operator)
-          break
-        }
-        case 4: {
-          const operator = cert.as_pool_retirement()?.pool().to_hex()
-          usedKeyHashes.push(operator)
-          break
-        }
-        case 6: {
-          const credential = cert.as_unreg_cert()?.stake_credential()
-          if (credential) {
-            usedKeyHashes.push(credential.to_cbor_hex())
-          }
-          break
-        }
-
-        default:
-          break
-      }
+  const withdrawals = bodyField(5n)
+  if (withdrawals?.kind === "map") {
+    for (const [address] of withdrawals.entries) {
+      if (address.kind !== "bytes") continue
+      const credential = CardanoLib.RewardAddress.from_address(
+        CardanoLib.Address.from_raw_bytes(address.value)
+      )?.payment()
+      const hash = credential?.as_pub_key() ?? credential?.as_script()
+      if (hash) usedKeyHashes.push(hash.to_hex())
     }
   }
 
-  if (withdrawals && withdrawals.len() > 0) {
-    const rewardAddresses = withdrawals.keys()
-    for (let i = 0; i < rewardAddresses.len(); i++) {
-      const credential = rewardAddresses.get(i).payment()
-      if (credential.kind() === 0) {
-        usedKeyHashes.push(credential.as_pub_key()?.to_hex())
-      }
-      if (credential.kind() === 1) {
-        usedKeyHashes.push(credential.as_script()?.to_hex())
-      }
-    }
+  for (const signer of collectionValues(bodyField(14n))) {
+    if (signer.kind === "bytes") usedKeyHashes.push(bytesToHex(signer.value))
   }
 
-  if (signers && signers.len() > 0) {
-    for (let i = 0; i < signers.len(); i++) {
-      usedKeyHashes.push(signers.get(i).to_hex())
+  const keyHashesFromScript = (script: CborValue): void => {
+    if (script.kind !== "array" || script.values[0]?.kind !== "unsigned") return
+    const kind = Number(script.values[0].value)
+    if (kind === 0 && script.values[1]?.kind === "bytes") {
+      usedKeyHashes.push(bytesToHex(script.values[1].value))
+      return
+    }
+    const nested = kind === 3 ? script.values[2] : script.values[1]
+    if (kind >= 1 && kind <= 3 && nested?.kind === "array") {
+      nested.values.forEach(keyHashesFromScript)
     }
   }
-
-  function keyHashFromScript(scripts: CML.NativeScriptList) {
-    for (let i = 0; i < scripts.len(); i++) {
-      const script = scripts.get(i)
-      if (script.kind() === 0) {
-        const keyHash = script.as_script_pubkey()?.ed25519_key_hash().to_hex()
-        usedKeyHashes.push(keyHash)
-      }
-      if (script.kind() === 1) {
-        keyHashFromScript(script.as_script_all()!.native_scripts())
-        return
-      }
-      if (script.kind() === 2) {
-        keyHashFromScript(script.as_script_any()!.native_scripts())
-        return
-      }
-      if (script.kind() === 3) {
-        keyHashFromScript(script.as_script_n_of_k()!.native_scripts())
-        return
-      }
-    }
-  }
-  if (scripts && scripts.len() > 0) keyHashFromScript(scripts)
+  collectionValues(witnessField(1n)).forEach(keyHashesFromScript)
 
   return usedKeyHashes.filter((hash) => ownKeyHashes.includes(hash))
 }
