@@ -1,4 +1,4 @@
-import { CardanoLib, CW3Types } from "@"
+import { CardanoLib, CW3Types } from "../index.js"
 import { Buffer } from "buffer"
 
 export const harden = (num: number): number => {
@@ -38,13 +38,7 @@ export const decryptDataWithPass = (data: string, password: string): string => {
 }
 
 export const randomBytes = (length: number): Uint8Array => {
-  if (typeof window !== "undefined" && window.crypto) {
-    const bytes = new Uint8Array(length)
-    window.crypto.getRandomValues(bytes)
-    return bytes
-  } else {
-    // TODO: avoid require warning
-    const { randomBytes } = require("crypto")
-    return Uint8Array.from(randomBytes(length))
-  }
+  const bytes = new Uint8Array(length)
+  globalThis.crypto.getRandomValues(bytes)
+  return bytes
 }

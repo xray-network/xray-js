@@ -1,5 +1,6 @@
-import { expect, it, describe } from "vitest"
-import { CardanoWeb3, PlutusData, PlutusConstr, utils } from "@"
+import assert from "node:assert/strict"
+import { describe, it } from "node:test"
+import { CardanoWeb3, PlutusData, PlutusConstr, utils } from "@xray-network/xray-js-cardano"
 
 describe("Data", async () => {
   const web3 = new CardanoWeb3()
@@ -23,7 +24,7 @@ describe("Data", async () => {
 
     const datum: MyDatum = 1234n
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
-    expect(datum).toEqual(newDatum)
+    assert.deepEqual(datum, newDatum)
   })
 
   it("Roundtrip data string", () => {
@@ -42,7 +43,7 @@ describe("Data", async () => {
 
     const datum: MyDatum = "31313131" //hex
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
-    expect(datum).toEqual(newDatum)
+    assert.deepEqual(datum, newDatum)
   })
 
   it("Roundtrip data boolean", () => {
@@ -61,7 +62,7 @@ describe("Data", async () => {
 
     const datum: MyDatum = true
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
-    expect(datum).toEqual(newDatum)
+    assert.deepEqual(datum, newDatum)
   })
 
   it("Roundtrip data object", () => {
@@ -92,7 +93,7 @@ describe("Data", async () => {
       myVariableB: 5555n,
     }
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
-    expect(datum).toEqual(newDatum)
+    assert.deepEqual(datum, newDatum)
 
     const datumNullable: MyDatum = {
       myVariableA: "313131",
@@ -100,7 +101,7 @@ describe("Data", async () => {
     }
     const newDatumNullable = PlutusData.from(PlutusData.to(datumNullable, MyDatum), MyDatum)
 
-    expect(datumNullable).toEqual(newDatumNullable)
+    assert.deepEqual(datumNullable, newDatumNullable)
   })
 
   it("Roundtrip data array", () => {
@@ -122,7 +123,7 @@ describe("Data", async () => {
 
     const datum: MyDatum = [45n, 100n, 9994n, 4281958210985912095n]
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
-    expect(datum).toEqual(newDatum)
+    assert.deepEqual(datum, newDatum)
   })
 
   it("Roundtrip data map", () => {
@@ -144,7 +145,7 @@ describe("Data", async () => {
       [249218490182n, "32323232"],
     ])
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
-    expect(datum).toEqual(newDatum)
+    assert.deepEqual(datum, newDatum)
   })
 
   it("Roundtrip data enum", () => {
@@ -174,11 +175,11 @@ describe("Data", async () => {
 
     const datumLeft: MyDatum = "Left"
     const newDatumLeft = PlutusData.from(PlutusData.to(datumLeft, MyDatum), MyDatum)
-    expect(datumLeft as MyDatum).toEqual(newDatumLeft)
+    assert.deepEqual(datumLeft as MyDatum, newDatumLeft)
 
     const datumUp: MyDatum = { Up: ["313131"] }
     const newDatumUp = PlutusData.from(PlutusData.to(datumUp, MyDatum), MyDatum)
-    expect(datumUp as MyDatum).toEqual(newDatumUp)
+    assert.deepEqual(datumUp as MyDatum, newDatumUp)
   })
 
   it("Roundtrip data enum with named args", () => {
@@ -207,12 +208,13 @@ describe("Data", async () => {
 
     const datumLeft: MyDatum = "Left"
     const newDatumLeft = PlutusData.from(PlutusData.to(datumLeft, MyDatum), MyDatum)
-    expect(datumLeft as MyDatum).toEqual(newDatumLeft)
+    assert.deepEqual(datumLeft as MyDatum, newDatumLeft)
 
     const datumUp: MyDatum = { Up: { x: 100n, y: "3131" } }
     const newDatumUp = PlutusData.from(PlutusData.to(datumUp, MyDatum), MyDatum)
-    expect(datumUp as MyDatum).toEqual(newDatumUp)
-    expect(PlutusData.to({ Up: { x: 100n, y: "3131" } }, MyDatum)).toEqual(
+    assert.deepEqual(datumUp as MyDatum, newDatumUp)
+    assert.deepEqual(
+      PlutusData.to({ Up: { x: 100n, y: "3131" } }, MyDatum),
       PlutusData.to({ Up: { y: "3131", x: 100n } }, MyDatum)
     )
   })
@@ -230,7 +232,7 @@ describe("Data", async () => {
     const datum = new PlutusConstr(0, [])
     const schema = PlutusData.Any()
     const newDatum = PlutusData.from(PlutusData.to(datum, schema), schema)
-    expect(datum).toEqual(newDatum)
+    assert.deepEqual(datum, newDatum)
   })
 
   it("Roundtrip data void", () => {
@@ -247,7 +249,7 @@ describe("Data", async () => {
     type MyDatum = PlutusData.Static<typeof MyDatum>
     const datum: MyDatum = void 0
     const newDatum = PlutusData.from(PlutusData.to(void 0, MyDatum), MyDatum)
-    expect(datum).toEqual(newDatum)
+    assert.deepEqual(datum, newDatum)
   })
 
   it("Roundtrip data tuple", () => {
@@ -265,7 +267,7 @@ describe("Data", async () => {
     const MyDatum = MyDatumSchema
     const datum: MyDatum = [123n, "313131"]
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
-    expect(datum).toEqual(newDatum)
+    assert.deepEqual(datum, newDatum)
   })
 
   it("Complex data structure", () => {
@@ -313,7 +315,7 @@ describe("Data", async () => {
       ],
     }
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
-    expect(datum as MyDatum).toEqual(newDatum)
+    assert.deepEqual(datum as MyDatum, newDatum)
   })
 
   it("Apply params to script", () => {
@@ -324,9 +326,9 @@ describe("Data", async () => {
         type: "PlutusV2",
         script: applyParamsToScript(script, [10n], PlutusData.Tuple([PlutusData.Integer()])),
       }
-      expect(mintingPolicy).toBeTruthy()
+      assert.ok(mintingPolicy)
     } catch (e) {
-      expect(false).toBeTruthy()
+      assert.ok(false)
     }
     try {
       const mintingPolicy = {
@@ -337,18 +339,18 @@ describe("Data", async () => {
           PlutusData.Tuple([PlutusData.Integer()])
         ),
       }
-      expect(!mintingPolicy).toBeTruthy()
+      assert.ok(!mintingPolicy)
     } catch (e) {
-      expect(true).toBeTruthy()
+      assert.ok(true)
     }
     try {
       const mintingPolicy = {
         type: "PlutusV2",
         script: applyParamsToScript(script, [10n]),
       }
-      expect(mintingPolicy).toBeTruthy()
+      assert.ok(mintingPolicy)
     } catch (e) {
-      expect(false).toBeTruthy()
+      assert.ok(false)
     }
   })
 })

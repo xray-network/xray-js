@@ -9,8 +9,8 @@ import {
   type ClientSubmitTxPayload,
   type ClientSignAndSubmitTxPayload,
   type ClientSignDataPayload,
-} from "../protocol"
-import { getHostWindow, getRequestId } from "./messaging"
+} from "../protocol/index.js"
+import { getHostWindow, getRequestId } from "./messaging.js"
 
 /**
  * Post a message to the host window and (optionally) resolve when a correlated

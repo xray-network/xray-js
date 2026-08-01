@@ -4,41 +4,54 @@
   "description": "Cross-chain XRAY Mini App SDK with a Cardano CIP-30 bridge",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/esm/index.js",
+  "module": "./dist/esm/index.js",
+  "browser": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/esm/index.d.ts",
+      "browser": "./dist/esm/index.js",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/esm/index.js"
     },
     "./protocol": {
-      "types": "./dist/protocol/index.d.ts",
-      "import": "./dist/protocol/index.js"
+      "types": "./dist/esm/protocol/index.d.ts",
+      "browser": "./dist/esm/protocol/index.js",
+      "import": "./dist/esm/protocol/index.js",
+      "default": "./dist/esm/protocol/index.js"
     },
     "./client": {
-      "types": "./dist/client/index.d.ts",
-      "import": "./dist/client/index.js"
+      "types": "./dist/esm/client/index.d.ts",
+      "browser": "./dist/esm/client/index.js",
+      "import": "./dist/esm/client/index.js",
+      "default": "./dist/esm/client/index.js"
     },
     "./host": {
-      "types": "./dist/host/index.d.ts",
-      "import": "./dist/host/index.js"
+      "types": "./dist/esm/host/index.d.ts",
+      "browser": "./dist/esm/host/index.js",
+      "import": "./dist/esm/host/index.js",
+      "default": "./dist/esm/host/index.js"
     },
     "./testing": {
-      "types": "./dist/testing/index.d.ts",
-      "import": "./dist/testing/index.js"
+      "types": "./dist/esm/testing/index.d.ts",
+      "browser": "./dist/esm/testing/index.js",
+      "import": "./dist/esm/testing/index.js",
+      "default": "./dist/esm/testing/index.js"
     },
     "./react": {
-      "types": "./dist/react/index.d.ts",
-      "import": "./dist/react/index.js"
+      "types": "./dist/esm/react/index.d.ts",
+      "browser": "./dist/esm/react/index.js",
+      "import": "./dist/esm/react/index.js",
+      "default": "./dist/esm/react/index.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "node -e \"process.exit(0)\"",
     "test:integration": "node -e \"process.exit(0)\"",
@@ -57,7 +70,6 @@
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
-    "react": "^19.0.0",
-    "tsup": "^8.5.0"
+    "react": "^19.0.0"
   }
 }

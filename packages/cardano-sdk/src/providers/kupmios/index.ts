@@ -1,9 +1,9 @@
-import { TTL } from "@/config"
+import { TTL } from "../../config.js"
 
 import KupoClient, { KupoTypes } from "cardano-kupo-client"
 import OgmiosClient, { OgmiosTypes } from "cardano-ogmios-client"
-import { CW3Types } from "@"
-import * as KupmiosProviderTypes from "./types"
+import { CW3Types } from "../../index.js"
+import * as KupmiosProviderTypes from "./types.js"
 
 export class KupmiosProvider implements CW3Types.Provider {
   private ogmiosClient: CW3Types.OgmiosClient

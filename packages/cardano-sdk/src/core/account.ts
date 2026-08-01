@@ -1,5 +1,5 @@
-import { CardanoWeb3, CardanoLib, utils, CW3Types } from "@"
-import { Connector } from "./connector"
+import { CardanoWeb3, CardanoLib, utils, CW3Types } from "../index.js"
+import { Connector } from "./connector.js"
 
 export class Account {
   private cw3: CardanoWeb3

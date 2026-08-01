@@ -5,8 +5,8 @@ import {
 } from "@scure/bip39"
 import { wordlist } from "@scure/bip39/wordlists/english.js"
 import { bech32 } from "@scure/base"
-import { CardanoLib, CW3Types } from "@"
-import { harden } from "./misc"
+import { CardanoLib, CW3Types } from "../index.js"
+import { harden } from "./misc.js"
 
 export const mnemonicGenerate = (length: 12 | 15 | 24 = 24): string => {
   return generateMnemonic(wordlist, (32 * length) / 3)

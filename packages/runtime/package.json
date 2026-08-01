@@ -14,54 +14,64 @@
     "access": "public"
   },
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/esm/index.js",
+  "module": "./dist/esm/index.js",
+  "browser": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "types": "./dist/esm/index.d.ts",
+      "browser": "./dist/esm/index.js",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/esm/index.js"
     },
     "./cardano": {
-      "types": "./dist/cardano.d.ts",
-      "browser": "./dist/cardano.js",
-      "node": {
-        "import": "./dist/cardano.js",
-        "require": "./dist/cardano.cjs"
-      },
-      "import": "./dist/cardano.js",
-      "require": "./dist/cardano.cjs"
+      "types": "./dist/esm/cardano.d.ts",
+      "browser": "./dist/esm/cardano.js",
+      "import": "./dist/esm/cardano.js",
+      "default": "./dist/esm/cardano.js"
     },
     "./cardano/lib": {
-      "types": "./dist/cardano-lib.d.ts",
-      "browser": "./dist/cardano-lib.js",
-      "import": "./dist/cardano-lib.js",
-      "default": "./dist/cardano-lib.js"
+      "types": "./dist/esm/cardano-lib.d.ts",
+      "browser": "./dist/esm/cardano-lib.js",
+      "import": "./dist/esm/cardano-lib.js",
+      "default": "./dist/esm/cardano-lib.js"
     },
     "./mini-app": {
-      "types": "./dist/mini-app.d.ts",
-      "import": "./dist/mini-app.js"
+      "types": "./dist/esm/mini-app.d.ts",
+      "browser": "./dist/esm/mini-app.js",
+      "import": "./dist/esm/mini-app.js",
+      "default": "./dist/esm/mini-app.js"
     },
     "./mini-app/protocol": {
-      "types": "./dist/mini-app-protocol.d.ts",
-      "import": "./dist/mini-app-protocol.js"
+      "types": "./dist/esm/mini-app-protocol.d.ts",
+      "browser": "./dist/esm/mini-app-protocol.js",
+      "import": "./dist/esm/mini-app-protocol.js",
+      "default": "./dist/esm/mini-app-protocol.js"
     },
     "./mini-app/client": {
-      "types": "./dist/mini-app-client.d.ts",
-      "import": "./dist/mini-app-client.js"
+      "types": "./dist/esm/mini-app-client.d.ts",
+      "browser": "./dist/esm/mini-app-client.js",
+      "import": "./dist/esm/mini-app-client.js",
+      "default": "./dist/esm/mini-app-client.js"
     },
     "./mini-app/host": {
-      "types": "./dist/mini-app-host.d.ts",
-      "import": "./dist/mini-app-host.js"
+      "types": "./dist/esm/mini-app-host.d.ts",
+      "browser": "./dist/esm/mini-app-host.js",
+      "import": "./dist/esm/mini-app-host.js",
+      "default": "./dist/esm/mini-app-host.js"
     },
     "./mini-app/react": {
-      "types": "./dist/mini-app-react.d.ts",
-      "import": "./dist/mini-app-react.js"
+      "types": "./dist/esm/mini-app-react.d.ts",
+      "browser": "./dist/esm/mini-app-react.js",
+      "import": "./dist/esm/mini-app-react.js",
+      "default": "./dist/esm/mini-app-react.js"
     },
     "./mini-app/testing": {
-      "types": "./dist/mini-app-testing.d.ts",
-      "import": "./dist/mini-app-testing.js"
+      "types": "./dist/esm/mini-app-testing.d.ts",
+      "browser": "./dist/esm/mini-app-testing.js",
+      "import": "./dist/esm/mini-app-testing.js",
+      "default": "./dist/esm/mini-app-testing.js"
     },
     "./package.json": "./package.json"
   },
@@ -69,7 +79,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup && tsc --emitDeclarationOnly",
+    "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
     "test": "node -e \"process.exit(0)\"",
     "test:integration": "node -e \"process.exit(0)\"",
@@ -79,16 +89,5 @@
     "@xray-network/xray-cardano-lib": "0.1.0",
     "@xray-network/xray-js-cardano": "3.0.0",
     "@xray-network/xray-js-mini-app": "3.0.0"
-  },
-  "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    }
-  },
-  "devDependencies": {
-    "tsup": "^8.5.0"
   }
 }

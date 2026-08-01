@@ -5,8 +5,8 @@ import {
   type StaticSchema,
 } from "@xray-network/xray-cardano-lib"
 import { decodeCbor, encodeCbor } from "@xray-network/xray-cardano-lib-core"
-import { CardanoLib, UPLC, CW3Types } from "@"
-import { fromHex, toHex } from "./misc"
+import { CardanoLib, UPLC, CW3Types } from "../index.js"
+import { fromHex, toHex } from "./misc.js"
 
 export const scriptToScriptRef = (script: CW3Types.Script): CardanoLib.ScriptRef => {
   const coreScript = (() => {

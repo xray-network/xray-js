@@ -1,6 +1,6 @@
-import { CardanoWeb3, CardanoLib, utils, CW3Types } from "@"
-import { createTransaction, getTransactionParts } from "@/libs/cardanoLib"
-import { Account } from "./account"
+import { CardanoWeb3, CardanoLib, utils, CW3Types } from "../index.js"
+import { createTransaction, getTransactionParts } from "../libs/cardanoLib/index.js"
+import { Account } from "./account.js"
 
 export class TxFinalizer {
   private cw3: CardanoWeb3

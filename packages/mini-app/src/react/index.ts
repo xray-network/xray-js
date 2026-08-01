@@ -1,6 +1,6 @@
-export { MiniAppProvider, useMiniAppStore } from "./context"
-export { createMiniAppStore, defaultMiniAppStore } from "./store"
-export type { MiniAppStore, MiniAppValues, MiniAppValueKey } from "./store"
+export { MiniAppProvider, useMiniAppStore } from "./context.js"
+export { createMiniAppStore, defaultMiniAppStore } from "./store.js"
+export type { MiniAppStore, MiniAppValues, MiniAppValueKey } from "./store.js"
 export {
   useMiniApp,
   useTheme,
@@ -15,4 +15,4 @@ export {
   useSubmitTx,
   useSignAndSubmitTx,
   useSignData,
-} from "./hooks"
+} from "./hooks.js"

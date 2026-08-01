@@ -14,8 +14,8 @@ import type {
   HostSignDataPayload,
   ClientMessagePayloadMap,
   ClientMessage,
-} from "../protocol"
-import { sendMessage, listenToWindow, listenAllFromWindow } from "./messaging"
+} from "../protocol/index.js"
+import { sendMessage, listenToWindow, listenAllFromWindow } from "./messaging.js"
 
 /** Confirm to the mini-app that the host is reachable and ready. */
 export const sendHandshake = (iframe: Window | null | undefined, payload: HostHandshakePayload, requestId: string) => {

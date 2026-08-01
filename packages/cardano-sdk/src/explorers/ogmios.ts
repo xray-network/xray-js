@@ -1,5 +1,5 @@
 import __OgmiosClient from "cardano-ogmios-client"
-import { CW3Types } from "@"
+import { CW3Types } from "../index.js"
 export type { OgmiosTypes } from "cardano-ogmios-client"
 
 export const OgmiosClient = (baseUrl: string, headers?: CW3Types.Headers): ReturnType<typeof __OgmiosClient> => {

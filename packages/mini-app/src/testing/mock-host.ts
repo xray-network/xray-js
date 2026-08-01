@@ -5,9 +5,9 @@ import type {
   Cip30HostMessagePayloadMap,
   HostAccountStatePayload,
   HostTipPayload,
-} from "../protocol"
-import { setHostWindow } from "../client"
-import { dispatchMessageEvent } from "./events"
+} from "../protocol/index.js"
+import { setHostWindow } from "../client/index.js"
+import { dispatchMessageEvent } from "./events.js"
 
 /** Canned responses the mock host serves for each request type. */
 export type MockHostState = {

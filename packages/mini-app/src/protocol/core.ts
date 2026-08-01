@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { Envelope } from "./envelope"
+import type { Envelope } from "./envelope.js"
 
 // Core protocol: zod schemas are the source of truth, payload types are
 // inferred from them so runtime validation and typings can never drift apart.

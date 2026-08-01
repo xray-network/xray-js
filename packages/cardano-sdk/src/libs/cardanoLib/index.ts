@@ -1,5 +1,5 @@
 import { decodeCbor, encodeCbor } from "@xray-network/xray-cardano-lib-core"
-import { CardanoLib } from "@"
+import { CardanoLib } from "../../index.js"
 
 export type TransactionParts = {
   body: CardanoLib.TransactionBody

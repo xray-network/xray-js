@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { Envelope } from "./envelope"
+import type { Envelope } from "./envelope.js"
 
 // CIP-30 protocol: the wallet-style API surface exposed to mini apps that
 // expect a standard Cardano dApp connector. Kept separate from the core

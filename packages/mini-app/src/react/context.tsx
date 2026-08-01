@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from "react"
-import { createMiniAppStore, defaultMiniAppStore, type MiniAppStore } from "./store"
+import { createMiniAppStore, defaultMiniAppStore, type MiniAppStore } from "./store.js"
 
 const MiniAppContext = createContext<MiniAppStore | null>(null)
 

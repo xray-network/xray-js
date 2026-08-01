@@ -8,8 +8,8 @@ import {
   type Cip30ClientSignTxPayload,
   type Cip30ClientSignDataPayload,
   type Cip30ClientSubmitTxPayload,
-} from "../protocol"
-import { getHostWindow, getRequestId } from "./messaging"
+} from "../protocol/index.js"
+import { getHostWindow, getRequestId } from "./messaging.js"
 
 export const version: string = "3.0.0"
 export const name: string = "xrayIframeConnector"

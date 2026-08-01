@@ -1,4 +1,4 @@
-import { CardanoLib, CW3Types } from "@"
+import { CardanoLib, CW3Types } from "../index.js"
 
 export const validateAddress = (addrBech32: string): boolean => {
   try {

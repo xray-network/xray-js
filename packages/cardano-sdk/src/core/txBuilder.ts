@@ -1,8 +1,8 @@
-import { TTL } from "@/config"
+import { TTL } from "../config.js"
 import { decodeCbor } from "@xray-network/xray-cardano-lib-core"
 
-import { CardanoWeb3, CardanoLib, UPLC, utils, CW3Types } from "@"
-import { TxFinalizer } from "./txFinalizer"
+import { CardanoWeb3, CardanoLib, UPLC, utils, CW3Types } from "../index.js"
+import { TxFinalizer } from "./txFinalizer.js"
 
 export class TxBuilder {
   private cw3: CardanoWeb3

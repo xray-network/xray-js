@@ -1,5 +1,5 @@
-import type { HostMessage, Cip30HostMessage } from "../protocol"
-import { dispatchMessageEvent } from "./events"
+import type { HostMessage, Cip30HostMessage } from "../protocol/index.js"
+import { dispatchMessageEvent } from "./events.js"
 
 export type MockClient = {
   /** Fake iframe window; pass it to host SDK helpers as the `iframe` argument. */

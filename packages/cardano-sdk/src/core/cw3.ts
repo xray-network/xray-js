@@ -4,18 +4,18 @@ import {
   DEFAULT_PROTOCOL_PARAMETERS,
   SLOT_CONFIG_NETWORK,
   TTL,
-} from "@/config"
+} from "../config.js"
 
-import { CardanoLib, Message, utils, CW3Types } from "@"
-import { TxBuilder } from "./txBuilder"
-import { TxFinalizer } from "./txFinalizer"
-import { Account } from "./account"
-import { Connector } from "./connector"
-import { KoiosProvider } from "@/providers/koios"
-import { KoiosClient } from "@/explorers/koios"
-import { OgmiosClient } from "@/explorers/ogmios"
-import { KupoClient } from "@/explorers/kupo"
-import { NftcdnClient } from "@/explorers/nftcdn"
+import { CardanoLib, Message, utils, CW3Types } from "../index.js"
+import { TxBuilder } from "./txBuilder.js"
+import { TxFinalizer } from "./txFinalizer.js"
+import { Account } from "./account.js"
+import { Connector } from "./connector.js"
+import { KoiosProvider } from "../providers/koios/index.js"
+import { KoiosClient } from "../explorers/koios.js"
+import { OgmiosClient } from "../explorers/ogmios.js"
+import { KupoClient } from "../explorers/kupo.js"
+import { NftcdnClient } from "../explorers/nftcdn.js"
 
 /**
  * CardanoWeb3 class

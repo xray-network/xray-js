@@ -1,9 +1,9 @@
 /** Class types */
-export type { CardanoWeb3 } from "@/core/cw3"
-export type { Account } from "@/core/account"
-export type { Connector } from "@/core/connector"
-export type { TxBuilder } from "@/core/txBuilder"
-export type { TxFinalizer } from "@/core/txFinalizer"
+export type { CardanoWeb3 } from "../core/cw3.js"
+export type { Account } from "../core/account.js"
+export type { Connector } from "../core/connector.js"
+export type { TxBuilder } from "../core/txBuilder.js"
+export type { TxFinalizer } from "../core/txFinalizer.js"
 
 /** Account types */
 export type AccountType = "xprv" | "xpub" | "connector" | "address" | "ledger" | "trezor"
@@ -92,7 +92,7 @@ export type Explorers = {
 }
 
 /** Connector types */
-import type { Connector } from "../core/connector"
+import type { Connector } from "../core/connector.js"
 export type ConnectorPaginate = {
   page: number
   limit: number

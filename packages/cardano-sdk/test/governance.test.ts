@@ -1,16 +1,20 @@
-import { expect, it, describe } from "vitest"
-import { CardanoWeb3, PlutusData, CW3Types, utils } from "@"
-import { testData } from "./__test"
+import assert from "node:assert/strict"
+import { before, describe, it } from "node:test"
+import { CardanoWeb3, PlutusData, CW3Types, utils } from "@xray-network/xray-js-cardano"
+import { testData } from "./__test.js"
 
-describe("Governance", async () => {
+describe("Governance", () => {
   const web3 = new CardanoWeb3({
     network: "preview",
   })
   const account = web3.account.fromXprvKey(testData.xprvKey)
   const changeAddress = account.__config.paymentAddress
   const stakingAddress = account.__config.stakingAddress
-  const accountState = await account.getState()
-  const accountUtxos = accountState.utxos
+  let accountUtxos: CW3Types.Utxo[] = []
+
+  before(async () => {
+    accountUtxos = (await account.getState()).utxos
+  })
 
   it("Delegate to DRep (AlwaysAbstain)", async () => {
     const tx_build = await web3
@@ -30,7 +34,7 @@ describe("Governance", async () => {
     //   .applyAndSubmit()
     // console.log(submitted_hash)
 
-    expect(tx_signed).haveOwnProperty("tx")
+    assert.ok(Object.hasOwn(Object(tx_signed), "tx"))
   })
 
   it("Delegate to DRep (AlwaysNoConfidence)", async () => {
@@ -51,7 +55,7 @@ describe("Governance", async () => {
     //   .applyAndSubmit()
     // console.log(submitted_hash)
 
-    expect(tx_signed).haveOwnProperty("tx")
+    assert.ok(Object.hasOwn(Object(tx_signed), "tx"))
   })
 
   it("Delegate to DRep", async () => {
@@ -72,7 +76,7 @@ describe("Governance", async () => {
     //   .applyAndSubmit()
     // console.log(submitted_hash)
 
-    expect(tx_signed).haveOwnProperty("tx")
+    assert.ok(Object.hasOwn(Object(tx_signed), "tx"))
   })
 
   it("Register DRep", async () => {
@@ -93,7 +97,7 @@ describe("Governance", async () => {
     //   .applyAndSubmit()
     // console.log(submitted_hash)
 
-    expect(tx_signed).haveOwnProperty("tx")
+    assert.ok(Object.hasOwn(Object(tx_signed), "tx"))
   })
 
   it("Update DRep", async () => {
@@ -114,7 +118,7 @@ describe("Governance", async () => {
     //   .applyAndSubmit()
     // console.log(submitted_hash)
 
-    expect(tx_signed).haveOwnProperty("tx")
+    assert.ok(Object.hasOwn(Object(tx_signed), "tx"))
   })
 
   it("Deregister DRep", async () => {
@@ -135,6 +139,6 @@ describe("Governance", async () => {
     //   .applyAndSubmit()
     // console.log(submitted_hash)
 
-    expect(tx_signed).haveOwnProperty("tx")
+    assert.ok(Object.hasOwn(Object(tx_signed), "tx"))
   })
 })

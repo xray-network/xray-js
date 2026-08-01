@@ -3,4 +3,4 @@
 //   @xray-network/xray-js-mini-app/client
 //   @xray-network/xray-js-mini-app/host
 //   @xray-network/xray-js-mini-app/testing
-export * from "./protocol"
+export * from "./protocol/index.js"

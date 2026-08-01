@@ -1,4 +1,4 @@
-import { CardanoWeb3, CW3Types } from "@"
+import { CardanoWeb3, CW3Types } from "@xray-network/xray-js-cardano"
 
 // Preview Network
 export const testData = {

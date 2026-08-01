@@ -5,7 +5,7 @@
 ## Installation
 
 ```bash
-yarn add @xray-network/xray-js
+npm install @xray-network/xray-js
 ```
 
 Use the Cardano subpaths in application code:
@@ -51,19 +51,20 @@ React is an optional peer dependency and is only needed for the `/react` entry.
 
 ## Development
 
-This repository requires Node.js 20.19 or newer and Yarn 1.22.x.
+This repository requires Node.js 20.19 or newer and npm 10.8.x.
+Published packages are ESM-only and compile directly with TypeScript into `dist/esm`; CommonJS `require()` is not supported.
 
 ```bash
-yarn install
-yarn build
-yarn typecheck
-yarn test
+npm ci
+npm run build
+npm run typecheck
+npm test
 ```
 
-`yarn test` runs the deterministic offline suite. Cardano explorer and provider tests call live XRAY endpoints and are available separately:
+`npm test` compiles and runs the deterministic offline suite with Node's built-in test runner. Cardano explorer and provider tests call live XRAY endpoints and are available separately:
 
 ```bash
-yarn test:integration
+npm run test:integration
 ```
 
 ## Cardano library
@@ -73,14 +74,4 @@ Cardano primitives, cryptography, ledger types, CIP implementations, transaction
 ```ts
 import { CardanoLib } from "@xray-network/xray-js/cardano"
 import { Address, TransactionBuilder } from "@xray-network/xray-js/cardano/lib"
-```
-
-## Releasing
-
-All public workspaces use a fixed Changesets version group.
-
-```bash
-yarn changeset
-yarn version-packages
-yarn release
 ```

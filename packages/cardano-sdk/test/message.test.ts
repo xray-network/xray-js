@@ -1,6 +1,7 @@
-import { expect, it, describe } from "vitest"
-import { CardanoWeb3, utils } from "@"
-import { testData } from "./__test"
+import assert from "node:assert/strict"
+import { describe, it } from "node:test"
+import { CardanoWeb3, utils } from "@xray-network/xray-js-cardano"
+import { testData } from "./__test.js"
 
 describe("Message", async () => {
   const web3 = new CardanoWeb3({
@@ -12,7 +13,7 @@ describe("Message", async () => {
     const message = "Hello, World!"
     const signature = await web3.message.signWithAccount(account, message)
     const verified = web3.message.verify(account.__config.paymentAddress, message, signature)
-    expect(verified).toBe(true)
+    assert.equal(verified, true)
   })
 
   it("SignAndVerify: with XprvKey", async () => {
@@ -20,6 +21,6 @@ describe("Message", async () => {
     const verificationKey = utils.keys.xprvToVrfKey(testData.xprvKey, testData.accountPath, testData.addressPath)
     const signature = web3.message.signWithVrfKey(verificationKey, testData.paymentAddress, message)
     const verified = web3.message.verify(testData.paymentAddress, message, signature)
-    expect(verified).toBe(true)
+    assert.equal(verified, true)
   })
 })

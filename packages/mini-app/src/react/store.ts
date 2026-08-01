@@ -1,4 +1,4 @@
-import { miniAppClient } from "../client"
+import { miniAppClient } from "../client/index.js"
 import type {
   HostThemePayload,
   HostNetworkPayload,
@@ -7,7 +7,7 @@ import type {
   HostExplorerPayload,
   HostTipPayload,
   HostAccountStatePayload,
-} from "../protocol"
+} from "../protocol/index.js"
 
 // Framework-free connection store backing the React hooks. Hooks read from the
 // module-level `defaultMiniAppStore` unless a <MiniAppProvider> supplies its

@@ -1,7 +1,7 @@
-import { CardanoLib, CW3Types } from "@"
-import cip4 from "../libs/cip4"
-import { getFingerprint, assetNameToAssetNameAscii } from "./asset"
-import { deriveBase, getCredentials, getStakingAddress } from "./address"
+import { CardanoLib, CW3Types } from "../index.js"
+import cip4 from "../libs/cip4/index.js"
+import { getFingerprint, assetNameToAssetNameAscii } from "./asset.js"
+import { deriveBase, getCredentials, getStakingAddress } from "./address.js"
 
 export const checksum = (
   xpubKey: string

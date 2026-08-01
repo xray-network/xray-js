@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"
-import { miniAppClient } from "../client"
-import type { HostMessagePayloadMap } from "../protocol"
-import { useMiniAppStore } from "./context"
-import type { MiniAppValueKey, MiniAppValues } from "./store"
+import { miniAppClient } from "../client/index.js"
+import type { HostMessagePayloadMap } from "../protocol/index.js"
+import { useMiniAppStore } from "./context.js"
+import type { MiniAppValueKey, MiniAppValues } from "./store.js"
 
 const useStoreValue = <K extends MiniAppValueKey>(key: K): MiniAppValues[K] => {
   const store = useMiniAppStore()

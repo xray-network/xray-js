@@ -1,4 +1,4 @@
-import { CardanoLib, CW3Types } from "@"
+import { CardanoLib, CW3Types } from "../index.js"
 import { bech32 } from "@scure/base"
 import { Buffer } from "buffer"
 

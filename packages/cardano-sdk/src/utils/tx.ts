@@ -1,8 +1,8 @@
 import { bytesToHex, decodeCbor, type CborValue } from "@xray-network/xray-cardano-lib-core"
-import { CardanoLib, CW3Types } from "@"
-import { fromHex } from "./misc"
-import { getShelleyOrByronAddress, getCredentials } from "./address"
-import { scriptToScriptRef } from "./script"
+import { CardanoLib, CW3Types } from "../index.js"
+import { fromHex } from "./misc.js"
+import { getShelleyOrByronAddress, getCredentials } from "./address.js"
+import { scriptToScriptRef } from "./script.js"
 
 export const createCostModels = (costModels: CW3Types.CostModels): CardanoLib.CostModels => {
   const models = CardanoLib.MapU64ToArrI64.new()

@@ -2,16 +2,12 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "strict": false,
-    "module": "ESNext",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": true,
     "sourceMap": false,
-    "outDir": "dist",
-    "paths": {
-      "@": ["./src/index.ts"],
-      "@/*": ["./src/*"]
-    }
+    "rootDir": "src",
+    "outDir": "dist/esm"
   },
-  "include": ["src/**/*.ts", "test"]
+  "include": ["src/**/*.ts"]
 }

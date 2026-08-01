@@ -1,5 +1,6 @@
-import { expect, it, describe } from "vitest"
-import { CardanoWeb3 } from "@"
+import assert from "node:assert/strict"
+import { describe, it } from "node:test"
+import { CardanoWeb3 } from "@xray-network/xray-js-cardano"
 
 describe("Explorers", async () => {
   describe("Mainnet", async () => {
@@ -7,12 +8,12 @@ describe("Explorers", async () => {
 
     it("Koios: /tip", async () => {
       const tip = await web3.explorers.koios.GET("/tip")
-      expect(tip.data?.[0]).toHaveProperty("epoch_no")
+      assert.ok("epoch_no" in Object(tip.data?.[0]))
     })
 
     it("Ogmios: /health", async () => {
       const health = await web3.explorers.ogmios.GET("/health")
-      expect(health.data).toHaveProperty("currentEpoch")
+      assert.ok("currentEpoch" in Object(health.data))
     })
 
     // it("Kupo: /health", async () => {
@@ -23,7 +24,7 @@ describe("Explorers", async () => {
     //     },
     //   })
     //   console.log(health.data)
-    //   expect(health.data).toHaveProperty("most_recent_node_tip")
+    //   assert.ok("most_recent_node_tip" in Object(health.data))
     // })
 
     it("Nftcdn: /metadata", async () => {
@@ -34,7 +35,7 @@ describe("Explorers", async () => {
           },
         },
       })
-      expect(metadata.data).toHaveProperty("fingerprint")
+      assert.ok("fingerprint" in Object(metadata.data))
     })
   })
 
@@ -43,12 +44,12 @@ describe("Explorers", async () => {
 
     it("Koios: /tip", async () => {
       const tip = await web3.explorers.koios.GET("/tip")
-      expect(tip.data?.[0]).toHaveProperty("epoch_no")
+      assert.ok("epoch_no" in Object(tip.data?.[0]))
     })
 
     it("Ogmios: /health", async () => {
       const health = await web3.explorers.ogmios.GET("/health")
-      expect(health.data).toHaveProperty("currentEpoch")
+      assert.ok("currentEpoch" in Object(health.data))
     })
 
     // it("Kupo: /health", async () => {
@@ -58,7 +59,7 @@ describe("Explorers", async () => {
     //       Authorization: "Bearer YOUR_API_KEY", // XRAY/Graph API key
     //     },
     //   })
-    //   expect(health.data).toHaveProperty("most_recent_node_tip")
+    //   assert.ok("most_recent_node_tip" in Object(health.data))
     // })
 
     it("Nftcdn: /metadata", async () => {
@@ -69,7 +70,7 @@ describe("Explorers", async () => {
           },
         },
       })
-      expect(metadata.data).toHaveProperty("fingerprint")
+      assert.ok("fingerprint" in Object(metadata.data))
     })
   })
 
@@ -78,12 +79,12 @@ describe("Explorers", async () => {
 
     it("Koios: /tip", async () => {
       const tip = await web3.explorers.koios.GET("/tip")
-      expect(tip.data?.[0]).toHaveProperty("epoch_no")
+      assert.ok("epoch_no" in Object(tip.data?.[0]))
     })
 
     it("Ogmios: /health", async () => {
       const health = await web3.explorers.ogmios.GET("/health")
-      expect(health.data).toHaveProperty("currentEpoch")
+      assert.ok("currentEpoch" in Object(health.data))
     })
 
     // it("Kupo: /health", async () => {
@@ -93,7 +94,7 @@ describe("Explorers", async () => {
     //       Authorization: "Bearer YOUR_API_KEY", // XRAY/Graph API key
     //     },
     //   })
-    //   expect(health.data).toHaveProperty("most_recent_node_tip")
+    //   assert.ok("most_recent_node_tip" in Object(health.data))
     // })
 
     it("Nftcdn: /metadata", async () => {
@@ -104,7 +105,7 @@ describe("Explorers", async () => {
           },
         },
       })
-      expect(metadata.data).toHaveProperty("fingerprint")
+      assert.ok("fingerprint" in Object(metadata.data))
     })
   })
 })
