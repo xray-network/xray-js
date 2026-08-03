@@ -85,7 +85,7 @@ export type CardanoServiceClients = {
 }
 
 /** Cip30Wallet types */
-import type { Cip30Wallet } from "../wallets/cip30-wallet.js"
+import type { Cip30Wallet } from "./wallets/cip30.js"
 export type WalletPagination = {
   page: number
   limit: number

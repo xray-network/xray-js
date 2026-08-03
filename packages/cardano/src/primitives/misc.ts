@@ -1,4 +1,4 @@
-import { CardanoLib } from "../internal/dependencies.js"
+import * as CardanoLib from "@xray-network/xray-cardano-lib"
 import { bytesToHex, hexToBytes } from "@xray-network/xray-cardano-lib-core"
 
 const textEncoder = new TextEncoder()

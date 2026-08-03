@@ -1,7 +1,8 @@
-import { TTL } from "../../config.js"
+import { TTL } from "../config.js"
 
 import KoiosClient, { KoiosTypes } from "cardano-koios-client"
-import type * as CardanoTypes from "../../types/index.js"
+import type * as CardanoTypes from "../types.js"
+import { createProviderResolvers, pollUntil } from "./provider.js"
 
 export const createKoiosProvider = (baseUrl: string, headers?: CardanoTypes.Headers): CardanoTypes.Provider => {
   const koiosClient = KoiosClient(baseUrl, headers)
@@ -64,10 +65,6 @@ export const createKoiosProvider = (baseUrl: string, headers?: CardanoTypes.Head
     }
   }
 
-  const getUtxosByAddress = async (address: string): Promise<CardanoTypes.Utxo[]> => {
-    return await getUtxosByAddresses([address])
-  }
-
   const getUtxoByOutputRef = async (txHash: string, index: number): Promise<CardanoTypes.Utxo> => {
     const response = await koiosClient.POST("/utxo_info", {
       body: {
@@ -79,22 +76,6 @@ export const createKoiosProvider = (baseUrl: string, headers?: CardanoTypes.Head
       return koiosUtxoToUtxo(response.data[0])
     }
     throw new Error("Error: KoiosProvider.getUtxoByTxRef")
-  }
-
-  const resolveUtxoDatumAndScript = async (utxo: CardanoTypes.Utxo): Promise<CardanoTypes.Utxo> => {
-    return {
-      ...utxo,
-      datum: utxo.datumHash ? await getDatumByHash(utxo.datumHash) : null,
-      script: utxo.scriptHash ? await getScriptByHash(utxo.scriptHash) : null,
-    }
-  }
-
-  const resolveUtxosDatumAndScript = async (utxos: CardanoTypes.Utxo[]) => {
-    return await Promise.all(
-      utxos.map(async (utxo) => {
-        return await resolveUtxoDatumAndScript(utxo)
-      })
-    )
   }
 
   const getDatumByHash = async (datumHash: string): Promise<string | undefined> => {
@@ -124,6 +105,12 @@ export const createKoiosProvider = (baseUrl: string, headers?: CardanoTypes.Head
     }
     throw new Error("Error: KoiosProvider.getDatumByhash")
   }
+
+  const { getUtxosByAddress, resolveUtxoDatumAndScript } = createProviderResolvers({
+    getUtxosByAddresses,
+    getDatumByHash,
+    getScriptByHash,
+  })
 
   const getDelegation = async (stakingAddress: string): Promise<CardanoTypes.AccountDelegation> => {
     const response = await koiosClient.POST("/account_info", {
@@ -182,21 +169,7 @@ export const createKoiosProvider = (baseUrl: string, headers?: CardanoTypes.Head
       const status = response.data?.[0]
       return (status?.num_confirmations ?? 0) > 0
     }
-    return new Promise(async (res) => {
-      const resolve = await checkTx()
-      if (resolve) return res(true)
-      const confirm = setInterval(async () => {
-        const resolve = await checkTx()
-        if (resolve) {
-          clearInterval(confirm)
-          return res(true)
-        }
-      }, checkInterval)
-      setTimeout(() => {
-        clearInterval(confirm)
-        return res(false)
-      }, maxTime)
-    })
+    return pollUntil(checkTx, checkInterval, maxTime)
   }
 
   const submitTx = async (tx: string): Promise<string> => {
@@ -216,15 +189,6 @@ export const createKoiosProvider = (baseUrl: string, headers?: CardanoTypes.Head
     throw new Error("Error: KoiosProvider.submitTx")
   }
 
-  const submitAndObserveTx = async (
-    tx: string,
-    checkInterval: number = 3000,
-    maxTime: number = TTL * 1000
-  ): Promise<boolean> => {
-    const txHash = await submitTx(tx)
-    return observeTx(txHash, checkInterval, maxTime)
-  }
-
   return Object.freeze({
     getTip,
     getProtocolParameters,
@@ -232,14 +196,12 @@ export const createKoiosProvider = (baseUrl: string, headers?: CardanoTypes.Head
     getUtxosByAddress,
     getUtxoByOutputRef,
     resolveUtxoDatumAndScript,
-    resolveUtxosDatumAndScript,
     getDatumByHash,
     getScriptByHash,
     getDelegation,
     evaluateTx,
     observeTx,
     submitTx,
-    submitAndObserveTx,
   })
 }
 

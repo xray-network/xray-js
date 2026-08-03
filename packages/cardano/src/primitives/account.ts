@@ -1,6 +1,6 @@
-import { CardanoLib } from "../internal/dependencies.js"
-import cip4 from "../internal/cip4/index.js"
-import type * as CardanoTypes from "../types/index.js"
+import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import cip4 from "../internal/cip4/checksum.js"
+import type * as CardanoTypes from "../types.js"
 import { getFingerprint, assetNameToAssetNameAscii } from "./asset.js"
 import { deriveBase, getCredentials, getStakingAddress } from "./address.js"
 
@@ -16,14 +16,14 @@ export const checksum = (
 export const getDetailsFromXpub = (
   xpubKey: string,
   addressDerivationPath: CardanoTypes.AddressDerivationPath,
-  netoworkId: CardanoTypes.NetworkId
+  networkId: CardanoTypes.NetworkId
 ): {
   paymentAddress: string
   paymentCred: string
   stakingAddress: string
   stakingCred: string
 } => {
-  const paymentAddress = deriveBase(xpubKey, addressDerivationPath, netoworkId)
+  const paymentAddress = deriveBase(xpubKey, addressDerivationPath, networkId)
   const { paymentCred, stakingCred } = getCredentials(paymentAddress)
   if (!paymentCred || !stakingCred) throw new Error("Derived base address is missing credentials")
   const stakingAddress = getStakingAddress(paymentAddress)

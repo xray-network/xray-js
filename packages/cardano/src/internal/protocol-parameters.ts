@@ -1,4 +1,4 @@
-import type { ProtocolParameters, ProtocolParameterSource, Provider } from "../types/index.js"
+import type { ProtocolParameters, ProtocolParameterSource, Provider } from "../types.js"
 
 const DEFAULT_CACHE_DURATION_MS = 5 * 60 * 1000
 

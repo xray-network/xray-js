@@ -1,4 +1,4 @@
-import { CardanoLib } from "../dependencies.js"
+import * as CardanoLib from "@xray-network/xray-cardano-lib"
 
 export type TransactionParts = {
   body: CardanoLib.TransactionBody

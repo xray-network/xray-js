@@ -5,8 +5,9 @@ import {
   type PlutusDataValue,
   type StaticSchema,
 } from "@xray-network/xray-cardano-lib"
-import { CardanoLib, UPLC } from "../internal/dependencies.js"
-import type * as CardanoTypes from "../types/index.js"
+import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import * as UPLC from "@xray-network/xray-cardano-lib"
+import type * as CardanoTypes from "../types.js"
 import { fromHex, toHex } from "./misc.js"
 
 const serializedPlutusScript = (script: string): SerializedPlutusScript => {
@@ -71,13 +72,13 @@ export const scriptToScriptRef = (script: CardanoTypes.Script): CardanoLib.Scrip
 
 export const scriptToAddress = (
   script: CardanoTypes.Script,
-  netoworkId: CardanoTypes.NetworkId,
+  networkId: CardanoTypes.NetworkId,
   stakeCredential?: CardanoTypes.Credential
 ): string => {
   const validatorHash = scriptToScriptHash(script)
   if (stakeCredential) {
     return CardanoLib.BaseAddress.new(
-      netoworkId,
+      networkId,
       CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(validatorHash)),
       stakeCredential.type === "key"
         ? CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakeCredential.hash))
@@ -87,7 +88,7 @@ export const scriptToAddress = (
       .to_bech32(undefined)
   } else {
     return CardanoLib.EnterpriseAddress.new(
-      netoworkId,
+      networkId,
       CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(validatorHash))
     )
       .to_address()

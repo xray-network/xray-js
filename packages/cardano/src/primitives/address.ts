@@ -1,5 +1,5 @@
-import { CardanoLib } from "../internal/dependencies.js"
-import type * as CardanoTypes from "../types/index.js"
+import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import type * as CardanoTypes from "../types.js"
 
 const deriveAddressPublic = (
   accountPublic: CardanoLib.Bip32PublicKey,
@@ -31,7 +31,7 @@ export const getNetwork = (addrBech32: string): CardanoTypes.NetworkId | undefin
 export const deriveBase = (
   xpubKey: string,
   addressDerivationPath: CardanoTypes.AddressDerivationPath,
-  netoworkId: CardanoTypes.NetworkId
+  networkId: CardanoTypes.NetworkId
 ): string => {
   const accountPublic = CardanoLib.Bip32PublicKey.from_bech32(xpubKey)
   const paymentKeyHash = deriveAddressPublic(accountPublic, addressDerivationPath).to_raw_key().hash()
@@ -39,7 +39,7 @@ export const deriveBase = (
     .to_raw_key()
     .hash()
   return CardanoLib.BaseAddress.new(
-    netoworkId,
+    networkId,
     CardanoLib.Credential.new_pub_key(paymentKeyHash),
     CardanoLib.Credential.new_pub_key(stakeKeyHash)
   )
@@ -50,17 +50,17 @@ export const deriveBase = (
 export const deriveEnterprise = (
   xpubKey: string,
   addressDerivationPath: CardanoTypes.AddressDerivationPath,
-  netoworkId: CardanoTypes.NetworkId
+  networkId: CardanoTypes.NetworkId
 ): string => {
   const paymentKeyHash = deriveAddressPublic(CardanoLib.Bip32PublicKey.from_bech32(xpubKey), addressDerivationPath)
     .to_raw_key()
     .hash()
-  return CardanoLib.EnterpriseAddress.new(netoworkId, CardanoLib.Credential.new_pub_key(paymentKeyHash))
+  return CardanoLib.EnterpriseAddress.new(networkId, CardanoLib.Credential.new_pub_key(paymentKeyHash))
     .to_address()
     .to_bech32()
 }
 
-export const deriveStaking = (xpubKey: string, netoworkId: CardanoTypes.NetworkId): string => {
+export const deriveStaking = (xpubKey: string, networkId: CardanoTypes.NetworkId): string => {
   const stakeKeyHash = CardanoLib.deriveCip1852Public(
     CardanoLib.Bip32PublicKey.from_bech32(xpubKey),
     CardanoLib.Cip1852Role.Stake,
@@ -68,7 +68,7 @@ export const deriveStaking = (xpubKey: string, netoworkId: CardanoTypes.NetworkI
   )
     .to_raw_key()
     .hash()
-  return CardanoLib.RewardAddress.new(netoworkId, CardanoLib.Credential.new_pub_key(stakeKeyHash))
+  return CardanoLib.RewardAddress.new(networkId, CardanoLib.Credential.new_pub_key(stakeKeyHash))
     .to_address()
     .to_bech32()
 }

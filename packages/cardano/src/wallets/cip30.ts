@@ -1,4 +1,4 @@
-import type { Cip30Api, Cip30Extension, Cip30Provider, SignedMessage, WalletPagination } from "../types/index.js"
+import type { Cip30Api, Cip30Extension, Cip30Provider, SignedMessage, WalletPagination } from "../types.js"
 
 declare global {
   interface Window {

@@ -1,7 +1,7 @@
 import { generateMnemonic, mnemonicToEntropy, validateMnemonic } from "@scure/bip39"
 import { wordlist } from "@scure/bip39/wordlists/english.js"
-import { CardanoLib } from "../internal/dependencies.js"
-import type * as CardanoTypes from "../types/index.js"
+import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import type * as CardanoTypes from "../types.js"
 import { harden } from "./misc.js"
 
 const deriveBip32PrivateKey = (

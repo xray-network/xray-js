@@ -1,5 +1,5 @@
 import { hexToBytes } from "@xray-network/xray-cardano-lib-core"
-import { CardanoLib } from "../internal/dependencies.js"
+import * as CardanoLib from "@xray-network/xray-cardano-lib"
 
 const textDecoder = new TextDecoder()
 

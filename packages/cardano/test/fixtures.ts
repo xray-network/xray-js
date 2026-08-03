@@ -48,7 +48,7 @@ export const testData = {
     ],
     balance: { value: 5_000_000_000n, assets: [] }, // Dummy 5K ADA
     delegation: null,
-    rewards: 10_000_000n, // Dumnmy 10 ADA
+    rewards: 10_000_000n, // Dummy 10 ADA
   },
 }
 

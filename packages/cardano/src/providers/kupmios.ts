@@ -1,9 +1,10 @@
-import { TTL } from "../../config.js"
+import { TTL } from "../config.js"
 
 import KupoClient, { KupoTypes } from "cardano-kupo-client"
 import OgmiosClient, { OgmiosTypes } from "cardano-ogmios-client"
-import type * as CardanoTypes from "../../types/index.js"
-import * as KupmiosProviderTypes from "./types.js"
+import type * as CardanoTypes from "../types.js"
+import * as KupmiosProviderTypes from "./kupmios-types.js"
+import { createProviderResolvers, pollUntil } from "./provider.js"
 
 export const createKupmiosProvider = ({
   ogmiosUrl,
@@ -53,7 +54,7 @@ export const createKupmiosProvider = ({
     try {
       const utxos: CardanoTypes.Utxo[] = []
       for (const address of addresses) {
-        // TODO: fix types (?unspent=true problem, https://github.com/CardanoSolutions/kupo/issues/179)
+        // Generated Kupo types omit the bare `?unspent` query supported by the service.
         const getUnspent = kupoClient.GET as unknown as (
           path: string,
           options: { params: { path: { pattern: string } } }
@@ -63,9 +64,6 @@ export const createKupmiosProvider = ({
             path: {
               pattern: address,
             },
-            // query: {
-            //   unspent: ""
-            // }
           },
         })
         if (response.data) {
@@ -76,10 +74,6 @@ export const createKupmiosProvider = ({
     } catch {
       throw new Error("Error: KupmiosProvider.getUtxosByAddresses")
     }
-  }
-
-  const getUtxosByAddress = async (address: string): Promise<CardanoTypes.Utxo[]> => {
-    return await getUtxosByAddresses([address])
   }
 
   const getUtxoByOutputRef = async (txHash: string, index: number): Promise<CardanoTypes.Utxo> => {
@@ -94,22 +88,6 @@ export const createKupmiosProvider = ({
       return kupoUtxoToUtxo(response.data[0])
     }
     throw new Error("Error: KupmiosProvider.getUtxoByTxRef")
-  }
-
-  const resolveUtxoDatumAndScript = async (utxo: CardanoTypes.Utxo): Promise<CardanoTypes.Utxo> => {
-    return {
-      ...utxo,
-      datum: utxo.datumHash ? await getDatumByHash(utxo.datumHash) : null,
-      script: utxo.scriptHash ? await getScriptByHash(utxo.scriptHash) : null,
-    }
-  }
-
-  const resolveUtxosDatumAndScript = async (utxos: CardanoTypes.Utxo[]) => {
-    return await Promise.all(
-      utxos.map(async (utxo) => {
-        return await resolveUtxoDatumAndScript(utxo)
-      })
-    )
   }
 
   const getDatumByHash = async (datumHash: string): Promise<string | undefined> => {
@@ -142,6 +120,12 @@ export const createKupmiosProvider = ({
     }
     throw new Error("Error: KupmiosProvider.getDatumByhash")
   }
+
+  const { getUtxosByAddress, resolveUtxoDatumAndScript } = createProviderResolvers({
+    getUtxosByAddresses,
+    getDatumByHash,
+    getScriptByHash,
+  })
 
   const getDelegation = async (stakingAddress: string): Promise<CardanoTypes.AccountDelegation> => {
     const response = await ogmiosClient.POST("/", {
@@ -219,21 +203,7 @@ export const createKupmiosProvider = ({
       }
       return false
     }
-    return new Promise(async (res) => {
-      const resolve = await checkTx()
-      if (resolve) return res(true)
-      const confirm = setInterval(async () => {
-        const resolve = await checkTx()
-        if (resolve) {
-          clearInterval(confirm)
-          return res(true)
-        }
-      }, checkInterval)
-      setTimeout(() => {
-        clearInterval(confirm)
-        return res(false)
-      }, maxTime)
-    })
+    return pollUntil(checkTx, checkInterval, maxTime)
   }
 
   return Object.freeze({
@@ -243,7 +213,6 @@ export const createKupmiosProvider = ({
     getUtxosByAddress,
     getUtxoByOutputRef,
     resolveUtxoDatumAndScript,
-    resolveUtxosDatumAndScript,
     getDatumByHash,
     getScriptByHash,
     getDelegation,

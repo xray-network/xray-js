@@ -15,10 +15,12 @@ describe("Cardano transactions", () => {
   it("builds, signs, serializes, and submits payments", async () => {
     const { provider, cardano, account } = setup()
     const emptyPlan = cardano.transactions.create()
-    const paymentPlan = emptyPlan
-      .setChangeAddress(account.paymentAddress)
-      .payTo([{ address: testData.paymentAddressEnterprise, value: 2_000_000n }])
-      .spend([ownedUtxo])
+    const output = { address: testData.paymentAddressEnterprise, value: 2_000_000n }
+    const input = { ...ownedUtxo, transaction: { ...ownedUtxo.transaction } }
+    const paymentPlan = emptyPlan.setChangeAddress(account.paymentAddress).payTo([output]).spend([input])
+    output.address = "mutated-after-planning"
+    input.address = "mutated-after-planning"
+    input.transaction.id = "2".repeat(64)
     assert.notEqual(emptyPlan, paymentPlan)
     assert.equal(Object.isFrozen(emptyPlan), true)
     const unsigned = await paymentPlan.build()

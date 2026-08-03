@@ -15,6 +15,7 @@ Target: cardano
 | `0001` | Adopt typed Cardano APIs            | [Instruction](./implementations/cardano/0001-IMPL-INSTR.md) | `ACCEPTED` | [Result](./implementations/cardano/0001-IMPL-RESULT.md) | `DERIVED`     | Human explicitly accepted `cardano/0001`.                                |
 | `0002` | Replace Cardano client architecture | [Instruction](./implementations/cardano/0002-IMPL-INSTR.md) | `REVIEW`   | [Result](./implementations/cardano/0002-IMPL-RESULT.md) | `LOCAL`       | Implementation completed and validation recorded; awaiting human review. |
 | `0003` | Adopt functional Cardano API        | [Instruction](./implementations/cardano/0003-IMPL-INSTR.md) | `REVIEW`   | [Result](./implementations/cardano/0003-IMPL-RESULT.md) | `LOCAL`       | Implementation completed and validation recorded; awaiting human review. |
+| `0004` | Simplify Cardano source structure   | [Instruction](./implementations/cardano/0004-IMPL-INSTR.md) | `REVIEW`   | [Result](./implementations/cardano/0004-IMPL-RESULT.md) | `LOCAL`       | Implementation completed and validation recorded; awaiting human review. |
 
 ## Mini App Bridge implementation status
 

@@ -1,5 +1,5 @@
-import { CardanoLib } from "../internal/dependencies.js"
-import type * as CardanoTypes from "../types/index.js"
+import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import type * as CardanoTypes from "../types.js"
 import {
   ProvisionalGovernanceCredentialId,
   ProvisionalGovernanceCredentialRole,

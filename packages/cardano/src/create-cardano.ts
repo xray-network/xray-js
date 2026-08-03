@@ -1,4 +1,10 @@
 import { DEFAULT_ACCOUNT_DERIVATION_PATH, DEFAULT_ADDRESS_DERIVATION_PATH, SLOT_CONFIG_NETWORK, TTL } from "./config.js"
+import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import { CIP8Message as Message } from "@xray-network/xray-cardano-lib"
+import KoiosClient from "cardano-koios-client"
+import KupoClient from "cardano-kupo-client"
+import NftcdnClient from "cardano-nftcdn-client"
+import OgmiosClient from "cardano-ogmios-client"
 import {
   accountFromAddress,
   accountFromMnemonic,
@@ -7,25 +13,21 @@ import {
   accountFromWallet,
   importCardanoAccount,
   type CardanoAccount,
-} from "./accounts/cardano-account.js"
-import { KoiosClient } from "./clients/koios-client.js"
-import { KupoClient } from "./clients/kupo-client.js"
-import { NftcdnClient } from "./clients/nftcdn-client.js"
-import { OgmiosClient } from "./clients/ogmios-client.js"
-import { CardanoLib, Message } from "./internal/dependencies.js"
-import type { CardanoContext } from "./internal/client-context.js"
-import { createProtocolParametersCache } from "./internal/protocol-parameters-cache.js"
-import { createKoiosProvider } from "./providers/koios/index.js"
-import primitives from "./primitives/index.js"
-import { createTransactionPlan, type TransactionPlan } from "./transactions/transaction-plan.js"
+} from "./accounts/account.js"
+import type { CardanoContext } from "./internal/context.js"
+import { createProtocolParametersCache } from "./internal/protocol-parameters.js"
+import { createKoiosProvider } from "./providers/koios.js"
+import * as addresses from "./primitives/address.js"
+import * as encoding from "./primitives/misc.js"
+import { createTransactionPlan, type TransactionPlan } from "./transactions/plan.js"
 import {
   signTransaction,
   signTransactionWithPrivateKey,
   unsignedTransactionFromCbor,
   type AccountSignOptions,
   type UnsignedTransaction,
-} from "./transactions/unsigned-transaction.js"
-import type { SignedTransaction } from "./transactions/signed-transaction.js"
+  type SignedTransaction,
+} from "./transactions/transaction.js"
 import type {
   AccountDerivationPath,
   AccountExportV1,
@@ -37,8 +39,8 @@ import type {
   Provider,
   SignedMessage,
   SlotConfig,
-} from "./types/index.js"
-import { connectCip30Wallet, isCip30WalletEnabled, listCip30Wallets, type Cip30Wallet } from "./wallets/cip30-wallet.js"
+} from "./types.js"
+import { connectCip30Wallet, isCip30WalletEnabled, listCip30Wallets, type Cip30Wallet } from "./wallets/cip30.js"
 
 export interface Cardano {
   readonly provider: Provider
@@ -123,8 +125,8 @@ export const createCardano = (config: CardanoConfig = {}): Cardano => {
 
   const signMessageWithPrivateKey = (privateKey: string, address: string, message: string): SignedMessage => {
     const hexAddress = CardanoLib.Address.from_bech32(address).to_hex()
-    const hexMessage = primitives.misc.fromStringToHex(message)
-    const { paymentCred } = primitives.address.getCredentials(address)
+    const hexMessage = encoding.fromStringToHex(message)
+    const { paymentCred } = addresses.getCredentials(address)
     const hash = CardanoLib.PrivateKey.from_bech32(privateKey).to_public().hash().to_hex()
     if (!paymentCred?.hash || paymentCred.hash !== hash) throw new Error("Private key does not match the address")
     return Message.signData(hexAddress, hexMessage, privateKey)
@@ -137,15 +139,15 @@ export const createCardano = (config: CardanoConfig = {}): Cardano => {
       }
       if (account.type === "wallet") {
         const hexAddress = CardanoLib.Address.from_bech32(account.paymentAddress).to_hex()
-        return account.getWallet().signData(hexAddress, primitives.misc.fromStringToHex(message))
+        return account.getWallet().signData(hexAddress, encoding.fromStringToHex(message))
       }
       throw new Error(`Account type ${account.type} cannot sign messages`)
     },
     signWithPrivateKey: signMessageWithPrivateKey,
     verify: (address: string, message: string, signedMessage: SignedMessage): boolean => {
       const hexAddress = CardanoLib.Address.from_bech32(address).to_hex()
-      const hexMessage = primitives.misc.fromStringToHex(message)
-      const { paymentCred, stakingCred } = primitives.address.getCredentials(address)
+      const hexMessage = encoding.fromStringToHex(message)
+      const { paymentCred, stakingCred } = addresses.getCredentials(address)
       const hash = paymentCred?.hash ?? stakingCred?.hash
       if (!hash) throw new Error("Invalid address")
       return Message.verifyData(hexAddress, hash, hexMessage, signedMessage)

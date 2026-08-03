@@ -1,88 +1,20 @@
-import type { CardanoContext } from "../internal/client-context.js"
-import { CardanoLib, UPLC } from "../internal/dependencies.js"
-import primitives from "../primitives/index.js"
-import type * as CardanoTypes from "../types/index.js"
-import { unsignedTransactionFromCbor, type UnsignedTransaction } from "./unsigned-transaction.js"
+import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import * as UPLC from "@xray-network/xray-cardano-lib"
+import type { CardanoContext } from "../internal/context.js"
+import * as addresses from "../primitives/address.js"
+import * as governancePrimitives from "../primitives/governance.js"
+import * as encoding from "../primitives/misc.js"
+import * as scriptsPrimitives from "../primitives/script.js"
+import * as time from "../primitives/time.js"
+import * as transactionPrimitives from "../primitives/tx.js"
+import type * as CardanoTypes from "../types.js"
+import { unsignedTransactionFromCbor, type UnsignedTransaction } from "./transaction.js"
+import type { TransactionOperation } from "./plan.js"
 
-export interface TransactionPlan {
-  attachScript(script: CardanoTypes.Script): TransactionPlan
-  readFrom(utxos: CardanoTypes.Utxo[]): TransactionPlan
-  spendFromScript(utxos: CardanoTypes.Utxo[], redeemer?: string): TransactionPlan
-  spend(utxos: CardanoTypes.Utxo[]): TransactionPlan
-  payToContract(
-    output: CardanoTypes.Output,
-    datum: CardanoTypes.DatumOutput,
-    script?: CardanoTypes.Script
-  ): TransactionPlan
-  payTo(outputs: CardanoTypes.Output[], datum?: CardanoTypes.DatumOutput, script?: CardanoTypes.Script): TransactionPlan
-  validFrom(unixTime: number): TransactionPlan
-  validUntil(unixTime: number): TransactionPlan
-  validForSlots(slotsOffset: number): TransactionPlan
-  setChangeAddress(address: string): TransactionPlan
-  requireSigner(address: string): TransactionPlan
-  requireSignerKeyHash(keyHash: string): TransactionPlan
-  mint(assets: CardanoTypes.Asset[], redeemer?: string): TransactionPlan
-  metadataText(label: number, metadata: CardanoTypes.JsonValue): TransactionPlan
-  metadataJson(label: number, metadata: CardanoTypes.JsonValue, conversion?: 0 | 1 | 2): TransactionPlan
-  readonly stake: {
-    withdrawRewards(rewardAddress: string, amount: bigint, redeemer?: string): TransactionPlan
-    delegateTo(rewardAddress: string, poolId: string, redeemer?: string): TransactionPlan
-    register(rewardAddress: string): TransactionPlan
-    deregister(rewardAddress: string, redeemer?: string): TransactionPlan
-  }
-  readonly governance: {
-    delegateToDRep(rewardAddress: string, drep: CardanoTypes.DRep, redeemer?: string): TransactionPlan
-    registerDRep(rewardAddress: string, drepInfo?: CardanoTypes.DrepAnchor, redeemer?: string): TransactionPlan
-    deregisterDRep(rewardAddress: string, redeemer?: string): TransactionPlan
-    updateDRep(rewardAddress: string, drepAnchor?: CardanoTypes.DrepAnchor, redeemer?: string): TransactionPlan
-  }
-  evaluation(mode: "local" | "remote"): TransactionPlan
-  coinSelection(strategy: CardanoTypes.CoinSelectionStrategy): TransactionPlan
-  build(): Promise<UnsignedTransaction>
-}
-
-export interface TransactionExecutor {
-  attachScript(script: CardanoTypes.Script): TransactionExecutor
-  readFrom(utxos: CardanoTypes.Utxo[]): TransactionExecutor
-  spendFromScript(utxos: CardanoTypes.Utxo[], redeemer?: string): TransactionExecutor
-  spend(utxos: CardanoTypes.Utxo[]): TransactionExecutor
-  payToContract(
-    output: CardanoTypes.Output,
-    datum: CardanoTypes.DatumOutput,
-    script?: CardanoTypes.Script
-  ): TransactionExecutor
-  payTo(
-    outputs: CardanoTypes.Output[],
-    datum?: CardanoTypes.DatumOutput,
-    script?: CardanoTypes.Script
-  ): TransactionExecutor
-  validFrom(unixTime: number): TransactionExecutor
-  validUntil(unixTime: number): TransactionExecutor
-  validForSlots(slotsOffset: number): TransactionExecutor
-  setChangeAddress(address: string): TransactionExecutor
-  requireSigner(address: string): TransactionExecutor
-  requireSignerKeyHash(keyHash: string): TransactionExecutor
-  mint(assets: CardanoTypes.Asset[], redeemer?: string): TransactionExecutor
-  metadataText(label: number, metadata: CardanoTypes.JsonValue): TransactionExecutor
-  metadataJson(label: number, metadata: CardanoTypes.JsonValue, conversion?: 0 | 1 | 2): TransactionExecutor
-  readonly stake: {
-    withdrawRewards(rewardAddress: string, amount: bigint, redeemer?: string): TransactionExecutor
-    delegateTo(rewardAddress: string, poolId: string, redeemer?: string): TransactionExecutor
-    register(rewardAddress: string): TransactionExecutor
-    deregister(rewardAddress: string, redeemer?: string): TransactionExecutor
-  }
-  readonly governance: {
-    delegateToDRep(rewardAddress: string, drep: CardanoTypes.DRep, redeemer?: string): TransactionExecutor
-    registerDRep(rewardAddress: string, drepInfo?: CardanoTypes.DrepAnchor, redeemer?: string): TransactionExecutor
-    deregisterDRep(rewardAddress: string, redeemer?: string): TransactionExecutor
-    updateDRep(rewardAddress: string, drepAnchor?: CardanoTypes.DrepAnchor, redeemer?: string): TransactionExecutor
-  }
-  evaluation(mode: "local" | "remote"): TransactionExecutor
-  coinSelection(strategy: CardanoTypes.CoinSelectionStrategy): TransactionExecutor
-  build(): Promise<UnsignedTransaction>
-}
-
-export const createTransactionExecutor = (client: CardanoContext): TransactionExecutor => {
+export const buildTransaction = async (
+  client: CardanoContext,
+  operations: readonly TransactionOperation[]
+): Promise<UnsignedTransaction> => {
   let protocolParameters: CardanoTypes.ProtocolParameters
   let changeAddress: string
   const scripts = new Map<string, CardanoTypes.Script>()
@@ -93,49 +25,46 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
   let evaluationMode: "local" | "remote" = "local"
   let coinSelectionStrategy: CardanoTypes.CoinSelectionStrategy = "largest-first-multiasset"
   let transactionBuilder: CardanoLib.TransactionBuilder
-  let api: TransactionExecutor
 
-  /** Attach script to transaction builder for using in next operations
-   * @param script Script to attach
-   * @returns TransactionExecutor instance
-   */
-  const attachScript = (script: CardanoTypes.Script) => {
-    const scriptHash = primitives.script.scriptToScriptHash(script)
-    scripts.set(scriptHash, script)
-    return api
+  const utxoKey = (utxo: CardanoTypes.Utxo) => `${utxo.index}@${utxo.transaction.id}`
+  const createPlutusWitness = (script: CardanoTypes.Script, redeemer?: string) => {
+    if (!redeemer) {
+      throw new Error("Redeemer is required for Plutus scripts. Use Data.void() if the script has no redeemer")
+    }
+    return createPlutusWitness(script, redeemer)
   }
-
-  /**
-   * Add UTXOs to read referenced data from
-   * @param utxos UTXOs to read from
-   * @returns TransactionExecutor instance
-   */
-  const readFrom = (utxos: CardanoTypes.Utxo[]) => {
+  const initializeBuilder = () => {
+    const builder = transactionPrimitives.getTransactionBuilder(protocolParameters)
+    builder.set_network_id(
+      client.network.type === "mainnet" ? CardanoLib.NetworkId.mainnet() : CardanoLib.NetworkId.testnet()
+    )
+    builder.set_ttl(BigInt(time.unixTimeToSlot(Date.now() + client.transactionTtlSeconds * 1000, client.slotConfig)))
+    return builder
+  }
+  const attachScript = (script: CardanoTypes.Script) => {
+    const scriptHash = scriptsPrimitives.scriptToScriptHash(script)
+    scripts.set(scriptHash, script)
+    return
+  }
+  const readFrom = (utxos: readonly CardanoTypes.Utxo[]) => {
     queue.push(async () => {
       for (const utxoUnresolved of utxos) {
         const utxo = await client.provider.resolveUtxoDatumAndScript(utxoUnresolved)
         if (utxo.script && utxo.scriptHash) {
           scripts.set(utxo.scriptHash, utxo.script)
         }
-        readInputs.set(`${utxo.index.toString()}@${utxo.transaction.id}`, utxo)
-        const input = primitives.tx.utxoToCore(utxo)
+        readInputs.set(utxoKey(utxo), utxo)
+        const input = transactionPrimitives.utxoToCore(utxo)
         transactionBuilder.add_reference_input(input)
       }
     })
-    return api
+    return
   }
-
-  /**
-   * Add script UTXOs to spend from
-   * @param utxos UTXOs to collect from
-   * @param redeemer Redeemer to use (optional)
-   * @returns TransactionExecutor instance
-   */
-  const spendFromScript = (utxos: CardanoTypes.Utxo[], redeemer?: string) => {
+  const spendFromScript = (utxos: readonly CardanoTypes.Utxo[], redeemer?: string) => {
     queue.push(async () => {
       for (const utxoUnresolved of utxos) {
         const utxo = await client.provider.resolveUtxoDatumAndScript(utxoUnresolved)
-        const { paymentCred } = primitives.address.getCredentials(utxo.address)
+        const { paymentCred } = addresses.getCredentials(utxo.address)
         if (!paymentCred) throw new Error("Script input address has no payment credential")
         const script = scripts.get(paymentCred.hash)
         if (!script) {
@@ -143,8 +72,8 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
             "Script is required for spendFromScript() method. Attach script with attachScript() or readFrom() method"
           )
         }
-        collectInputs.set(`${utxo.index.toString()}@${utxo.transaction.id}`, utxo)
-        const coreUtxo = primitives.tx.utxoToCore(utxo)
+        collectInputs.set(utxoKey(utxo), utxo)
+        const coreUtxo = transactionPrimitives.utxoToCore(utxo)
         const inputBuilder = CardanoLib.SingleInputBuilder.from_transaction_unspent_output(coreUtxo)
         switch (script.language) {
           case "Native":
@@ -156,14 +85,9 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
             )
             break
           case "PlutusV1":
-            if (!redeemer) {
-              throw new Error(
-                "Redeemer is required for Plutus scripts. Use Data.void() if script doesn't require a redeemer"
-              )
-            }
             transactionBuilder.add_input(
               inputBuilder.plutus_script(
-                primitives.script.partialPlutusWitness(primitives.script.scriptToPlutusScript(script), redeemer),
+                createPlutusWitness(script, redeemer),
                 CardanoLib.RequiredSigners.new(),
                 CardanoLib.PlutusData.from_cbor_hex(utxo.datum!)
               )
@@ -171,14 +95,9 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
             break
           case "PlutusV2":
           case "PlutusV3":
-            if (!redeemer) {
-              throw new Error(
-                "Redeemer is required for Plutus scripts. Use Data.void() if script doesn't require a redeemer"
-              )
-            }
             transactionBuilder.add_input(
               inputBuilder.plutus_script_inline_datum(
-                primitives.script.partialPlutusWitness(primitives.script.scriptToPlutusScript(script), redeemer),
+                createPlutusWitness(script, redeemer),
                 CardanoLib.RequiredSigners.new()
               )
             )
@@ -186,39 +105,24 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
         }
       }
     })
-    return api
+    return
   }
-
-  /**
-   * Add UTXOs to spend from
-   * @param utxos UTXOs to spend from
-   * @returns TransactionExecutor instance
-   */
-  const spend = (utxos: CardanoTypes.Utxo[]) => {
+  const spend = (utxos: readonly CardanoTypes.Utxo[]) => {
     queue.push(async () => {
       for (const utxo of utxos) {
-        inputs.set(`${utxo.index.toString()}@${utxo.transaction.id}`, utxo)
-        const coreUtxo = primitives.tx.utxoToCore(utxo)
+        inputs.set(utxoKey(utxo), utxo)
+        const coreUtxo = transactionPrimitives.utxoToCore(utxo)
         const inputBuilder = CardanoLib.SingleInputBuilder.from_transaction_unspent_output(coreUtxo)
         transactionBuilder.add_input(inputBuilder.payment_key())
       }
     })
-    return api
+    return
   }
-
-  /**
-   * Main method to pay to address with/without data
-   * @param output Output to pay to
-   * @param datum Datum to attach
-   * @param script Script to attach (optional)
-   * @returns TransactionExecutor instance
-   * @throws Error if script is not provided with hash datum type
-   */
   const addOutput = (output: CardanoTypes.Output, datum?: CardanoTypes.DatumOutput, script?: CardanoTypes.Script) => {
     queue.push(async () => {
-      const outputBuilder = primitives.tx.outputToTransactionOutputBuilder(output, datum, script)
+      const outputBuilder = transactionPrimitives.outputToTransactionOutputBuilder(output, datum, script)
       const value = output.value ?? 0n
-      const cardanoValue = primitives.tx.assetsToValue(value, output.assets)
+      const cardanoValue = transactionPrimitives.assetsToValue(value, output.assets)
       const multiAsset = cardanoValue.multi_asset()
       if (value === 0n && !multiAsset) throw new Error("An output requires lovelace or assets")
       const outputBuilderResult =
@@ -230,101 +134,58 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
               .build()
       transactionBuilder.add_output(outputBuilderResult)
     })
-    return api
+    return
   }
-
-  /**
-   * Add Output with data to pay to contract with address check
-   * @param output Output to pay to
-   * @param datum Datum to attach
-   * @param script Script to attach
-   * @returns TransactionExecutor instance
-   * @throws Error if address is not script type
-   */
   const payToContract = (
     output: CardanoTypes.Output,
     datum: CardanoTypes.DatumOutput,
     script?: CardanoTypes.Script
   ) => {
-    const { paymentCred } = primitives.address.getCredentials(output.address)
+    const { paymentCred } = addresses.getCredentials(output.address)
     if (!paymentCred || paymentCred.type !== "script") {
       throw new Error("Invalid address for contract")
     }
     addOutput(output, datum, script)
-    return api
+    return
   }
-
-  /**
-   * Add Outputs to pay to addresses
-   * @param outputs Outputs to pay to
-   * @param datum Datum to attach (optional)
-   * @param script Script to attach (optional)
-   * @returns TransactionExecutor instance
-   */
-  const payTo = (outputs: CardanoTypes.Output[], datum?: CardanoTypes.DatumOutput, script?: CardanoTypes.Script) => {
+  const payTo = (
+    outputs: readonly CardanoTypes.Output[],
+    datum?: CardanoTypes.DatumOutput,
+    script?: CardanoTypes.Script
+  ) => {
     for (const output of outputs) {
       addOutput(output, datum, script)
     }
-    return api
+    return
   }
-
-  /**
-   * Set transaction validity start interval
-   * @param unixTime Unix timestamp
-   * @returns TransactionExecutor instance
-   */
   const validFrom = (unixTime: number) => {
     queue.push(async () => {
-      const slot = primitives.time.unixTimeToSlot(unixTime, client.slotConfig)
+      const slot = time.unixTimeToSlot(unixTime, client.slotConfig)
       transactionBuilder.set_validity_start_interval(BigInt(slot))
     })
-    return api
+    return
   }
-
-  /**
-   * Set transaction validity end interval by Unix timestamp
-   * @param unixTime Unix timestamp
-   * @returns TransactionExecutor instance
-   */
   const validUntil = (unixTime: number) => {
     queue.push(async () => {
-      const slot = primitives.time.unixTimeToSlot(unixTime, client.slotConfig)
+      const slot = time.unixTimeToSlot(unixTime, client.slotConfig)
       transactionBuilder.set_ttl(BigInt(slot))
     })
-    return api
+    return
   }
-
-  /**
-   * Set transaction validity end interval (TTL) in slots from now
-   * @param slotsOffset Slots offset
-   * @returns TransactionExecutor instance
-   */
   const validForSlots = (slotsOffset: number) => {
     queue.push(async () => {
-      const slot = primitives.time.unixTimeToSlot(Date.now() + slotsOffset * 1000, client.slotConfig)
+      const slot = time.unixTimeToSlot(Date.now() + slotsOffset * 1000, client.slotConfig)
       transactionBuilder.set_ttl(BigInt(slot))
     })
-    return api
+    return
   }
-
-  /**
-   * Set change address
-   * @param address Change address
-   * @returns TransactionExecutor instance
-   */
   const setChangeAddress = (address: string) => {
     changeAddress = address
-    return api
+    return
   }
-
-  /**
-   * Add Required Signer by address
-   * @param address Address of required signer
-   * @returns TransactionExecutor instance
-   */
   const requireSigner = (address: string) => {
     queue.push(() => {
-      const { paymentCred, stakingCred, type } = primitives.address.getCredentials(address)
+      const { paymentCred, stakingCred, type } = addresses.getCredentials(address)
       if (!paymentCred && !stakingCred) {
         throw new Error("Invalid address for required signer")
       }
@@ -335,37 +196,21 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
       }
       transactionBuilder.add_required_signer(CardanoLib.Ed25519KeyHash.from_hex(credential.hash))
     })
-    return api
+    return
   }
-
-  /**
-   * Add Required Signer by key hash
-   * @param keyHash Key hash of required signer
-   * @returns TransactionExecutor instance
-   */
   const requireSignerKeyHash = (keyHash: string) => {
     queue.push(() => {
       transactionBuilder.add_required_signer(CardanoLib.Ed25519KeyHash.from_hex(keyHash))
     })
-    return api
+    return
   }
-
-  /**
-   * Add minting of assets
-   * @param assets Assets to mint
-   * @param redeemer Redeemer to use (optional)
-   * @returns TransactionExecutor instance
-   */
-  const mint = (assets: CardanoTypes.Asset[], redeemer?: string) => {
+  const mint = (assets: readonly CardanoTypes.Asset[], redeemer?: string) => {
     queue.push(async () => {
       const policyId = assets[0].policyId
       const mintAssets = CardanoLib.MapAssetNameToNonZeroInt64.new()
       for (const asset of assets) {
         if (asset.policyId !== policyId) throw new Error("All assets must have the same policyId")
-        mintAssets.insert(
-          CardanoLib.AssetName.from_raw_bytes(primitives.misc.fromHex(asset.assetName || "")),
-          asset.quantity
-        )
+        mintAssets.insert(CardanoLib.AssetName.from_raw_bytes(encoding.fromHex(asset.assetName || "")), asset.quantity)
       }
       const script = scripts.get(policyId)
       if (!script) {
@@ -384,29 +229,14 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
         case "PlutusV1":
         case "PlutusV2":
         case "PlutusV3":
-          if (!redeemer) {
-            throw new Error(
-              "Redeemer is required for Plutus scripts. Use Data.void() if script doesn't require a redeemer"
-            )
-          }
           transactionBuilder.add_mint(
-            mintBuilder.plutus_script(
-              primitives.script.partialPlutusWitness(primitives.script.scriptToPlutusScript(script), redeemer),
-              CardanoLib.RequiredSigners.new()
-            )
+            mintBuilder.plutus_script(createPlutusWitness(script, redeemer), CardanoLib.RequiredSigners.new())
           )
           break
       }
     })
-    return api
+    return
   }
-
-  /**
-   * Add metadata as string to transaction
-   * @param label Metadata label
-   * @param metadata Metadata to attach
-   * @returns TransactionExecutor instance
-   */
   const metadataText = (label: number, metadata: CardanoTypes.JsonValue) => {
     queue.push(async () => {
       const metadatum = CardanoLib.TransactionMetadatum.new_text(JSON.stringify(metadata))
@@ -415,16 +245,8 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
       const aux = CardanoLib.AuxiliaryData.new(metadataBuilder)
       transactionBuilder.add_auxiliary_data(aux)
     })
-    return api
+    return
   }
-
-  /**
-   * Add metadata as JSON (with conversion) to transaction
-   * @param label Metadata label
-   * @param metadata Metadata to attach
-   * @param conversion Conversion type (optional, 0: default, 1: detailed, 2: more detailed)
-   * @returns TransactionExecutor instance
-   */
   const metadataJson = (label: number, metadata: CardanoTypes.JsonValue, conversion: 0 | 1 | 2 = 0) => {
     queue.push(async () => {
       const metadatum = CardanoLib.encode_json_str_to_metadatum(JSON.stringify(metadata), conversion)
@@ -433,30 +255,18 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
       const aux = CardanoLib.AuxiliaryData.new(metadataBuilder)
       transactionBuilder.add_auxiliary_data(aux)
     })
-    return api
+    return
   }
 
-  /**
-   * Stake related methods
-   */
-
   const stake: {
-    withdrawRewards: (rewardAddress: string, amount: bigint, redeemer?: string) => TransactionExecutor
-    delegateTo: (rewardAddress: string, poolId: string, redeemer?: string) => TransactionExecutor
-    register: (rewardAddress: string) => TransactionExecutor
-    deregister: (rewardAddress: string, redeemer?: string) => TransactionExecutor
+    withdrawRewards: (rewardAddress: string, amount: bigint, redeemer?: string) => void
+    delegateTo: (rewardAddress: string, poolId: string, redeemer?: string) => void
+    register: (rewardAddress: string) => void
+    deregister: (rewardAddress: string, redeemer?: string) => void
   } = {
-    /**
-     * Add withdrawal of rewards
-     * @param rewardAddress Reward address to withdraw from
-     * @param amount Amount to withdraw
-     * @param script Script to attach (optional)
-     * @param redeemer Redeemer to use (optional)
-     * @returns TransactionExecutor instance
-     */
     withdrawRewards: (rewardAddress: string, amount: bigint, redeemer?: string) => {
       queue.push(async () => {
-        const { stakingCred } = primitives.address.getCredentials(rewardAddress)
+        const { stakingCred } = addresses.getCredentials(rewardAddress)
         if (!stakingCred) throw new Error("Invalid address for rewards withdrawal (no staking credential)")
         const reward = CardanoLib.RewardAddress.from_address(CardanoLib.Address.from_bech32(rewardAddress))
         if (!reward) throw new Error("Invalid reward address")
@@ -485,16 +295,8 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
-                if (!redeemer) {
-                  throw new Error(
-                    "Redeemer is required for Plutus scripts. Use Data.void() if script doesn't require a redeemer"
-                  )
-                }
                 transactionBuilder.add_withdrawal(
-                  withdrawBuilder.plutus_script(
-                    primitives.script.partialPlutusWitness(primitives.script.scriptToPlutusScript(script), redeemer),
-                    CardanoLib.RequiredSigners.new()
-                  )
+                  withdrawBuilder.plutus_script(createPlutusWitness(script, redeemer), CardanoLib.RequiredSigners.new())
                 )
                 break
             }
@@ -502,19 +304,11 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
           }
         }
       })
-      return api
+      return
     },
-    /**
-     * Delegate to pool
-     * @param rewardAddress Reward address to delegate from
-     * @param poolId Pool ID to delegate to
-     * @param script Script to attach (optional)
-     * @param redeemer Redeemer to use (optional)
-     * @returns TransactionExecutor instance
-     */
     delegateTo: (rewardAddress: string, poolId: string, redeemer?: string) => {
       queue.push(async () => {
-        const { stakingCred } = primitives.address.getCredentials(rewardAddress)
+        const { stakingCred } = addresses.getCredentials(rewardAddress)
         if (!stakingCred) throw new Error("Invalid address for rewards delegation (no staking credential)")
         switch (stakingCred.type) {
           case "key": {
@@ -552,14 +346,9 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
-                if (!redeemer) {
-                  throw new Error(
-                    "Redeemer is required for Plutus scripts. Use Data.void() if script doesn't require a redeemer"
-                  )
-                }
                 transactionBuilder.add_cert(
                   certificateBuilder.plutus_script(
-                    primitives.script.partialPlutusWitness(primitives.script.scriptToPlutusScript(script), redeemer),
+                    createPlutusWitness(script, redeemer),
                     CardanoLib.RequiredSigners.new()
                   )
                 )
@@ -569,16 +358,11 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
           }
         }
       })
-      return api
+      return
     },
-    /**
-     * Register stake address
-     * @param rewardAddress Reward address to register
-     * @returns TransactionExecutor instance
-     */
     register: (rewardAddress: string) => {
       queue.push(async () => {
-        const { stakingCred } = primitives.address.getCredentials(rewardAddress)
+        const { stakingCred } = addresses.getCredentials(rewardAddress)
         if (!stakingCred) throw new Error("Invalid address for rewards withdrawal (no staking credential)")
         const credential =
           stakingCred.type === "key"
@@ -589,18 +373,11 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
         )
         transactionBuilder.add_cert(certificateBuilder.skip_witness())
       })
-      return api
+      return
     },
-    /**
-     * Deregister stake address
-     * @param rewardAddress Reward address to deregister
-     * @param script Script to attach (optional)
-     * @param redeemer Redeemer to use (optional)
-     * @returns TransactionExecutor instance
-     */
     deregister: (rewardAddress: string, redeemer?: string) => {
       queue.push(async () => {
-        const { stakingCred } = primitives.address.getCredentials(rewardAddress)
+        const { stakingCred } = addresses.getCredentials(rewardAddress)
         if (!stakingCred) throw new Error("Invalid address for rewards deregistration (no staking credential)")
         switch (stakingCred.type) {
           case "key": {
@@ -634,14 +411,9 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
-                if (!redeemer) {
-                  throw new Error(
-                    "Redeemer is required for Plutus scripts. Use Data.void() if script doesn't require a redeemer"
-                  )
-                }
                 transactionBuilder.add_cert(
                   certificateBuilder.plutus_script(
-                    primitives.script.partialPlutusWitness(primitives.script.scriptToPlutusScript(script), redeemer),
+                    createPlutusWitness(script, redeemer),
                     CardanoLib.RequiredSigners.new()
                   )
                 )
@@ -650,24 +422,20 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
           }
         }
       })
-      return api
+      return
     },
   }
-
-  /**
-   * Governance related methods
-   */
   const governance: {
-    delegateToDRep: (rewardAddress: string, drep: CardanoTypes.DRep, redeemer?: string) => TransactionExecutor
-    registerDRep: (rewardAddress: string, drepInfo?: CardanoTypes.DrepAnchor, redeemer?: string) => TransactionExecutor
-    deregisterDRep: (rewardAddress: string, redeemer?: string) => TransactionExecutor
-    updateDRep: (rewardAddress: string, drepAnchor?: CardanoTypes.DrepAnchor, redeemer?: string) => TransactionExecutor
+    delegateToDRep: (rewardAddress: string, drep: CardanoTypes.DRep, redeemer?: string) => void
+    registerDRep: (rewardAddress: string, drepInfo?: CardanoTypes.DrepAnchor, redeemer?: string) => void
+    deregisterDRep: (rewardAddress: string, redeemer?: string) => void
+    updateDRep: (rewardAddress: string, drepAnchor?: CardanoTypes.DrepAnchor, redeemer?: string) => void
   } = {
     delegateToDRep: (rewardAddress: string, drep: CardanoTypes.DRep, redeemer?: string) => {
       queue.push(async () => {
-        const { stakingCred } = primitives.address.getCredentials(rewardAddress)
+        const { stakingCred } = addresses.getCredentials(rewardAddress)
         if (!stakingCred) throw new Error("Invalid governance address: no staking credential")
-        const drepInstance = primitives.governance.toDRep(drep)
+        const drepInstance = governancePrimitives.toDRep(drep)
 
         switch (stakingCred.type) {
           case "key": {
@@ -701,14 +469,9 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
-                if (!redeemer) {
-                  throw new Error(
-                    "Redeemer is required for Plutus scripts. Use Data.void() if script doesn't require a redeemer"
-                  )
-                }
                 transactionBuilder.add_cert(
                   certificateBuilder.plutus_script(
-                    primitives.script.partialPlutusWitness(primitives.script.scriptToPlutusScript(script), redeemer),
+                    createPlutusWitness(script, redeemer),
                     CardanoLib.RequiredSigners.new()
                   )
                 )
@@ -717,12 +480,12 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
           }
         }
       })
-      return api
+      return
     },
 
     registerDRep: (rewardAddress: string, drepAnchor?: CardanoTypes.DrepAnchor, redeemer?: string) => {
       queue.push(async () => {
-        const { stakingCred } = primitives.address.getCredentials(rewardAddress)
+        const { stakingCred } = addresses.getCredentials(rewardAddress)
         if (!stakingCred) throw new Error("Invalid governance address: no staking credential")
         const drepAnchorInstance = drepAnchor
           ? CardanoLib.Anchor.new(
@@ -767,14 +530,9 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
-                if (!redeemer) {
-                  throw new Error(
-                    "Redeemer is required for Plutus scripts. Use Data.void() if script doesn't require a redeemer"
-                  )
-                }
                 transactionBuilder.add_cert(
                   certificateBuilder.plutus_script(
-                    primitives.script.partialPlutusWitness(primitives.script.scriptToPlutusScript(script), redeemer),
+                    createPlutusWitness(script, redeemer),
                     CardanoLib.RequiredSigners.new()
                   )
                 )
@@ -783,12 +541,12 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
           }
         }
       })
-      return api
+      return
     },
 
     deregisterDRep: (rewardAddress: string, redeemer?: string) => {
       queue.push(async () => {
-        const { stakingCred } = primitives.address.getCredentials(rewardAddress)
+        const { stakingCred } = addresses.getCredentials(rewardAddress)
         if (!stakingCred) throw new Error("Invalid governance address: no staking credential")
 
         switch (stakingCred.type) {
@@ -827,14 +585,9 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
-                if (!redeemer) {
-                  throw new Error(
-                    "Redeemer is required for Plutus scripts. Use Data.void() if script doesn't require a redeemer"
-                  )
-                }
                 transactionBuilder.add_cert(
                   certificateBuilder.plutus_script(
-                    primitives.script.partialPlutusWitness(primitives.script.scriptToPlutusScript(script), redeemer),
+                    createPlutusWitness(script, redeemer),
                     CardanoLib.RequiredSigners.new()
                   )
                 )
@@ -843,12 +596,12 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
           }
         }
       })
-      return api
+      return
     },
 
     updateDRep: (rewardAddress: string, drepAnchor?: CardanoTypes.DrepAnchor, redeemer?: string) => {
       queue.push(async () => {
-        const { stakingCred } = primitives.address.getCredentials(rewardAddress)
+        const { stakingCred } = addresses.getCredentials(rewardAddress)
         if (!stakingCred) throw new Error("Invalid governance address: no staking credential")
         const drepAnchorInstance = drepAnchor
           ? CardanoLib.Anchor.new(
@@ -893,14 +646,9 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
-                if (!redeemer) {
-                  throw new Error(
-                    "Redeemer is required for Plutus scripts. Use Data.void() if script doesn't require a redeemer"
-                  )
-                }
                 transactionBuilder.add_cert(
                   certificateBuilder.plutus_script(
-                    primitives.script.partialPlutusWitness(primitives.script.scriptToPlutusScript(script), redeemer),
+                    createPlutusWitness(script, redeemer),
                     CardanoLib.RequiredSigners.new()
                   )
                 )
@@ -909,66 +657,27 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
           }
         }
       })
-      return api
+      return
     },
   }
-
-  /**
-   * Evaluate TX execution cost remotely
-   * @param mode Evaluation mode
-   * @returns TransactionExecutor instance
-   */
   const evaluation = (mode: "local" | "remote") => {
     evaluationMode = mode
-    return api
+    return
   }
-
-  /**
-   * Set coin selection strategy
-   *
-   * -1: Include all inputs
-   *
-   * 0: LargestFirst: Performs CIP2's Largest First ada-only selection. Will error if outputs contain non-ADA assets
-   *
-   * 1: RandomImprove: Performs CIP2's Random Improve ada-only selection. Will error if outputs contain non-ADA assets
-   *
-   * 2: LargestFirstMultiAsset: Same as LargestFirst, but before adding ADA, will insert by largest-first for each asset type
-   *
-   * 3: RandomImproveMultiAsset: Same as RandomImprove, but before adding ADA, will insert by random-improve for each asset type
-   *
-   * @param strategy Coin selection strategy
-   * @returns TransactionExecutor instance
-   */
   const coinSelection = (strategy: CardanoTypes.CoinSelectionStrategy) => {
     coinSelectionStrategy = strategy
-    return api
+    return
   }
-
-  /**
-   * Apply all methods and return UnsignedTransaction instance
-   * @returns UnsignedTransaction instance
-   */
   const applyOperations = async () => {
-    // Check if change address is set
     if (!changeAddress) {
       throw new Error("Change address is required. Use setChangeAddress() method to set it")
     }
 
-    // Initialize Transaction Builder
     if (!transactionBuilder) {
       protocolParameters = await client.getProtocolParameters()
-      transactionBuilder = primitives.tx.getTransactionBuilder(protocolParameters)
-      // Set Network ID
-      transactionBuilder.set_network_id(
-        client.network.type === "mainnet" ? CardanoLib.NetworkId.mainnet() : CardanoLib.NetworkId.testnet()
-      )
-      // Set default TTL
-      transactionBuilder.set_ttl(
-        BigInt(primitives.time.unixTimeToSlot(Date.now() + client.transactionTtlSeconds * 1000, client.slotConfig))
-      )
+      transactionBuilder = initializeBuilder()
     }
 
-    // Execute queue tasks
     for (const task of queue) {
       await task()
     }
@@ -980,21 +689,20 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
       if (!collateral) throw new Error("Suitable collateral > 5 ADA not found")
       transactionBuilder.add_collateral(
         CardanoLib.SingleInputBuilder.from_transaction_unspent_output(
-          primitives.tx.utxoToCore(collateral)
+          transactionPrimitives.utxoToCore(collateral)
         ).payment_key()
       )
       transactionBuilder.set_collateral_return(
         CardanoLib.TransactionOutputBuilder.new()
           .with_address(CardanoLib.Address.from_bech32(changeAddress))
           .next()
-          .with_value(primitives.tx.assetsToValue(collateral.value - BigInt(3_000_000), collateral.assets))
+          .with_value(transactionPrimitives.assetsToValue(collateral.value - BigInt(3_000_000), collateral.assets))
           .build()
           .output()
       )
     }
     addCollateral()
 
-    // Coin Selection
     const selectionAlgorithms: Record<Exclude<CardanoTypes.CoinSelectionStrategy, "all">, 0 | 1 | 2 | 3> = {
       "largest-first": 0,
       "random-improve": 1,
@@ -1014,12 +722,12 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
         CardanoLib.Address.from_bech32(changeAddress)
       )
       if (evaluationMode === "local") {
-        const costModels = primitives.tx.createCostModels(protocolParameters.costModels)
+        const costModels = transactionPrimitives.createCostModels(protocolParameters.costModels)
         const slotConfig = client.slotConfig
         const allInputs = [...inputs.values(), ...readInputs.values(), ...collectInputs.values()]
         const uplcEvaluatedRedeemers = UPLC.evaluatePhaseTwo(
           evaluation.draft_tx(),
-          allInputs.map(primitives.tx.utxoToCore),
+          allInputs.map(transactionPrimitives.utxoToCore),
           costModels,
           [protocolParameters.maxTxExSteps, protocolParameters.maxTxExMem],
           [BigInt(slotConfig.zeroTime), BigInt(slotConfig.zeroSlot), BigInt(slotConfig.slotDuration)],
@@ -1028,13 +736,7 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
         )
         // Evaluation adds draft change to the low-level builder. Rebuild from the
         // operation queue before applying execution units so final build owns change calculation.
-        transactionBuilder = primitives.tx.getTransactionBuilder(protocolParameters)
-        transactionBuilder.set_network_id(
-          client.network.type === "mainnet" ? CardanoLib.NetworkId.mainnet() : CardanoLib.NetworkId.testnet()
-        )
-        transactionBuilder.set_ttl(
-          BigInt(primitives.time.unixTimeToSlot(Date.now() + client.transactionTtlSeconds * 1000, client.slotConfig))
-        )
+        transactionBuilder = initializeBuilder()
         for (const task of queue) await task()
         addCollateral()
         selectCoins()
@@ -1049,13 +751,8 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
       }
     }
 
-    return api
+    return
   }
-
-  /**
-   * Apply all methods, build TX and return UnsignedTransaction instance
-   * @returns UnsignedTransaction instance
-   */
   const build = async () => {
     await applyOperations()
     return unsignedTransactionFromCbor(
@@ -1067,159 +764,89 @@ export const createTransactionExecutor = (client: CardanoContext): TransactionEx
     )
   }
 
-  api = Object.freeze({
-    attachScript,
-    readFrom,
-    spendFromScript,
-    spend,
-    payToContract,
-    payTo,
-    validFrom,
-    validUntil,
-    validForSlots,
-    setChangeAddress,
-    requireSigner,
-    requireSignerKeyHash,
-    mint,
-    metadataText,
-    metadataJson,
-    stake: Object.freeze(stake),
-    governance: Object.freeze(governance),
-    evaluation,
-    coinSelection,
-    build,
-  })
-  return api
-}
-
-type TransactionOperation = (executor: TransactionExecutor) => TransactionExecutor
-
-const copyAssets = (assets: readonly CardanoTypes.Asset[] | undefined): CardanoTypes.Asset[] | undefined =>
-  assets?.map((asset) => ({ ...asset }))
-
-const copyUtxos = (utxos: readonly CardanoTypes.Utxo[]): CardanoTypes.Utxo[] =>
-  utxos.map((utxo) => ({
-    ...utxo,
-    transaction: { ...utxo.transaction },
-    assets: copyAssets(utxo.assets) ?? [],
-    script: utxo.script ? { ...utxo.script } : utxo.script,
-  }))
-
-const copyOutputs = (outputs: readonly CardanoTypes.Output[]): CardanoTypes.Output[] =>
-  outputs.map((output) => ({ ...output, assets: copyAssets(output.assets) }))
-
-export const createTransactionPlan = (
-  client: CardanoContext,
-  operations: readonly TransactionOperation[] = []
-): TransactionPlan => {
-  const append = (operation: TransactionOperation): TransactionPlan =>
-    createTransactionPlan(client, Object.freeze([...operations, operation]))
-
-  const attachScript = (script: CardanoTypes.Script) => {
-    const snapshot = { ...script }
-    return append((executor) => executor.attachScript(snapshot))
-  }
-  const readFrom = (utxos: CardanoTypes.Utxo[]) => {
-    const snapshot = copyUtxos(utxos)
-    return append((executor) => executor.readFrom(snapshot))
-  }
-  const spendFromScript = (utxos: CardanoTypes.Utxo[], redeemer?: string) => {
-    const snapshot = copyUtxos(utxos)
-    return append((executor) => executor.spendFromScript(snapshot, redeemer))
-  }
-  const spend = (utxos: CardanoTypes.Utxo[]) => {
-    const snapshot = copyUtxos(utxos)
-    return append((executor) => executor.spend(snapshot))
-  }
-  const payToContract = (
-    output: CardanoTypes.Output,
-    datum: CardanoTypes.DatumOutput,
-    script?: CardanoTypes.Script
-  ) => {
-    const outputSnapshot = copyOutputs([output])[0]!
-    const datumSnapshot = { ...datum }
-    const scriptSnapshot = script ? { ...script } : undefined
-    return append((executor) => executor.payToContract(outputSnapshot, datumSnapshot, scriptSnapshot))
-  }
-  const payTo = (outputs: CardanoTypes.Output[], datum?: CardanoTypes.DatumOutput, script?: CardanoTypes.Script) => {
-    const outputSnapshot = copyOutputs(outputs)
-    const datumSnapshot = datum ? { ...datum } : undefined
-    const scriptSnapshot = script ? { ...script } : undefined
-    return append((executor) => executor.payTo(outputSnapshot, datumSnapshot, scriptSnapshot))
-  }
-  const validFrom = (unixTime: number) => append((executor) => executor.validFrom(unixTime))
-  const validUntil = (unixTime: number) => append((executor) => executor.validUntil(unixTime))
-  const validForSlots = (slotsOffset: number) => append((executor) => executor.validForSlots(slotsOffset))
-  const setChangeAddress = (address: string) => append((executor) => executor.setChangeAddress(address))
-  const requireSigner = (address: string) => append((executor) => executor.requireSigner(address))
-  const requireSignerKeyHash = (keyHash: string) => append((executor) => executor.requireSignerKeyHash(keyHash))
-  const mint = (assets: CardanoTypes.Asset[], redeemer?: string) => {
-    const snapshot = copyAssets(assets) ?? []
-    return append((executor) => executor.mint(snapshot, redeemer))
-  }
-  const metadataText = (label: number, metadata: CardanoTypes.JsonValue) => {
-    const snapshot = structuredClone(metadata)
-    return append((executor) => executor.metadataText(label, snapshot))
-  }
-  const metadataJson = (label: number, metadata: CardanoTypes.JsonValue, conversion: 0 | 1 | 2 = 0) => {
-    const snapshot = structuredClone(metadata)
-    return append((executor) => executor.metadataJson(label, snapshot, conversion))
-  }
-  const evaluation = (mode: "local" | "remote") => append((executor) => executor.evaluation(mode))
-  const coinSelection = (strategy: CardanoTypes.CoinSelectionStrategy) =>
-    append((executor) => executor.coinSelection(strategy))
-
-  const stake = Object.freeze({
-    withdrawRewards: (rewardAddress: string, amount: bigint, redeemer?: string) =>
-      append((executor) => executor.stake.withdrawRewards(rewardAddress, amount, redeemer)),
-    delegateTo: (rewardAddress: string, poolId: string, redeemer?: string) =>
-      append((executor) => executor.stake.delegateTo(rewardAddress, poolId, redeemer)),
-    register: (rewardAddress: string) => append((executor) => executor.stake.register(rewardAddress)),
-    deregister: (rewardAddress: string, redeemer?: string) =>
-      append((executor) => executor.stake.deregister(rewardAddress, redeemer)),
-  })
-
-  const governance = Object.freeze({
-    delegateToDRep: (rewardAddress: string, drep: CardanoTypes.DRep, redeemer?: string) =>
-      append((executor) => executor.governance.delegateToDRep(rewardAddress, drep, redeemer)),
-    registerDRep: (rewardAddress: string, drepInfo?: CardanoTypes.DrepAnchor, redeemer?: string) => {
-      const snapshot = drepInfo ? { ...drepInfo } : undefined
-      return append((executor) => executor.governance.registerDRep(rewardAddress, snapshot, redeemer))
-    },
-    deregisterDRep: (rewardAddress: string, redeemer?: string) =>
-      append((executor) => executor.governance.deregisterDRep(rewardAddress, redeemer)),
-    updateDRep: (rewardAddress: string, drepAnchor?: CardanoTypes.DrepAnchor, redeemer?: string) => {
-      const snapshot = drepAnchor ? { ...drepAnchor } : undefined
-      return append((executor) => executor.governance.updateDRep(rewardAddress, snapshot, redeemer))
-    },
-  })
-
-  const build = async (): Promise<UnsignedTransaction> => {
-    let executor = createTransactionExecutor(client)
-    for (const operation of operations) executor = operation(executor)
-    return executor.build()
+  for (const operation of operations) {
+    switch (operation.kind) {
+      case "attach-script":
+        attachScript(operation.script)
+        break
+      case "read-from":
+        readFrom(operation.utxos)
+        break
+      case "spend-from-script":
+        spendFromScript(operation.utxos, operation.redeemer)
+        break
+      case "spend":
+        spend(operation.utxos)
+        break
+      case "pay-to-contract":
+        payToContract(operation.output, operation.datum, operation.script)
+        break
+      case "pay-to":
+        payTo(operation.outputs, operation.datum, operation.script)
+        break
+      case "valid-from":
+        validFrom(operation.unixTime)
+        break
+      case "valid-until":
+        validUntil(operation.unixTime)
+        break
+      case "valid-for-slots":
+        validForSlots(operation.slotsOffset)
+        break
+      case "set-change-address":
+        setChangeAddress(operation.address)
+        break
+      case "require-signer":
+        requireSigner(operation.address)
+        break
+      case "require-signer-key-hash":
+        requireSignerKeyHash(operation.keyHash)
+        break
+      case "mint":
+        mint(operation.assets, operation.redeemer)
+        break
+      case "metadata-text":
+        metadataText(operation.label, operation.metadata)
+        break
+      case "metadata-json":
+        metadataJson(operation.label, operation.metadata, operation.conversion)
+        break
+      case "withdraw-rewards":
+        stake.withdrawRewards(operation.rewardAddress, operation.amount, operation.redeemer)
+        break
+      case "delegate-stake":
+        stake.delegateTo(operation.rewardAddress, operation.poolId, operation.redeemer)
+        break
+      case "register-stake":
+        stake.register(operation.rewardAddress)
+        break
+      case "deregister-stake":
+        stake.deregister(operation.rewardAddress, operation.redeemer)
+        break
+      case "delegate-drep":
+        governance.delegateToDRep(operation.rewardAddress, operation.drep, operation.redeemer)
+        break
+      case "register-drep":
+        governance.registerDRep(operation.rewardAddress, operation.anchor, operation.redeemer)
+        break
+      case "deregister-drep":
+        governance.deregisterDRep(operation.rewardAddress, operation.redeemer)
+        break
+      case "update-drep":
+        governance.updateDRep(operation.rewardAddress, operation.anchor, operation.redeemer)
+        break
+      case "evaluation":
+        evaluation(operation.mode)
+        break
+      case "coin-selection":
+        coinSelection(operation.strategy)
+        break
+      default: {
+        const exhaustive: never = operation
+        return exhaustive
+      }
+    }
   }
 
-  return Object.freeze({
-    attachScript,
-    readFrom,
-    spendFromScript,
-    spend,
-    payToContract,
-    payTo,
-    validFrom,
-    validUntil,
-    validForSlots,
-    setChangeAddress,
-    requireSigner,
-    requireSignerKeyHash,
-    mint,
-    metadataText,
-    metadataJson,
-    stake,
-    governance,
-    evaluation,
-    coinSelection,
-    build,
-  })
+  return build()
 }

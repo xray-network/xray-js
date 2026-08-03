@@ -1,9 +1,9 @@
-import type { CardanoAccount } from "../accounts/cardano-account.js"
-import { CardanoLib } from "../internal/dependencies.js"
-import { createTransaction, getTransactionParts } from "../internal/cardano-lib/index.js"
-import primitives from "../primitives/index.js"
-import type { Utxo } from "../types/index.js"
-import { signedTransactionFromCbor, type SignedTransaction } from "./signed-transaction.js"
+import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import type { CardanoAccount } from "../accounts/account.js"
+import { createTransaction, getTransactionParts } from "../internal/transaction.js"
+import * as keys from "../primitives/keys.js"
+import * as transactionPrimitives from "../primitives/tx.js"
+import type { Utxo } from "../types.js"
 
 export interface AccountSignOptions {
   password?: string
@@ -16,6 +16,23 @@ export interface UnsignedTransaction {
   readonly hash: string
   readonly json: unknown
   readonly resolvedUtxos: readonly Utxo[]
+}
+
+export interface SignedTransaction {
+  readonly kind: "signed"
+  readonly cbor: string
+  readonly hash: string
+  readonly json: unknown
+}
+
+export const signedTransactionFromCbor = (cbor: string): SignedTransaction => {
+  const transaction = CardanoLib.Transaction.from_cbor_hex(cbor)
+  return Object.freeze({
+    kind: "signed" as const,
+    cbor: transaction.to_cbor_hex(),
+    hash: CardanoLib.hash_transaction(getTransactionParts(transaction).body).to_hex(),
+    json: transaction.to_js_value(),
+  })
 }
 
 export const unsignedTransactionFromCbor = (cbor: string, resolvedUtxos: readonly Utxo[] = []): UnsignedTransaction => {
@@ -42,10 +59,10 @@ export const signTransaction = async (
     if (account.type === "private-key") {
       const material = account.getSigningMaterial(options.password)
       const paymentKey = CardanoLib.PrivateKey.from_bech32(
-        primitives.keys.derivePrivateKey(material.rootPrivateKey, material.accountPath, material.addressPath)
+        keys.derivePrivateKey(material.rootPrivateKey, material.accountPath, material.addressPath)
       )
       const stakingKey = CardanoLib.PrivateKey.from_bech32(
-        primitives.keys.derivePrivateKey(material.rootPrivateKey, material.accountPath, [2, 0])
+        keys.derivePrivateKey(material.rootPrivateKey, material.accountPath, [2, 0])
       )
       const paymentKeyHash = paymentKey.to_public().hash().to_hex()
       const stakingKeyHash = stakingKey.to_public().hash().to_hex()
@@ -53,7 +70,7 @@ export const signTransaction = async (
       for (const utxo of [...unsigned.resolvedUtxos, ...(options.resolvedUtxos ?? [])]) {
         resolved.set(`${utxo.transaction.id}#${utxo.index}`, utxo)
       }
-      const foundHashes = primitives.tx.discoverOwnUsedTxKeyHashes(
+      const foundHashes = transactionPrimitives.discoverOwnUsedTxKeyHashes(
         transaction,
         [stakingKeyHash, paymentKeyHash],
         [...resolved.values()]

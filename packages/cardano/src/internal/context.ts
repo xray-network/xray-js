@@ -1,4 +1,4 @@
-import type { NetworkConfig, ProtocolParameters, Provider, SlotConfig } from "../types/index.js"
+import type { NetworkConfig, ProtocolParameters, Provider, SlotConfig } from "../types.js"
 
 export interface CardanoContext {
   readonly network: NetworkConfig

@@ -1,6 +1,9 @@
-import type { CardanoContext } from "../internal/client-context.js"
-import { CardanoLib } from "../internal/dependencies.js"
-import primitives from "../primitives/index.js"
+import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import type { CardanoContext } from "../internal/context.js"
+import * as account from "../primitives/account.js"
+import * as addresses from "../primitives/address.js"
+import * as keys from "../primitives/keys.js"
+import * as encoding from "../primitives/misc.js"
 import type {
   AccountConfig,
   AccountDelegation,
@@ -9,8 +12,8 @@ import type {
   AccountState,
   AccountType,
   AddressDerivationPath,
-} from "../types/index.js"
-import type { Cip30Wallet } from "../wallets/cip30-wallet.js"
+} from "../types.js"
+import type { Cip30Wallet } from "../wallets/cip30.js"
 
 export interface CardanoAccount {
   readonly type: AccountType
@@ -55,12 +58,12 @@ const createCardanoAccount = (client: CardanoContext, state: AccountConfig): Car
   const encryptPrivateKey = (password: string): string => {
     if (!state.xprvKey) throw new Error("Account has no private key")
     if (state.xprvKeyIsEncoded) throw new Error("Private key is already encrypted")
-    return primitives.misc.encryptDataWithPass(state.xprvKey, password)
+    return encoding.encryptDataWithPass(state.xprvKey, password)
   }
 
   const decryptPrivateKey = (password: string): string => {
     if (!state.xprvKey || !state.xprvKeyIsEncoded) throw new Error("Account has no encrypted private key")
-    return primitives.misc.decryptDataWithPass(state.xprvKey, password)
+    return encoding.decryptDataWithPass(state.xprvKey, password)
   }
 
   const getSigningMaterial = (password?: string) => {
@@ -77,7 +80,7 @@ const createCardanoAccount = (client: CardanoContext, state: AccountConfig): Car
 
   const getPrivateKey = (password?: string): string => {
     const material = getSigningMaterial(password)
-    return primitives.keys.derivePrivateKey(material.rootPrivateKey, material.accountPath, material.addressPath)
+    return keys.derivePrivateKey(material.rootPrivateKey, material.accountPath, material.addressPath)
   }
 
   const getWallet = (): Cip30Wallet => {
@@ -87,7 +90,7 @@ const createCardanoAccount = (client: CardanoContext, state: AccountConfig): Car
 
   const getState = async (): Promise<AccountState> => {
     const utxos = await client.provider.getUtxosByAddress(paymentAddress)
-    return { utxos, balance: primitives.account.getBalanceFromUtxos(utxos) }
+    return { utxos, balance: account.getBalanceFromUtxos(utxos) }
   }
 
   const getDelegation = async (): Promise<AccountDelegation> => {
@@ -123,16 +126,16 @@ const privateKeyState = (
   accountPath: AccountDerivationPath,
   addressPath: AddressDerivationPath
 ): AccountConfig => {
-  const publicKey = primitives.keys.xprvKeyToXpubKey(privateKey, accountPath)
-  const checksum = primitives.account.checksum(publicKey)
-  const details = primitives.account.getDetailsFromXpub(publicKey, addressPath, client.network.id)
+  const publicKey = keys.xprvKeyToXpubKey(privateKey, accountPath)
+  const checksum = account.checksum(publicKey)
+  const details = account.getDetailsFromXpub(publicKey, addressPath, client.network.id)
   return {
     configVersion: 1,
     type: "private-key",
     checksumImage: checksum.checksumImage,
     checksumId: checksum.checksumId,
     xpubKey: publicKey,
-    xprvKey: password ? primitives.misc.encryptDataWithPass(privateKey, password) : privateKey,
+    xprvKey: password ? encoding.encryptDataWithPass(privateKey, password) : privateKey,
     xprvKeyIsEncoded: Boolean(password),
     accountPath,
     addressPath,
@@ -149,9 +152,9 @@ const publicKeyState = (
   publicKey: string,
   addressPath: AddressDerivationPath
 ): AccountConfig => {
-  if (!primitives.keys.xpubKeyValidate(publicKey)) throw new Error("Invalid public key")
-  const checksum = primitives.account.checksum(publicKey)
-  const details = primitives.account.getDetailsFromXpub(publicKey, addressPath, client.network.id)
+  if (!keys.xpubKeyValidate(publicKey)) throw new Error("Invalid public key")
+  const checksum = account.checksum(publicKey)
+  const details = account.getDetailsFromXpub(publicKey, addressPath, client.network.id)
   return {
     configVersion: 1,
     type: "public-key",
@@ -176,8 +179,7 @@ export const accountFromMnemonic = (
   password: string | undefined,
   accountPath: AccountDerivationPath,
   addressPath: AddressDerivationPath
-): CardanoAccount =>
-  accountFromPrivateKey(client, primitives.keys.mnemonicToXprvKey(mnemonic), password, accountPath, addressPath)
+): CardanoAccount => accountFromPrivateKey(client, keys.mnemonicToXprvKey(mnemonic), password, accountPath, addressPath)
 
 export const accountFromPrivateKey = (
   client: CardanoContext,
@@ -201,7 +203,7 @@ export const accountFromWallet = async (client: CardanoContext, wallet: Cip30Wal
   const rewardAddress = (await wallet.getRewardAddresses())[0]
   if (!mainAddress) throw new Error("Wallet did not provide a payment address")
   const paymentAddress = CardanoLib.Address.from_hex(mainAddress).to_bech32()
-  const credentials = primitives.address.getCredentials(paymentAddress)
+  const credentials = addresses.getCredentials(paymentAddress)
   const stakingAddress = rewardAddress ? CardanoLib.Address.from_hex(rewardAddress).to_bech32() : undefined
   return createCardanoAccount(client, {
     configVersion: 1,
@@ -222,7 +224,7 @@ export const accountFromWallet = async (client: CardanoContext, wallet: Cip30Wal
 }
 
 export const accountFromAddress = (client: CardanoContext, address: string): CardanoAccount => {
-  const credentials = primitives.address.getCredentials(address)
+  const credentials = addresses.getCredentials(address)
   return createCardanoAccount(client, {
     configVersion: 1,
     type: "address",
@@ -235,7 +237,7 @@ export const accountFromAddress = (client: CardanoContext, address: string): Car
     addressPath: undefined,
     paymentAddress: address,
     paymentCred: credentials.paymentCred?.hash,
-    stakingAddress: primitives.address.getStakingAddress(address),
+    stakingAddress: addresses.getStakingAddress(address),
     stakingCred: credentials.stakingCred?.hash,
     wallet: undefined,
   })

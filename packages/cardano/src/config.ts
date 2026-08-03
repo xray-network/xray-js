@@ -1,4 +1,4 @@
-import type * as CardanoTypes from "./types/index.js"
+import type * as CardanoTypes from "./types.js"
 
 export const SLOT_CONFIG_NETWORK: Record<CardanoTypes.NetworkName, CardanoTypes.SlotConfig> = {
   mainnet: { zeroTime: 1596059091000, zeroSlot: 4492800, slotDuration: 1000 },
