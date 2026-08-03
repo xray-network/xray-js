@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import { CardanoWeb3, utils } from "@xray-network/xray-js-cardano"
-import { testData } from "./__test.js"
+import { testData } from "./fixtures.js"
 
 describe("Account", async () => {
   const web3 = new CardanoWeb3()

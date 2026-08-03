@@ -37,41 +37,41 @@
       "import": "./dist/esm/cardano-lib.js",
       "default": "./dist/esm/cardano-lib.js"
     },
-    "./mini-app": {
-      "types": "./dist/esm/mini-app.d.ts",
-      "browser": "./dist/esm/mini-app.js",
-      "import": "./dist/esm/mini-app.js",
-      "default": "./dist/esm/mini-app.js"
+    "./mini-app-bridge": {
+      "types": "./dist/esm/mini-app-bridge.d.ts",
+      "browser": "./dist/esm/mini-app-bridge.js",
+      "import": "./dist/esm/mini-app-bridge.js",
+      "default": "./dist/esm/mini-app-bridge.js"
     },
-    "./mini-app/protocol": {
-      "types": "./dist/esm/mini-app-protocol.d.ts",
-      "browser": "./dist/esm/mini-app-protocol.js",
-      "import": "./dist/esm/mini-app-protocol.js",
-      "default": "./dist/esm/mini-app-protocol.js"
+    "./mini-app-bridge/protocol": {
+      "types": "./dist/esm/mini-app-bridge-protocol.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-protocol.js",
+      "import": "./dist/esm/mini-app-bridge-protocol.js",
+      "default": "./dist/esm/mini-app-bridge-protocol.js"
     },
-    "./mini-app/client": {
-      "types": "./dist/esm/mini-app-client.d.ts",
-      "browser": "./dist/esm/mini-app-client.js",
-      "import": "./dist/esm/mini-app-client.js",
-      "default": "./dist/esm/mini-app-client.js"
+    "./mini-app-bridge/client": {
+      "types": "./dist/esm/mini-app-bridge-client.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-client.js",
+      "import": "./dist/esm/mini-app-bridge-client.js",
+      "default": "./dist/esm/mini-app-bridge-client.js"
     },
-    "./mini-app/host": {
-      "types": "./dist/esm/mini-app-host.d.ts",
-      "browser": "./dist/esm/mini-app-host.js",
-      "import": "./dist/esm/mini-app-host.js",
-      "default": "./dist/esm/mini-app-host.js"
+    "./mini-app-bridge/host": {
+      "types": "./dist/esm/mini-app-bridge-host.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-host.js",
+      "import": "./dist/esm/mini-app-bridge-host.js",
+      "default": "./dist/esm/mini-app-bridge-host.js"
     },
-    "./mini-app/react": {
-      "types": "./dist/esm/mini-app-react.d.ts",
-      "browser": "./dist/esm/mini-app-react.js",
-      "import": "./dist/esm/mini-app-react.js",
-      "default": "./dist/esm/mini-app-react.js"
+    "./mini-app-bridge/react": {
+      "types": "./dist/esm/mini-app-bridge-react.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-react.js",
+      "import": "./dist/esm/mini-app-bridge-react.js",
+      "default": "./dist/esm/mini-app-bridge-react.js"
     },
-    "./mini-app/testing": {
-      "types": "./dist/esm/mini-app-testing.d.ts",
-      "browser": "./dist/esm/mini-app-testing.js",
-      "import": "./dist/esm/mini-app-testing.js",
-      "default": "./dist/esm/mini-app-testing.js"
+    "./mini-app-bridge/testing": {
+      "types": "./dist/esm/mini-app-bridge-testing.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-testing.js",
+      "import": "./dist/esm/mini-app-bridge-testing.js",
+      "default": "./dist/esm/mini-app-bridge-testing.js"
     },
     "./package.json": "./package.json"
   },
@@ -88,6 +88,6 @@
   "dependencies": {
     "@xray-network/xray-cardano-lib": "0.1.0",
     "@xray-network/xray-js-cardano": "3.0.0",
-    "@xray-network/xray-js-mini-app": "3.0.0"
+    "@xray-network/xray-js-mini-app-bridge": "3.0.0"
   }
 }

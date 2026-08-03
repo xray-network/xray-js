@@ -1,15 +1,16 @@
-import { bytesToHex, decodeCbor, type CborValue } from "@xray-network/xray-cardano-lib-core"
 import { CardanoLib, CW3Types } from "../index.js"
 import { fromHex } from "./misc.js"
-import { getShelleyOrByronAddress, getCredentials } from "./address.js"
+import { getShelleyOrByronAddress } from "./address.js"
 import { scriptToScriptRef } from "./script.js"
 
 export const createCostModels = (costModels: CW3Types.CostModels): CardanoLib.CostModels => {
-  const models = CardanoLib.MapU64ToArrI64.new()
-  models.insert(0n, BigInt64Array.from(costModels.PlutusV1.map(BigInt)))
-  models.insert(1n, BigInt64Array.from(costModels.PlutusV2.map(BigInt)))
-  models.insert(2n, BigInt64Array.from(costModels.PlutusV3.map(BigInt)))
-  return CardanoLib.CostModels.new(models)
+  return CardanoLib.CostModels.from_json(
+    JSON.stringify({
+      "0": costModels.PlutusV1,
+      "1": costModels.PlutusV2,
+      "2": costModels.PlutusV3,
+    })
+  )
 }
 
 export const getTxBuilder = (protocolParams: CW3Types.ProtocolParameters): CardanoLib.TransactionBuilder => {
@@ -106,87 +107,6 @@ export const discoverOwnUsedTxKeyHashes = (
   ownKeyHashes: string[],
   ownUtxos: CW3Types.Utxo[]
 ): string[] => {
-  const usedKeyHashes: string[] = []
-  const transaction = decodeCbor(tx.to_cbor_bytes())
-  if (transaction.kind !== "array" || transaction.values[0]?.kind !== "map") {
-    throw new TypeError("Invalid Cardano transaction")
-  }
-  const body = transaction.values[0]
-  const witnesses = transaction.values[1]
-  const bodyField = (field: bigint): CborValue | undefined =>
-    body.entries.find(([key]) => key.kind === "unsigned" && key.value === field)?.[1]
-  const witnessField = (field: bigint): CborValue | undefined =>
-    witnesses?.kind === "map"
-      ? witnesses.entries.find(([key]) => key.kind === "unsigned" && key.value === field)?.[1]
-      : undefined
-  const collectionValues = (value: CborValue | undefined): readonly CborValue[] => {
-    const collection = value?.kind === "tag" && value.tag === 258n ? value.value : value
-    return collection?.kind === "array" ? collection.values : []
-  }
-
-  for (const inputs of [bodyField(0n), bodyField(13n)]) {
-    for (const input of collectionValues(inputs)) {
-      if (input.kind !== "array" || input.values[0]?.kind !== "bytes" || input.values[1]?.kind !== "unsigned") {
-        continue
-      }
-      const txId = bytesToHex(input.values[0].value)
-      const txIndex = Number(input.values[1].value)
-      const utxo = ownUtxos.find((utxo) => utxo.transaction.id === txId && utxo.index === txIndex)
-      if (utxo) {
-        const { paymentCred } = getCredentials(utxo.address)
-        usedKeyHashes.push(paymentCred.hash)
-      }
-    }
-  }
-
-  for (const certificate of collectionValues(bodyField(4n))) {
-    if (certificate.kind !== "array" || certificate.values[0]?.kind !== "unsigned") continue
-    const kind = Number(certificate.values[0].value)
-    if (kind === 3 && certificate.values[1]?.kind === "array") {
-      const pool = certificate.values[1]
-      if (pool.values[0]?.kind === "bytes") usedKeyHashes.push(bytesToHex(pool.values[0].value))
-      for (const owner of collectionValues(pool.values[6])) {
-        if (owner.kind === "bytes") usedKeyHashes.push(bytesToHex(owner.value))
-      }
-    } else if (kind === 4 && certificate.values[1]?.kind === "bytes") {
-      usedKeyHashes.push(bytesToHex(certificate.values[1].value))
-    } else if (kind !== 0) {
-      const credential = certificate.values[1]
-      if (credential?.kind === "array" && credential.values[1]?.kind === "bytes") {
-        usedKeyHashes.push(bytesToHex(credential.values[1].value))
-      }
-    }
-  }
-
-  const withdrawals = bodyField(5n)
-  if (withdrawals?.kind === "map") {
-    for (const [address] of withdrawals.entries) {
-      if (address.kind !== "bytes") continue
-      const credential = CardanoLib.RewardAddress.from_address(
-        CardanoLib.Address.from_raw_bytes(address.value)
-      )?.payment()
-      const hash = credential?.as_pub_key() ?? credential?.as_script()
-      if (hash) usedKeyHashes.push(hash.to_hex())
-    }
-  }
-
-  for (const signer of collectionValues(bodyField(14n))) {
-    if (signer.kind === "bytes") usedKeyHashes.push(bytesToHex(signer.value))
-  }
-
-  const keyHashesFromScript = (script: CborValue): void => {
-    if (script.kind !== "array" || script.values[0]?.kind !== "unsigned") return
-    const kind = Number(script.values[0].value)
-    if (kind === 0 && script.values[1]?.kind === "bytes") {
-      usedKeyHashes.push(bytesToHex(script.values[1].value))
-      return
-    }
-    const nested = kind === 3 ? script.values[2] : script.values[1]
-    if (kind >= 1 && kind <= 3 && nested?.kind === "array") {
-      nested.values.forEach(keyHashesFromScript)
-    }
-  }
-  collectionValues(witnessField(1n)).forEach(keyHashesFromScript)
-
-  return usedKeyHashes.filter((hash) => ownKeyHashes.includes(hash))
+  const required = CardanoLib.discover_required_witnesses(tx, ownUtxos.map(utxoToCore))
+  return [...required.vkeys.keys()].filter((hash) => ownKeyHashes.includes(hash))
 }

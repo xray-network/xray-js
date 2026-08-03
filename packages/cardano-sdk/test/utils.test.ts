@@ -1,7 +1,11 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { CardanoWeb3, utils } from "@xray-network/xray-js-cardano"
-import { testData } from "./__test.js"
+import { CardanoLib, CardanoWeb3, CW3Types, UPLC, utils } from "@xray-network/xray-js-cardano"
+import {
+  ProvisionalGovernanceCredentialId,
+  ProvisionalGovernanceCredentialRole,
+} from "@xray-network/xray-cardano-lib-cip/cip129"
+import { testData } from "./fixtures.js"
 
 describe("Utils", async () => {
   const web3 = new CardanoWeb3({
@@ -52,6 +56,14 @@ describe("Utils", async () => {
     it("xpubKeyValidate()", async () => {
       const isValid = utils.keys.xpubKeyValidate(testData.xpubKey)
       assert.deepEqual(isValid, true)
+    })
+
+    it("xvkKeyToXpubKey()", () => {
+      const xvk = CardanoLib.encodeCardanoBip32PublicKey(
+        CardanoLib.CardanoKeyRole.Account,
+        CardanoLib.Bip32PublicKey.from_bech32(testData.xpubKey)
+      )
+      assert.equal(utils.keys.xvkKeyToXpubKey(xvk), testData.xpubKey)
     })
 
     it("PaymentAddress Verification Key", async () => {
@@ -149,6 +161,104 @@ describe("Utils", async () => {
       const assetNameHex = utils.misc.fromStringToHex(assetName)
       const fingerprintGenerated = utils.asset.getFingerprint(policyId, assetNameHex)
       assert.deepEqual(fingerprintGenerated, fingerprint)
+    })
+  })
+
+  describe("Governance", () => {
+    it("decodes a strict CIP-129 DRep credential", () => {
+      const credential = utils.governance.getDRepCredentials(
+        "drep1yf4darz2mwutsy5j966e6unjrd4f4s56e8eh3hekzvq3grcrzn4ws"
+      )
+      assert.equal(credential.type, "key")
+      assert.equal(credential.hash.length, 56)
+    })
+
+    it("rejects a governance identifier with the wrong role", () => {
+      const committeeId = ProvisionalGovernanceCredentialId.from_credential(
+        ProvisionalGovernanceCredentialRole.ConstitutionalCommitteeHot,
+        CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_raw_bytes(new Uint8Array(28)))
+      )
+      assert.throws(() => utils.governance.getDRepCredentials(committeeId.to_bech32()), /not a DRep/)
+    })
+  })
+
+  describe("Script", () => {
+    it("normalizes every explicit Plutus envelope to double CBOR", () => {
+      const raw = UPLC.encodeFlatProgram(UPLC.parseUplcText("(program 1.0.0 (con unit ()))"))
+      const envelope = CardanoLib.SerializedPlutusScript.from_raw_flat(raw)
+      const expected = utils.misc.toHex(envelope.to_double_cbor())
+
+      for (const script of [raw, envelope.to_single_cbor(), envelope.to_double_cbor()]) {
+        assert.equal(utils.script.applyDoubleCborEncoding(utils.misc.toHex(script)), expected)
+      }
+    })
+
+    it("uses the same ledger hash for every Plutus envelope", () => {
+      const raw = UPLC.encodeFlatProgram(UPLC.parseUplcText("(program 1.0.0 (con unit ()))"))
+      const envelope = CardanoLib.SerializedPlutusScript.from_raw_flat(raw)
+      const hashes = [raw, envelope.to_single_cbor(), envelope.to_double_cbor()].map((script) =>
+        utils.script.scriptToScriptHash({ language: "PlutusV2", script: utils.misc.toHex(script) })
+      )
+      assert.equal(new Set(hashes).size, 1)
+    })
+  })
+
+  describe("Transaction", () => {
+    const ownedUtxo = () => ({
+      ...testData.accountState.utxos[0],
+      address: testData.paymentAddress,
+      assets: [] as CW3Types.Asset[],
+    })
+
+    it("discovers and signs the account witness from builder-resolved inputs", async () => {
+      const account = web3.account.fromXprvKey(testData.xprvKey)
+      const finalizer = await web3
+        .createTx()
+        .setChangeAddress(testData.paymentAddress)
+        .addOutputs([{ address: testData.paymentAddress, value: 2_000_000n }])
+        .addInputs([ownedUtxo()])
+        .applyAndBuild()
+      const unsigned = finalizer.__tx.to_cbor_hex()
+      const signed = await finalizer.signWithAccount(account, []).applyAndToJson()
+
+      assert.notEqual(signed.tx, unsigned)
+      assert.equal(signed.hash.length, 64)
+    })
+
+    it("emits the Conway certificate variants for DRep operations", async () => {
+      const certificateKind = async (operation: (builder: ReturnType<CardanoWeb3["createTx"]>) => void) => {
+        const builder = web3.createTx().setChangeAddress(testData.paymentAddress)
+        operation(builder)
+        const finalizer = await builder.addInputs([ownedUtxo()]).applyAndBuild()
+        const fields = finalizer.__tx.body().to_js_value() as Array<{ k: number; v: unknown }>
+        const certificates = fields.find(({ k }) => k === 4)?.v as { value: Array<[number, ...unknown[]]> } | undefined
+        return certificates?.value[0]?.[0]
+      }
+
+      assert.equal(
+        await certificateKind((builder) => {
+          builder.governance.delegateToDRep(testData.stakingAddress, "AlwaysAbstain")
+        }),
+        9
+      )
+      assert.equal(
+        await certificateKind((builder) => {
+          builder.governance.registerDRep(testData.stakingAddress)
+        }),
+        16
+      )
+      assert.equal(
+        await certificateKind((builder) => {
+          builder.governance.deregisterDRep(testData.stakingAddress)
+        }),
+        17
+      )
+      assert.equal(
+        await certificateKind((builder) => {
+          builder.governance.updateDRep(testData.stakingAddress)
+        }),
+        18
+      )
     })
   })
 

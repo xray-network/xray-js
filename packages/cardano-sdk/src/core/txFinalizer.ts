@@ -4,12 +4,14 @@ import { Account } from "./account.js"
 
 export class TxFinalizer {
   private cw3: CardanoWeb3
+  private resolvedUtxos: CW3Types.Utxo[]
   private queue: (() => unknown)[] = []
   __tx: CardanoLib.Transaction
   __witnessBuilder: CardanoLib.TransactionWitnessSetBuilder
 
-  constructor(cw3: CardanoWeb3, tx: string) {
+  constructor(cw3: CardanoWeb3, tx: string, resolvedUtxos: CW3Types.Utxo[] = []) {
     this.cw3 = cw3
+    this.resolvedUtxos = resolvedUtxos
     this.__tx = CardanoLib.Transaction.from_cbor_hex(tx)
     this.__witnessBuilder = CardanoLib.TransactionWitnessSetBuilder.new()
   }
@@ -57,8 +59,16 @@ export class TxFinalizer {
         const stakingKey = CardanoLib.PrivateKey.from_bech32(stakingVerificationKey)
         const stakingKeyHash = stakingKey.to_public().hash().to_hex()
 
-        if (utxos.length > 0) {
-          const foundHashes = utils.tx.discoverOwnUsedTxKeyHashes(this.__tx, [stakingKeyHash, paymentKeyHash], utxos)
+        const resolvedUtxos = new Map<string, CW3Types.Utxo>()
+        for (const utxo of [...this.resolvedUtxos, ...utxos]) {
+          resolvedUtxos.set(`${utxo.transaction.id}#${utxo.index}`, utxo)
+        }
+        if (resolvedUtxos.size > 0) {
+          const foundHashes = utils.tx.discoverOwnUsedTxKeyHashes(
+            this.__tx,
+            [stakingKeyHash, paymentKeyHash],
+            [...resolvedUtxos.values()]
+          )
           if (foundHashes.includes(paymentKeyHash)) {
             this.__witnessBuilder.add_vkey(
               CardanoLib.make_vkey_witness(CardanoLib.hash_transaction(getTransactionParts(this.__tx).body), paymentKey)

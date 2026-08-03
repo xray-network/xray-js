@@ -21,25 +21,20 @@
     "dist"
   ],
   "scripts": {
-    "dev": "tsx test/__dev.ts",
     "build": "tsc -p tsconfig.json",
-    "test": "tsc -p tsconfig.test.json && node --test .test-dist/data.test.js .test-dist/message.test.js .test-dist/utils.test.js",
-    "test:integration": "tsc -p tsconfig.test.json && node --test .test-dist/*.test.js",
-    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "tsc -p test/tsconfig.json && node --test .test-dist/data.test.js .test-dist/message.test.js .test-dist/utils.test.js",
+    "test:integration": "tsc -p test/tsconfig.json && node --test .test-dist/*.test.js",
+    "typecheck": "tsc --noEmit -p test/tsconfig.json",
     "clean": "rm -rf dist .test-dist"
   },
   "dependencies": {
-    "@noble/hashes": "2.2.0",
-    "@scure/base": "2.2.0",
     "@scure/bip39": "2.2.0",
     "@xray-network/xray-cardano-lib": "0.1.0",
+    "@xray-network/xray-cardano-lib-cip": "0.1.0",
     "@xray-network/xray-cardano-lib-core": "0.1.0",
     "cardano-koios-client": "^1.0.10",
     "cardano-kupo-client": "^1.0.1",
     "cardano-nftcdn-client": "^1.0.6",
     "cardano-ogmios-client": "^1.0.0"
-  },
-  "devDependencies": {
-    "tsx": "^4.15.1"
   }
 }

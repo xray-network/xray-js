@@ -1,5 +1,15 @@
 import { CardanoLib, CW3Types } from "../index.js"
 
+const deriveAddressPublic = (
+  accountPublic: CardanoLib.Bip32PublicKey,
+  [role, index]: CW3Types.AddressDerivationPath
+): CardanoLib.Bip32PublicKey => {
+  if (role >= CardanoLib.Cip1852Role.External && role <= CardanoLib.Cip1852Role.ConstitutionalCommitteeHot) {
+    return CardanoLib.deriveCip1852Public(accountPublic, role, index)
+  }
+  return accountPublic.derive(role).derive(index)
+}
+
 export const validateAddress = (addrBech32: string): boolean => {
   try {
     CardanoLib.Address.from_bech32(addrBech32)
@@ -22,12 +32,11 @@ export const deriveBase = (
   addressDerivationPath: CW3Types.AddressDerivationPath,
   netoworkId: CW3Types.NetworkId
 ): string => {
-  const paymentKeyHash = CardanoLib.Bip32PublicKey.from_bech32(xpubKey)
-    .derive(addressDerivationPath[0])
-    .derive(addressDerivationPath[1])
+  const accountPublic = CardanoLib.Bip32PublicKey.from_bech32(xpubKey)
+  const paymentKeyHash = deriveAddressPublic(accountPublic, addressDerivationPath).to_raw_key().hash()
+  const stakeKeyHash = CardanoLib.deriveCip1852Public(accountPublic, CardanoLib.Cip1852Role.Stake, 0)
     .to_raw_key()
     .hash()
-  const stakeKeyHash = CardanoLib.Bip32PublicKey.from_bech32(xpubKey).derive(2).derive(0).to_raw_key().hash()
   return CardanoLib.BaseAddress.new(
     netoworkId,
     CardanoLib.Credential.new_pub_key(paymentKeyHash),
@@ -42,9 +51,7 @@ export const deriveEnterprise = (
   addressDerivationPath: CW3Types.AddressDerivationPath,
   netoworkId: CW3Types.NetworkId
 ): string => {
-  const paymentKeyHash = CardanoLib.Bip32PublicKey.from_bech32(xpubKey)
-    .derive(addressDerivationPath[0])
-    .derive(addressDerivationPath[1])
+  const paymentKeyHash = deriveAddressPublic(CardanoLib.Bip32PublicKey.from_bech32(xpubKey), addressDerivationPath)
     .to_raw_key()
     .hash()
   return CardanoLib.EnterpriseAddress.new(netoworkId, CardanoLib.Credential.new_pub_key(paymentKeyHash))
@@ -53,7 +60,13 @@ export const deriveEnterprise = (
 }
 
 export const deriveStaking = (xpubKey: string, netoworkId: CW3Types.NetworkId): string => {
-  const stakeKeyHash = CardanoLib.Bip32PublicKey.from_bech32(xpubKey).derive(2).derive(0).to_raw_key().hash()
+  const stakeKeyHash = CardanoLib.deriveCip1852Public(
+    CardanoLib.Bip32PublicKey.from_bech32(xpubKey),
+    CardanoLib.Cip1852Role.Stake,
+    0
+  )
+    .to_raw_key()
+    .hash()
   return CardanoLib.RewardAddress.new(netoworkId, CardanoLib.Credential.new_pub_key(stakeKeyHash))
     .to_address()
     .to_bech32()

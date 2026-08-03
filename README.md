@@ -25,11 +25,11 @@ const web3 = new Cardano.CardanoWeb3()
 
 ## Packages
 
-| Workspace              | Purpose                                         |
-| ---------------------- | ----------------------------------------------- |
-| `packages/runtime`     | Public `@xray-network/xray-js` runtime package  |
-| `packages/cardano-sdk` | Cardano SDK, previously `cardano-web3-js`       |
-| `packages/mini-app`    | Cross-chain XRAY Mini App SDK and CIP-30 bridge |
+| Workspace                  | Purpose                                              |
+| -------------------------- | ---------------------------------------------------- |
+| `packages/runtime`         | Public `@xray-network/xray-js` runtime package       |
+| `packages/cardano-sdk`     | Cardano SDK, previously `cardano-web3-js`            |
+| `packages/mini-app-bridge` | Cross-chain XRAY Mini App Bridge with CIP-30 support |
 
 Shared XRAY primitives are available from the package root:
 
@@ -37,14 +37,14 @@ Shared XRAY primitives are available from the package root:
 import { XrayError, type XrayChain, type RequestOptions } from "@xray-network/xray-js"
 ```
 
-## Mini-app imports
+## Mini App Bridge imports
 
-The chain-neutral mini-app protocol lives in `packages/mini-app`, with Cardano support provided by its CIP-30 modules.
+The chain-neutral Mini App Bridge lives in `packages/mini-app-bridge`, with Cardano support provided by its CIP-30 modules.
 
 ```ts
-import { miniAppClient } from "@xray-network/xray-js/mini-app/client"
-import { miniAppHost } from "@xray-network/xray-js/mini-app/host"
-import { MiniAppProvider } from "@xray-network/xray-js/mini-app/react"
+import { miniAppClient } from "@xray-network/xray-js/mini-app-bridge/client"
+import { miniAppHost } from "@xray-network/xray-js/mini-app-bridge/host"
+import { MiniAppProvider } from "@xray-network/xray-js/mini-app-bridge/react"
 ```
 
 React is an optional peer dependency and is only needed for the `/react` entry.

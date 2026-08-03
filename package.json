@@ -8,12 +8,11 @@
   },
   "workspaces": [
     "packages/cardano-sdk",
-    "packages/mini-app",
+    "packages/mini-app-bridge",
     "packages/runtime"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "dev": "npm run dev --workspace @xray-network/xray-js-cardano",
     "test": "npm run build && npm run test --workspaces --if-present",
     "test:integration": "npm run build && npm run test:integration --workspaces --if-present",
     "typecheck": "npm run build && npm run typecheck --workspaces --if-present",

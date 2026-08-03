@@ -4,7 +4,7 @@ let hostWindowOverride: Window | null = null
 
 /**
  * Override the window the client SDK talks to. Intended for tests (see
- * `@xray-network/xray-js-mini-app/testing`) where the mini app is not actually embedded in an
+ * `@xray-network/xray-js-mini-app-bridge/testing`) where the mini app is not actually embedded in an
  * iframe. Pass null to restore the default parent-window resolution.
  */
 export const setHostWindow = (win: Window | null) => {

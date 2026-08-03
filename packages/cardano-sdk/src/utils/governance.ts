@@ -1,20 +1,22 @@
 import { CardanoLib, CW3Types } from "../index.js"
-import { bech32 } from "@scure/base"
-import { bytesToHex } from "@xray-network/xray-cardano-lib-core"
+import {
+  ProvisionalGovernanceCredentialId,
+  ProvisionalGovernanceCredentialRole,
+} from "@xray-network/xray-cardano-lib-cip/cip129"
 
 export const toDRep = (drep: CW3Types.DRep): CardanoLib.DRep => {
   if (drep === "AlwaysAbstain") {
-    return CardanoLib.DRep.new(2n)
+    return CardanoLib.DRep.new_always_abstain()
   } else if (drep === "AlwaysNoConfidence") {
-    return CardanoLib.DRep.new(3n)
+    return CardanoLib.DRep.new_always_no_confidence()
   } else {
     try {
       const drepCredentials = getDRepCredentials(drep)
       switch (drepCredentials.type) {
         case "key":
-          return CardanoLib.DRep.new(0n, CardanoLib.Ed25519KeyHash.from_hex(drepCredentials.hash).to_raw_bytes())
+          return CardanoLib.DRep.new_key(CardanoLib.Ed25519KeyHash.from_hex(drepCredentials.hash))
         case "script":
-          return CardanoLib.DRep.new(1n, CardanoLib.ScriptHash.from_hex(drepCredentials.hash).to_raw_bytes())
+          return CardanoLib.DRep.new_script(CardanoLib.ScriptHash.from_hex(drepCredentials.hash))
         default:
           throw new Error(`Unsupported DRep type: ${drepCredentials.type}`)
       }
@@ -25,19 +27,12 @@ export const toDRep = (drep: CW3Types.DRep): CardanoLib.DRep => {
 }
 
 export const getDRepCredentials = (drepBech32: string): CW3Types.Credential => {
-  const { words } = bech32.decode(drepBech32, 1023)
-  const payload = bech32.fromWords(words)
-  const header = payload[0]
-  const hash = payload.slice(1)
-  const isDrepGovCred = (header & 0x20) === 0x20
-  const isScriptHash = (header & 0x03) === 0x03
-
-  if (!isDrepGovCred) {
-    throw new Error(`Invalid DRep Bech32 header: ${header}`)
-  }
-
-  return {
-    type: isScriptHash ? "script" : "key",
-    hash: bytesToHex(hash),
-  }
+  const identifier = ProvisionalGovernanceCredentialId.from_bech32(drepBech32)
+  if (identifier.role() !== ProvisionalGovernanceCredentialRole.DRep) throw new Error("Governance ID is not a DRep")
+  const credential = identifier.credential()
+  const keyHash = credential.as_pub_key()
+  const scriptHash = credential.as_script()
+  if (scriptHash) return { type: "script", hash: scriptHash.to_hex() }
+  if (keyHash) return { type: "key", hash: keyHash.to_hex() }
+  throw new TypeError("DRep identifier has no credential hash")
 }

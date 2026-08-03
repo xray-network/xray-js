@@ -1,50 +1,71 @@
 import {
   Data as PlutusData,
+  SerializedPlutusScript,
   type DataSchema,
   type PlutusDataValue,
   type StaticSchema,
 } from "@xray-network/xray-cardano-lib"
-import { decodeCbor, encodeCbor } from "@xray-network/xray-cardano-lib-core"
 import { CardanoLib, UPLC, CW3Types } from "../index.js"
 import { fromHex, toHex } from "./misc.js"
+
+const serializedPlutusScript = (script: string): SerializedPlutusScript => {
+  const bytes = fromHex(script)
+  const candidates = [
+    () => SerializedPlutusScript.from_raw_flat(bytes),
+    () => SerializedPlutusScript.from_single_cbor(bytes),
+    () => SerializedPlutusScript.from_double_cbor(bytes),
+  ]
+    .map((parse) => {
+      try {
+        return parse()
+      } catch {
+        return undefined
+      }
+    })
+    .filter((candidate): candidate is SerializedPlutusScript => candidate !== undefined)
+
+  if (candidates.length !== 1) {
+    throw new TypeError(
+      candidates.length === 0
+        ? "Plutus script is not valid raw Flat, single-CBOR, or double-CBOR"
+        : "Plutus script serialization is ambiguous"
+    )
+  }
+  return candidates[0]
+}
+
+const plutusLedgerScript = (
+  script: string,
+  language: "PlutusV1" | "PlutusV2" | "PlutusV3"
+): CardanoLib.PlutusScript => {
+  const bytes = serializedPlutusScript(script).to_single_cbor()
+  switch (language) {
+    case "PlutusV1":
+      return CardanoLib.PlutusScript.from_v1(CardanoLib.PlutusV1Script.from_raw_bytes(bytes))
+    case "PlutusV2":
+      return CardanoLib.PlutusScript.from_v2(CardanoLib.PlutusV2Script.from_raw_bytes(bytes))
+    case "PlutusV3":
+      return CardanoLib.PlutusScript.from_v3(CardanoLib.PlutusV3Script.from_raw_bytes(bytes))
+  }
+}
 
 export const scriptToScriptRef = (script: CW3Types.Script): CardanoLib.ScriptRef => {
   const coreScript = (() => {
     switch (script.language) {
       case "Native":
-        return CardanoLib.Script.new(0n, CardanoLib.NativeScript.from_cbor_hex(script.script))
+        return CardanoLib.Script.new_native(CardanoLib.NativeScript.from_cbor_hex(script.script))
       case "PlutusV1":
-        return CardanoLib.Script.new(
-          1n,
-          CardanoLib.PlutusV1Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
-        )
+        return plutusLedgerScript(script.script, script.language).to_script()
       case "PlutusV2":
-        return CardanoLib.Script.new(
-          2n,
-          CardanoLib.PlutusV2Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
-        )
+        return plutusLedgerScript(script.script, script.language).to_script()
       case "PlutusV3":
-        return CardanoLib.Script.new(
-          3n,
-          CardanoLib.PlutusV3Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
-        )
+        return plutusLedgerScript(script.script, script.language).to_script()
       default:
         throw new Error("scriptToScriptRef: Wrong script language")
     }
   })()
 
-  return CardanoLib.ScriptRef.from_cbor_bytes(
-    encodeCbor({
-      kind: "tag",
-      tag: 24n,
-      value: {
-        kind: "bytes",
-        value: coreScript.to_cbor_bytes(),
-        encoding: { kind: "definite", width: 0 },
-      },
-      encoding: { width: 0 },
-    })
-  )
+  return CardanoLib.ScriptRef.new_script(coreScript)
 }
 
 export const scriptToAddress = (
@@ -76,17 +97,9 @@ export const scriptToAddress = (
 export const scriptToPlutusScript = (script: CW3Types.Script): CardanoLib.PlutusScript => {
   switch (script.language) {
     case "PlutusV1":
-      return CardanoLib.PlutusScript.from_v1(
-        CardanoLib.PlutusV1Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
-      )
     case "PlutusV2":
-      return CardanoLib.PlutusScript.from_v2(
-        CardanoLib.PlutusV2Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
-      )
     case "PlutusV3":
-      return CardanoLib.PlutusScript.from_v3(
-        CardanoLib.PlutusV3Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
-      )
+      return plutusLedgerScript(script.script, script.language)
     default:
       throw new Error("scriptToPlutusScript: Wrong script language")
   }
@@ -97,23 +110,9 @@ export const scriptToScriptHash = (script: CW3Types.Script): string => {
     case "Native":
       return CardanoLib.NativeScript.from_cbor_hex(script.script).hash().to_hex()
     case "PlutusV1":
-      return CardanoLib.PlutusScript.from_v1(
-        CardanoLib.PlutusV1Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
-      )
-        .hash()
-        .to_hex()
     case "PlutusV2":
-      return CardanoLib.PlutusScript.from_v2(
-        CardanoLib.PlutusV2Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
-      )
-        .hash()
-        .to_hex()
     case "PlutusV3":
-      return CardanoLib.PlutusScript.from_v3(
-        CardanoLib.PlutusV3Script.from_cbor_hex(applyDoubleCborEncoding(script.script))
-      )
-        .hash()
-        .to_hex()
+      return plutusLedgerScript(script.script, script.language).hash().to_hex()
     default:
       throw new Error("scriptToScriptHash: Wrong script language")
   }
@@ -130,27 +129,7 @@ export const partialPlutusWitness = (
 }
 
 export const applyDoubleCborEncoding = (script: string): string => {
-  const scriptBytes = fromHex(script)
-  const encodeBytes = (bytes: Uint8Array): Uint8Array =>
-    encodeCbor({
-      kind: "bytes",
-      value: bytes,
-      encoding: { kind: "definite", width: 0 },
-    })
-
-  try {
-    const outer = decodeCbor(scriptBytes)
-    if (outer.kind !== "bytes") throw new TypeError("CBOR value is not a byte string")
-    decodeCbor(outer.value)
-    return script
-  } catch {
-    try {
-      decodeCbor(scriptBytes)
-      return toHex(encodeBytes(scriptBytes))
-    } catch {
-      return toHex(encodeBytes(encodeBytes(scriptBytes)))
-    }
-  }
+  return toHex(serializedPlutusScript(script).to_double_cbor())
 }
 
 export const nativeScriptFromJson = (
@@ -204,15 +183,10 @@ export function applyParamsToScript(plutusScript: string, params: PlutusDataValu
 export function applyParamsToScript(plutusScript: string, params: unknown, type?: DataSchema): string {
   const p = type ? PlutusData.castTo(params as never, type) : params
   if (!Array.isArray(p)) throw new TypeError("Script parameters must encode as a Plutus Data list")
-  const scriptBytes = fromHex(plutusScript)
-  const outer = decodeCbor(scriptBytes)
-  const normalizedScript = (() => {
-    if (outer.kind !== "bytes") return scriptBytes
-    try {
-      return decodeCbor(outer.value).kind === "bytes" ? outer.value : scriptBytes
-    } catch {
-      return scriptBytes
-    }
-  })()
-  return toHex(UPLC.applyParamsToScript(fromHex(PlutusData.to(p as PlutusDataValue[])), normalizedScript))
+  return toHex(
+    UPLC.applyParamsToScript(
+      fromHex(PlutusData.to(p as PlutusDataValue[])),
+      serializedPlutusScript(plutusScript).to_single_cbor()
+    )
+  )
 }

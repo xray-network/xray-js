@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { before, describe, it } from "node:test"
 import { CardanoWeb3, PlutusData, CW3Types, utils } from "@xray-network/xray-js-cardano"
-import { testData } from "./__test.js"
+import { testData } from "./fixtures.js"
 
 describe("TX", () => {
   const web3 = new CardanoWeb3({

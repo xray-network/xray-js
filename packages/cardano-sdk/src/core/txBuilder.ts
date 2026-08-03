@@ -1,5 +1,4 @@
 import { TTL } from "../config.js"
-import { decodeCbor } from "@xray-network/xray-cardano-lib-core"
 
 import { CardanoWeb3, CardanoLib, UPLC, utils, CW3Types } from "../index.js"
 import { TxFinalizer } from "./txFinalizer.js"
@@ -90,7 +89,7 @@ export class TxBuilder {
             this.__txBuilder.add_input(
               inputBuilder.plutus_script(
                 utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                CardanoLib.RequiredSigners.from_cbor_hex("d9010280"),
+                CardanoLib.RequiredSigners.new(),
                 CardanoLib.PlutusData.from_cbor_hex(utxo.datum!)
               )
             )
@@ -105,7 +104,7 @@ export class TxBuilder {
             this.__txBuilder.add_input(
               inputBuilder.plutus_script_inline_datum(
                 utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
+                CardanoLib.RequiredSigners.new()
               )
             )
             break
@@ -311,7 +310,7 @@ export class TxBuilder {
           this.__txBuilder.add_mint(
             mintBuilder.plutus_script(
               utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-              CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
+              CardanoLib.RequiredSigners.new()
             )
           )
           break
@@ -401,6 +400,7 @@ export class TxBuilder {
                     CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
+                break
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
@@ -412,7 +412,7 @@ export class TxBuilder {
                 this.__txBuilder.add_withdrawal(
                   withdrawBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
+                    CardanoLib.RequiredSigners.new()
                   )
                 )
                 break
@@ -439,7 +439,9 @@ export class TxBuilder {
           case "key": {
             const credential = CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
-              CardanoLib.Certificate.new(2n, credential, CardanoLib.Ed25519KeyHash.from_bech32(poolId).to_raw_bytes())
+              CardanoLib.Certificate.new_stake_delegation(
+                CardanoLib.StakeDelegation.new(credential, CardanoLib.Ed25519KeyHash.from_bech32(poolId))
+              )
             )
             this.__txBuilder.add_cert(certificateBuilder.payment_key())
             break
@@ -453,7 +455,9 @@ export class TxBuilder {
             }
             const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
-              CardanoLib.Certificate.new(2n, credential, CardanoLib.Ed25519KeyHash.from_bech32(poolId).to_raw_bytes())
+              CardanoLib.Certificate.new_stake_delegation(
+                CardanoLib.StakeDelegation.new(credential, CardanoLib.Ed25519KeyHash.from_bech32(poolId))
+              )
             )
             switch (script.language) {
               case "Native":
@@ -463,6 +467,7 @@ export class TxBuilder {
                     CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
+                break
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
@@ -474,7 +479,7 @@ export class TxBuilder {
                 this.__txBuilder.add_cert(
                   certificateBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
+                    CardanoLib.RequiredSigners.new()
                   )
                 )
                 break
@@ -498,7 +503,9 @@ export class TxBuilder {
           stakingCred.type === "key"
             ? CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
             : CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
-        const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(CardanoLib.Certificate.new(0n, credential))
+        const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
+          CardanoLib.Certificate.new_stake_registration(CardanoLib.StakeRegistration.new(credential))
+        )
         this.__txBuilder.add_cert(certificateBuilder.skip_witness())
       })
       return this
@@ -518,7 +525,7 @@ export class TxBuilder {
           case "key": {
             const credential = CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
-              CardanoLib.Certificate.new(1n, credential)
+              CardanoLib.Certificate.new_stake_deregistration(CardanoLib.StakeDeregistration.new(credential))
             )
             this.__txBuilder.add_cert(certificateBuilder.payment_key())
             break
@@ -532,7 +539,7 @@ export class TxBuilder {
             }
             const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
-              CardanoLib.Certificate.new(1n, credential)
+              CardanoLib.Certificate.new_stake_deregistration(CardanoLib.StakeDeregistration.new(credential))
             )
             switch (script.language) {
               case "Native":
@@ -542,6 +549,7 @@ export class TxBuilder {
                     CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
+                break
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
@@ -553,7 +561,7 @@ export class TxBuilder {
                 this.__txBuilder.add_cert(
                   certificateBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
+                    CardanoLib.RequiredSigners.new()
                   )
                 )
                 break
@@ -583,7 +591,7 @@ export class TxBuilder {
           case "key": {
             const credential = CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
-              CardanoLib.Certificate.new(7n, credential, drepInstance)
+              CardanoLib.Certificate.new_vote_deleg_cert(CardanoLib.VoteDelegCert.new(credential, drepInstance))
             )
             this.__txBuilder.add_cert(certificateBuilder.payment_key())
             break
@@ -597,7 +605,7 @@ export class TxBuilder {
             }
             const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
-              CardanoLib.Certificate.new(7n, credential, drepInstance)
+              CardanoLib.Certificate.new_vote_deleg_cert(CardanoLib.VoteDelegCert.new(credential, drepInstance))
             )
             switch (script.language) {
               case "Native":
@@ -607,6 +615,7 @@ export class TxBuilder {
                     CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
+                break
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
@@ -618,7 +627,7 @@ export class TxBuilder {
                 this.__txBuilder.add_cert(
                   certificateBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
+                    CardanoLib.RequiredSigners.new()
                   )
                 )
                 break
@@ -643,11 +652,12 @@ export class TxBuilder {
           case "key": {
             const credential = CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
-              CardanoLib.Certificate.new(
-                14n,
-                credential,
-                this.cw3.__config.protocolParams.drepDeposit,
-                drepAnchorInstance ?? null
+              CardanoLib.Certificate.new_reg_drep_cert(
+                CardanoLib.RegDrepCert.new(
+                  credential,
+                  this.cw3.__config.protocolParams.drepDeposit,
+                  drepAnchorInstance ?? null
+                )
               )
             )
             this.__txBuilder.add_cert(certificateBuilder.payment_key())
@@ -662,11 +672,12 @@ export class TxBuilder {
             }
             const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
-              CardanoLib.Certificate.new(
-                14n,
-                credential,
-                this.cw3.__config.protocolParams.drepDeposit,
-                drepAnchorInstance ?? null
+              CardanoLib.Certificate.new_reg_drep_cert(
+                CardanoLib.RegDrepCert.new(
+                  credential,
+                  this.cw3.__config.protocolParams.drepDeposit,
+                  drepAnchorInstance ?? null
+                )
               )
             )
             switch (script.language) {
@@ -677,6 +688,7 @@ export class TxBuilder {
                     CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
+                break
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
@@ -688,7 +700,7 @@ export class TxBuilder {
                 this.__txBuilder.add_cert(
                   certificateBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
+                    CardanoLib.RequiredSigners.new()
                   )
                 )
                 break
@@ -707,7 +719,9 @@ export class TxBuilder {
           case "key": {
             const credential = CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
-              CardanoLib.Certificate.new(15n, credential, this.cw3.__config.protocolParams.drepDeposit)
+              CardanoLib.Certificate.new_unreg_drep_cert(
+                CardanoLib.UnregDrepCert.new(credential, this.cw3.__config.protocolParams.drepDeposit)
+              )
             )
             this.__txBuilder.add_cert(certificateBuilder.payment_key())
             break
@@ -721,7 +735,9 @@ export class TxBuilder {
             }
             const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
-              CardanoLib.Certificate.new(15n, credential, this.cw3.__config.protocolParams.drepDeposit)
+              CardanoLib.Certificate.new_unreg_drep_cert(
+                CardanoLib.UnregDrepCert.new(credential, this.cw3.__config.protocolParams.drepDeposit)
+              )
             )
             switch (script.language) {
               case "Native":
@@ -731,6 +747,7 @@ export class TxBuilder {
                     CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
+                break
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
@@ -742,7 +759,7 @@ export class TxBuilder {
                 this.__txBuilder.add_cert(
                   certificateBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
+                    CardanoLib.RequiredSigners.new()
                   )
                 )
                 break
@@ -767,7 +784,9 @@ export class TxBuilder {
           case "key": {
             const credential = CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
-              CardanoLib.Certificate.new(16n, credential, drepAnchorInstance ?? null)
+              CardanoLib.Certificate.new_update_drep_cert(
+                CardanoLib.UpdateDrepCert.new(credential, drepAnchorInstance ?? null)
+              )
             )
             this.__txBuilder.add_cert(certificateBuilder.payment_key())
             break
@@ -781,7 +800,9 @@ export class TxBuilder {
             }
             const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
-              CardanoLib.Certificate.new(16n, credential, drepAnchorInstance ?? null)
+              CardanoLib.Certificate.new_update_drep_cert(
+                CardanoLib.UpdateDrepCert.new(credential, drepAnchorInstance ?? null)
+              )
             )
             switch (script.language) {
               case "Native":
@@ -791,6 +812,7 @@ export class TxBuilder {
                     CardanoLib.NativeScriptWitnessInfo.assume_signature_count()
                   )
                 )
+                break
               case "PlutusV1":
               case "PlutusV2":
               case "PlutusV3":
@@ -802,7 +824,7 @@ export class TxBuilder {
                 this.__txBuilder.add_cert(
                   certificateBuilder.plutus_script(
                     utils.script.partialPlutusWitness(utils.script.scriptToPlutusScript(script), redeemer),
-                    CardanoLib.RequiredSigners.from_cbor_hex("d9010280")
+                    CardanoLib.RequiredSigners.new()
                   )
                 )
                 break
@@ -926,35 +948,20 @@ export class TxBuilder {
         const costModels = utils.tx.createCostModels(this.protocolParams.costModels)
         const slotConfig = this.cw3.__config.slotConfig
         const allInputs = [...this.inputs.values(), ...this.readInputs.values(), ...this.collectInputs.values()]
-        const uplcEvaluatedRedeemers = UPLC.evaluatePhaseTwoRaw(
-          evaluation.draft_tx().to_cbor_bytes(),
-          allInputs.map(
-            (utxo) =>
-              [
-                utils.tx.utxoToTransactionInput(utxo).to_cbor_bytes(),
-                utils.tx.utxoToTransactionOutput(utxo).to_cbor_bytes(),
-              ] as const
-          ),
-          costModels.to_cbor_bytes(),
+        const uplcEvaluatedRedeemers = UPLC.evaluatePhaseTwo(
+          evaluation.draft_tx(),
+          allInputs.map(utils.tx.utxoToCore),
+          costModels,
           [this.protocolParams.maxTxExSteps, this.protocolParams.maxTxExMem],
           [BigInt(slotConfig.zeroTime), BigInt(slotConfig.zeroSlot), BigInt(slotConfig.slotDuration)],
           this.protocolParams.protocolMajorVersion,
           true
         )
-        for (const [redeemerBytes, result] of uplcEvaluatedRedeemers) {
-          const redeemer = decodeCbor(redeemerBytes)
-          if (
-            redeemer.kind !== "array" ||
-            redeemer.values[0]?.kind !== "unsigned" ||
-            redeemer.values[1]?.kind !== "unsigned"
-          ) {
-            throw new Error("UPLC evaluator returned an invalid redeemer")
-          }
-          const key = CardanoLib.RedeemerWitnessKey.new(
-            Number(redeemer.values[0].value) as CardanoLib.RedeemerTag,
-            redeemer.values[1].value
+        for (const result of uplcEvaluatedRedeemers) {
+          this.__txBuilder.set_exunits(
+            result.redeemer,
+            CardanoLib.ExUnits.new(result.evaluation.cost.memory, result.evaluation.cost.cpu)
           )
-          this.__txBuilder.set_exunits(key, CardanoLib.ExUnits.new(result.cost.memory, result.cost.cpu))
         }
       } else {
         throw new Error("Remote TX evaluation is not supported yet")
@@ -978,7 +985,8 @@ export class TxBuilder {
       this.__txBuilder
         .build(CardanoLib.ChangeSelectionAlgo.Default, CardanoLib.Address.from_bech32(this.changeAddress))
         .build_unchecked()
-        .to_cbor_hex()
+        .to_cbor_hex(),
+      [...this.inputs.values(), ...this.readInputs.values(), ...this.collectInputs.values()]
     )
   }
 }

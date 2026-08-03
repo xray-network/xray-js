@@ -1,4 +1,3 @@
-import { decodeCbor, encodeCbor } from "@xray-network/xray-cardano-lib-core"
 import { CardanoLib } from "../../index.js"
 
 export type TransactionParts = {
@@ -9,25 +8,12 @@ export type TransactionParts = {
 }
 
 export const getTransactionParts = (transaction: CardanoLib.Transaction): TransactionParts => {
-  const value = decodeCbor(transaction.to_cbor_bytes())
-  if (
-    value.kind !== "array" ||
-    value.values.length !== 4 ||
-    value.values[0] === undefined ||
-    value.values[1] === undefined ||
-    value.values[2]?.kind !== "boolean"
-  ) {
-    throw new TypeError("Invalid Cardano transaction")
-  }
-
-  const auxiliaryData = value.values[3]
+  const auxiliaryData = transaction.auxiliary_data()
   return {
-    body: CardanoLib.TransactionBody.from_cbor_bytes(encodeCbor(value.values[0])),
-    witnessSet: CardanoLib.TransactionWitnessSet.from_cbor_bytes(encodeCbor(value.values[1])),
-    isValid: value.values[2].value,
-    ...(auxiliaryData !== undefined && auxiliaryData.kind !== "null"
-      ? { auxiliaryData: CardanoLib.AuxiliaryData.from_cbor_bytes(encodeCbor(auxiliaryData)) }
-      : {}),
+    body: transaction.body(),
+    witnessSet: transaction.witness_set(),
+    isValid: transaction.is_valid(),
+    ...(auxiliaryData ? { auxiliaryData } : {}),
   }
 }
 
