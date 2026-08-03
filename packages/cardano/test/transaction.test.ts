@@ -18,6 +18,7 @@ describe("Cardano transactions", () => {
     const output = { address: testData.paymentAddressEnterprise, value: 2_000_000n }
     const input = { ...ownedUtxo, transaction: { ...ownedUtxo.transaction } }
     const paymentPlan = emptyPlan.setChangeAddress(account.paymentAddress).payTo([output]).spend([input])
+    // Plans snapshot their inputs, so later caller mutations must not affect the build.
     output.address = "mutated-after-planning"
     input.address = "mutated-after-planning"
     input.transaction.id = "2".repeat(64)

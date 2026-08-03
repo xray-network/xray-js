@@ -17,7 +17,8 @@
     "test:integration": "npm run build && npm run test:integration --workspaces --if-present",
     "typecheck": "npm run build && npm run typecheck --workspaces --if-present",
     "check": "npm run build && npm run test --workspaces --if-present && npm run typecheck --workspaces --if-present",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,mts,cts,json,md}\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "clean": "npm run clean --workspaces --if-present"
   },
   "devDependencies": {
