@@ -1,5 +1,9 @@
 export type XrayChain = "base" | "cardano" | "bitcoin" | "midnight"
 
+export interface XrayChainModule<Config, Client> {
+  create(config?: Config): Client
+}
+
 export interface XrayErrorOptions {
   cause?: unknown
   details?: Readonly<Record<string, unknown>>

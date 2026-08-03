@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": true,
+    "sourceMap": false,
+    "rootDir": "src",
+    "outDir": "dist/esm"
+  },
+  "include": ["src/**/*.ts"]
+}

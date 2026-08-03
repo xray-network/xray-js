@@ -1,6 +1,6 @@
 # XRAY JavaScript SDK
 
-`@xray-network/xray-js` is the JavaScript SDK for XRAY/Network. The current release contains the Cardano SDK and cross-chain mini-app APIs behind one public package.
+`@xray-network/xray-js` is the multi-chain JavaScript SDK for XRAY/Network. The uppercase `XRAY` facade exposes isolated clients through lower-case chain modules such as `XRAY.cardano`; future Bitcoin, Midnight, and other modules follow the same shape without being coupled to Cardano.
 
 ## Installation
 
@@ -8,19 +8,45 @@
 npm install @xray-network/xray-js
 ```
 
-Use the Cardano subpaths in application code:
+Create a Cardano client through the root facade:
 
 ```ts
-import { CardanoWeb3 } from "@xray-network/xray-js/cardano"
+import { XRAY } from "@xray-network/xray-js"
+
+const cardano = XRAY.cardano.create({
+  network: "preview",
+  protocolParameters: {
+    source: "remote",
+    cacheDurationMs: 5 * 60 * 1000,
+  },
+})
+
+const account = cardano.accounts.fromMnemonic(mnemonic)
+const tip = await cardano.chain.getTip()
+```
+
+Use the Cardano subpath for direct factories, providers, primitives, and types:
+
+```ts
+import { createCardano, createKoiosProvider, type Utxo } from "@xray-network/xray-js/cardano"
 import { Address } from "@xray-network/xray-js/cardano/lib"
 ```
 
-The root entry provides namespaces for discovery and scripts:
+The Cardano API is classless: factories create frozen clients, accounts, wallets, transaction plans, and transaction values. Client and transaction-plan creation are synchronous. Promises are reserved for APIs that may cross a provider or wallet boundary:
 
 ```ts
-import { Cardano } from "@xray-network/xray-js"
+const cardano = createCardano({ network: "preview", provider })
+const account = cardano.accounts.fromMnemonic(mnemonic)
 
-const web3 = new Cardano.CardanoWeb3()
+const plan = cardano.transactions
+  .create()
+  .setChangeAddress(account.paymentAddress)
+  .spend(utxos)
+  .payTo([{ address: recipient, value: 2_000_000n }])
+
+const unsigned = await plan.build() // provider/protocol resolution
+const signed = cardano.transactions.signWithPrivateKey(unsigned, account.getPrivateKey()) // local
+const transactionHash = await cardano.transactions.submit(signed) // provider request
 ```
 
 ## Packages
@@ -28,7 +54,7 @@ const web3 = new Cardano.CardanoWeb3()
 | Workspace                  | Purpose                                              |
 | -------------------------- | ---------------------------------------------------- |
 | `packages/runtime`         | Public `@xray-network/xray-js` runtime package       |
-| `packages/cardano-sdk`     | Cardano SDK, previously `cardano-web3-js`            |
+| `packages/cardano`         | Cardano client and future-facing XRAY chain module   |
 | `packages/mini-app-bridge` | Cross-chain XRAY Mini App Bridge with CIP-30 support |
 
 Shared XRAY primitives are available from the package root:
@@ -61,7 +87,7 @@ npm run typecheck
 npm test
 ```
 
-`npm test` compiles and runs the deterministic offline suite with Node's built-in test runner. Cardano explorer and provider tests call live XRAY endpoints and are available separately:
+`npm test` compiles and runs the deterministic offline suite with Node's built-in test runner. The live Cardano provider smoke test calls an XRAY endpoint and is available separately:
 
 ```bash
 npm run test:integration

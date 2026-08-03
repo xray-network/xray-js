@@ -1,2 +1,2 @@
 export * from "./common.js"
-export * as Cardano from "@xray-network/xray-js-cardano"
+export { XRAY } from "./xray.js"

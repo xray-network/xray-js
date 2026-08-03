@@ -7,7 +7,7 @@
     "node": ">=20.19.0"
   },
   "workspaces": [
-    "packages/cardano-sdk",
+    "packages/cardano",
     "packages/mini-app-bridge",
     "packages/runtime"
   ],

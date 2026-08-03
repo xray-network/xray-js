@@ -1,6 +1,6 @@
 {
   "name": "@xray-network/xray-js",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "JavaScript SDK for XRAY/Network",
   "author": "XRAY/Network <hello@xray.app>",
   "license": "MIT",
@@ -36,6 +36,12 @@
       "browser": "./dist/esm/cardano-lib.js",
       "import": "./dist/esm/cardano-lib.js",
       "default": "./dist/esm/cardano-lib.js"
+    },
+    "./cardano/testing": {
+      "types": "./dist/esm/cardano-testing.d.ts",
+      "browser": "./dist/esm/cardano-testing.js",
+      "import": "./dist/esm/cardano-testing.js",
+      "default": "./dist/esm/cardano-testing.js"
     },
     "./mini-app-bridge": {
       "types": "./dist/esm/mini-app-bridge.d.ts",
@@ -80,14 +86,14 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc --noEmit",
-    "test": "node -e \"process.exit(0)\"",
+    "typecheck": "tsc --noEmit -p test/tsconfig.json",
+    "test": "tsc -p test/tsconfig.json && node --test .test-dist/*.test.js",
     "test:integration": "node -e \"process.exit(0)\"",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist .test-dist"
   },
   "dependencies": {
     "@xray-network/xray-cardano-lib": "0.1.0",
-    "@xray-network/xray-js-cardano": "3.0.0",
+    "@xray-network/xray-js-cardano": "4.0.0",
     "@xray-network/xray-js-mini-app-bridge": "3.0.0"
   }
 }
