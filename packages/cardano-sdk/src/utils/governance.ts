@@ -1,6 +1,6 @@
 import { CardanoLib, CW3Types } from "../index.js"
 import { bech32 } from "@scure/base"
-import { Buffer } from "buffer"
+import { bytesToHex } from "@xray-network/xray-cardano-lib-core"
 
 export const toDRep = (drep: CW3Types.DRep): CardanoLib.DRep => {
   if (drep === "AlwaysAbstain") {
@@ -38,6 +38,6 @@ export const getDRepCredentials = (drepBech32: string): CW3Types.Credential => {
 
   return {
     type: isScriptHash ? "script" : "key",
-    hash: Buffer.from(hash).toString("hex"),
+    hash: bytesToHex(hash),
   }
 }

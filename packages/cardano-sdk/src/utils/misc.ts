@@ -1,40 +1,40 @@
 import { CardanoLib, CW3Types } from "../index.js"
-import { Buffer } from "buffer"
+import { bytesToHex, hexToBytes } from "@xray-network/xray-cardano-lib-core"
+
+const textEncoder = new TextEncoder()
+const textDecoder = new TextDecoder()
 
 export const harden = (num: number): number => {
   return 0x80000000 + num
 }
 
 export const fromHex = (hex: string): Uint8Array => {
-  return new Uint8Array(Buffer.from(hex, "hex"))
+  return hexToBytes(hex)
 }
 
 export const toHex = (bytes: Uint8Array): string => {
-  return Buffer.from(bytes).toString("hex")
+  return bytesToHex(bytes)
 }
 
 export const toStringFromHex = (hex: string): string => {
-  return Buffer.from(hex, "hex").toString()
+  return textDecoder.decode(hexToBytes(hex))
 }
 
 export const fromStringToHex = (text: string): string => {
-  return Buffer.from(text).toString("hex")
+  return bytesToHex(textEncoder.encode(text))
 }
 
 export const encryptDataWithPass = (data: string, password: string): string => {
   return CardanoLib.emip3_encrypt_with_password(
-    Buffer.from(password).toString("hex"),
-    Buffer.from(randomBytes(32)).toString("hex"),
-    Buffer.from(randomBytes(12)).toString("hex"),
-    Buffer.from(data).toString("hex")
+    fromStringToHex(password),
+    toHex(randomBytes(32)),
+    toHex(randomBytes(12)),
+    fromStringToHex(data)
   )
 }
 
 export const decryptDataWithPass = (data: string, password: string): string => {
-  return Buffer.from(
-    CardanoLib.emip3_decrypt_with_password(Buffer.from(password).toString("hex"), data),
-    "hex"
-  ).toString()
+  return toStringFromHex(CardanoLib.emip3_decrypt_with_password(fromStringToHex(password), data))
 }
 
 export const randomBytes = (length: number): Uint8Array => {
