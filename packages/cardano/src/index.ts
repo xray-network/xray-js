@@ -1,4 +1,5 @@
 export { createCardano, type Cardano } from "./create-cardano.js"
+export * from "./config.js"
 export type { CardanoAccount } from "./accounts/account.js"
 export {
   createCip30Wallet,

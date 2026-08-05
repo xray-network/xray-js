@@ -7,6 +7,20 @@ export const SLOT_CONFIG_NETWORK: Record<CardanoTypes.NetworkName, CardanoTypes.
   custom: { zeroTime: 0, zeroSlot: 0, slotDuration: 0 },
 }
 
+export const SLOT_STARTING_EPOCH: Record<CardanoTypes.NetworkName, number> = {
+  mainnet: 208,
+  preprod: 4,
+  preview: 0,
+  custom: 0,
+}
+
+export const SLOT_EPOCH_DURATION: Record<CardanoTypes.NetworkName, number> = {
+  mainnet: 432000,
+  preprod: 432000,
+  preview: 432000 / 5,
+  custom: 0,
+}
+
 export const TTL = 900 // 900 seconds = 15 minutes (1 slot = 1 second)
 
 export const DERIVATION_SCHEME: CardanoTypes.DerivationScheme = {
