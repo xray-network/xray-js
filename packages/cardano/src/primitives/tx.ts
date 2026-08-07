@@ -1,4 +1,5 @@
-import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import * as CardanoLib from "@xray-network/xray-cardano-lib-chain"
+import { ScriptHash } from "@xray-network/xray-cardano-lib-crypto"
 import type * as CardanoTypes from "../types.js"
 import { fromHex } from "./misc.js"
 import { getShelleyOrByronAddress } from "./address.js"
@@ -45,7 +46,7 @@ export const assetsToValue = (value?: CardanoTypes.Value, assets?: CardanoTypes.
 
   if (assets) {
     for (const asset of assets) {
-      const policyId = CardanoLib.ScriptHash.from_hex(asset.policyId)
+      const policyId = ScriptHash.from_hex(asset.policyId)
       const assetName = CardanoLib.AssetName.from_raw_bytes(fromHex(asset.assetName || ""))
       const policyAssets = multiAsset.get_assets(policyId) ?? CardanoLib.MapAssetNameToCoin.new()
       policyAssets.insert(assetName, asset.quantity)

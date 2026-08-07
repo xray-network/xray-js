@@ -1,5 +1,6 @@
-import * as CardanoLib from "@xray-network/xray-cardano-lib"
-import * as UPLC from "@xray-network/xray-cardano-lib"
+import * as CardanoLib from "@xray-network/xray-cardano-lib-chain"
+import { AnchorDocHash, ScriptHash } from "@xray-network/xray-cardano-lib-crypto"
+import * as UPLC from "@xray-network/xray-cardano-lib-plutus"
 import type { CardanoContext } from "../internal/context.js"
 import * as addresses from "../primitives/address.js"
 import * as governancePrimitives from "../primitives/governance.js"
@@ -328,7 +329,7 @@ export const buildTransaction = async (
                 "Script is required for stake.delegateTo() method. Attach script with attachScript() or readFrom() method"
               )
             }
-            const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            const credential = CardanoLib.Credential.new_script(ScriptHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
               CardanoLib.Certificate.new_stake_delegation(
                 CardanoLib.StakeDelegation.new(credential, CardanoLib.Ed25519KeyHash.from_bech32(poolId))
@@ -367,7 +368,7 @@ export const buildTransaction = async (
         const credential =
           stakingCred.type === "key"
             ? CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakingCred.hash))
-            : CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            : CardanoLib.Credential.new_script(ScriptHash.from_hex(stakingCred.hash))
         const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
           CardanoLib.Certificate.new_stake_registration(CardanoLib.StakeRegistration.new(credential))
         )
@@ -395,7 +396,7 @@ export const buildTransaction = async (
                 "Script is required for stake.deregister() method. Attach script with attachScript() or readFrom() method"
               )
             }
-            const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            const credential = CardanoLib.Credential.new_script(ScriptHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
               CardanoLib.Certificate.new_stake_deregistration(CardanoLib.StakeDeregistration.new(credential))
             )
@@ -453,7 +454,7 @@ export const buildTransaction = async (
                 "Script is required for governance.delegateToDRep() method. Attach script with attachScript() or readFrom() method"
               )
             }
-            const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            const credential = CardanoLib.Credential.new_script(ScriptHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
               CardanoLib.Certificate.new_vote_deleg_cert(CardanoLib.VoteDelegCert.new(credential, drepInstance))
             )
@@ -488,10 +489,7 @@ export const buildTransaction = async (
         const { stakingCred } = addresses.getCredentials(rewardAddress)
         if (!stakingCred) throw new Error("Invalid governance address: no staking credential")
         const drepAnchorInstance = drepAnchor
-          ? CardanoLib.Anchor.new(
-              CardanoLib.Url.new(drepAnchor.url),
-              CardanoLib.AnchorDocHash.from_hex(drepAnchor.dataHash)
-            )
+          ? CardanoLib.Anchor.new(CardanoLib.Url.new(drepAnchor.url), AnchorDocHash.from_hex(drepAnchor.dataHash))
           : undefined
 
         switch (stakingCred.type) {
@@ -512,7 +510,7 @@ export const buildTransaction = async (
                 "Script is required for governance.registerDRep() method. Attach script with attachScript() or readFrom() method"
               )
             }
-            const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            const credential = CardanoLib.Credential.new_script(ScriptHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
               CardanoLib.Certificate.new_reg_drep_cert(
                 CardanoLib.RegDrepCert.new(credential, protocolParameters.drepDeposit, drepAnchorInstance ?? null)
@@ -567,7 +565,7 @@ export const buildTransaction = async (
                 "Script is required for governance.registerDRep() method. Attach script with attachScript() or readFrom() method"
               )
             }
-            const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            const credential = CardanoLib.Credential.new_script(ScriptHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
               CardanoLib.Certificate.new_unreg_drep_cert(
                 CardanoLib.UnregDrepCert.new(credential, protocolParameters.drepDeposit)
@@ -604,10 +602,7 @@ export const buildTransaction = async (
         const { stakingCred } = addresses.getCredentials(rewardAddress)
         if (!stakingCred) throw new Error("Invalid governance address: no staking credential")
         const drepAnchorInstance = drepAnchor
-          ? CardanoLib.Anchor.new(
-              CardanoLib.Url.new(drepAnchor.url),
-              CardanoLib.AnchorDocHash.from_hex(drepAnchor.dataHash)
-            )
+          ? CardanoLib.Anchor.new(CardanoLib.Url.new(drepAnchor.url), AnchorDocHash.from_hex(drepAnchor.dataHash))
           : undefined
 
         switch (stakingCred.type) {
@@ -628,7 +623,7 @@ export const buildTransaction = async (
                 "Script is required for governance.registerDRep() method. Attach script with attachScript() or readFrom() method"
               )
             }
-            const credential = CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakingCred.hash))
+            const credential = CardanoLib.Credential.new_script(ScriptHash.from_hex(stakingCred.hash))
             const certificateBuilder = CardanoLib.SingleCertificateBuilder.new(
               CardanoLib.Certificate.new_update_drep_cert(
                 CardanoLib.UpdateDrepCert.new(credential, drepAnchorInstance ?? null)

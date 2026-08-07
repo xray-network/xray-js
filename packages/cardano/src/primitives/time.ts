@@ -1,4 +1,3 @@
-import * as CardanoLib from "@xray-network/xray-cardano-lib"
 import type * as CardanoTypes from "../types.js"
 
 export const unixTimeToSlot = (unixTime: number, slotConfig: CardanoTypes.SlotConfig): number => {

@@ -25,13 +25,15 @@ const account = cardano.accounts.fromMnemonic(mnemonic)
 const tip = await cardano.chain.getTip()
 ```
 
-Use the Cardano subpath for direct factories, providers, primitives, and types:
+Use the Cardano subpath for grouped providers, primitives, CIPs, Plutus utilities, and types:
 
 ```ts
-import { cip8, cip67, createCardano, createKoiosProvider, uplc, type Utxo } from "@xray-network/xray-js/cardano"
-import { Address } from "@xray-network/xray-js/cardano/lib"
+import { cips, createCardano, providers, type types } from "@xray-network/xray-js/cardano"
+import { chain } from "@xray-network/xray-js/cardano/lib"
 
-const assetLabel = cip67.decode_asset_name_label(Uint8Array.from([0x00, 0x0d, 0xe1, 0x40])) // 222
+const provider: types.Provider = providers.koios.createKoiosProvider(koiosUrl)
+const assetLabel = cips.cip67.decode_asset_name_label(Uint8Array.from([0x00, 0x0d, 0xe1, 0x40])) // 222
+const address = chain.Address.from_bech32(addressBech32)
 ```
 
 The Cardano API is classless: factories create frozen clients, accounts, wallets, transaction plans, and transaction values. Client and transaction-plan creation are synchronous. Promises are reserved for APIs that may cross a provider or wallet boundary:
@@ -99,9 +101,12 @@ npm run test:integration
 
 Cardano primitives, cryptography, ledger types, CIP implementations, transaction builders, Plutus Data, and UPLC are provided by the universal pure-JavaScript [`@xray-network/xray-cardano-lib`](https://github.com/xray-network/xray-cardano-lib) package. No WebAssembly initialization or environment-specific build is required.
 
-CIP modules and UPLC use focused lowercase namespaces: `cip8`, `cip67`, and `uplc`. CIP-67 remains a proposal API and is not flattened into the Cardano root.
+The application API groups capabilities under stable lowercase domains such as `accounts`, `wallets`, `transactions`, `providers`, `cips`, and `plutus`. Stable CIPs are available through `cips.cipN`; provisional CIP-129 remains available only from its focused Cardano Lib subpath.
 
 ```ts
-import { CardanoLib } from "@xray-network/xray-js/cardano"
-import { Address, TransactionBuilder } from "@xray-network/xray-js/cardano/lib"
+import { cips, plutus } from "@xray-network/xray-js/cardano"
+import { chain, core, crypto } from "@xray-network/xray-js/cardano/lib"
+
+const address = chain.Address.from_bech32(addressBech32)
+const key = crypto.PrivateKey.from_bech32(privateKeyBech32)
 ```

@@ -1,4 +1,4 @@
-import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import * as CardanoLib from "@xray-network/xray-cardano-lib-chain"
 import type { CardanoContext } from "../internal/context.js"
 import * as account from "../primitives/account.js"
 import * as addresses from "../primitives/address.js"

@@ -1,4 +1,5 @@
-import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import * as CardanoLib from "@xray-network/xray-cardano-lib-chain"
+import { ScriptHash } from "@xray-network/xray-cardano-lib-crypto"
 import type * as CardanoTypes from "../types.js"
 import {
   ProvisionalGovernanceCredentialId,
@@ -17,7 +18,7 @@ export const toDRep = (drep: CardanoTypes.DRep): CardanoLib.DRep => {
         case "key":
           return CardanoLib.DRep.new_key(CardanoLib.Ed25519KeyHash.from_hex(drepCredentials.hash))
         case "script":
-          return CardanoLib.DRep.new_script(CardanoLib.ScriptHash.from_hex(drepCredentials.hash))
+          return CardanoLib.DRep.new_script(ScriptHash.from_hex(drepCredentials.hash))
         default:
           throw new Error(`Unsupported DRep type: ${drepCredentials.type}`)
       }

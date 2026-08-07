@@ -1,6 +1,9 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { PlutusData, PlutusConstr, scripts } from "@xray-network/xray-js-cardano"
+import { plutus, scripts } from "@xray-network/xray-js-cardano"
+
+const PlutusData = plutus.data.Data
+const PlutusConstr = plutus.data.Constr
 
 describe("Data", () => {
   const { applyParamsToScript } = scripts
@@ -16,7 +19,7 @@ describe("Data", () => {
       type MyDatum = Int
     */
     const MyDatumSchema = PlutusData.Integer()
-    type MyDatum = PlutusData.Static<typeof MyDatumSchema>
+    type MyDatum = plutus.data.Data.Static<typeof MyDatumSchema>
     const MyDatum = MyDatumSchema
 
     const datum: MyDatum = 1234n
@@ -35,7 +38,7 @@ describe("Data", () => {
       type MyDatum = ByteArray
     */
     const MyDatumSchema = PlutusData.Bytes()
-    type MyDatum = PlutusData.Static<typeof MyDatumSchema>
+    type MyDatum = plutus.data.Data.Static<typeof MyDatumSchema>
     const MyDatum = MyDatumSchema
 
     const datum: MyDatum = "31313131" //hex
@@ -54,7 +57,7 @@ describe("Data", () => {
       type MyDatum = Bool
     */
     const MyDatumSchema = PlutusData.Boolean()
-    type MyDatum = PlutusData.Static<typeof MyDatumSchema>
+    type MyDatum = plutus.data.Data.Static<typeof MyDatumSchema>
     const MyDatum = MyDatumSchema
 
     const datum: MyDatum = true
@@ -82,7 +85,7 @@ describe("Data", () => {
       myVariableA: PlutusData.Bytes(),
       myVariableB: PlutusData.Nullable(PlutusData.Integer()),
     })
-    type MyDatum = PlutusData.Static<typeof MyDatumSchema>
+    type MyDatum = plutus.data.Data.Static<typeof MyDatumSchema>
     const MyDatum = MyDatumSchema
 
     const datum: MyDatum = {
@@ -115,7 +118,7 @@ describe("Data", () => {
       minItems: 3,
       maxItems: 4,
     })
-    type MyDatum = PlutusData.Static<typeof MyDatumSchema>
+    type MyDatum = plutus.data.Data.Static<typeof MyDatumSchema>
     const MyDatum = MyDatumSchema
 
     const datum: MyDatum = [45n, 100n, 9994n, 4281958210985912095n]
@@ -134,7 +137,7 @@ describe("Data", () => {
       type MyDatum = Dict<Int, ByteArray>
     */
     const MyDatumSchema = PlutusData.Map(PlutusData.Integer(), PlutusData.Bytes())
-    type MyDatum = PlutusData.Static<typeof MyDatumSchema>
+    type MyDatum = plutus.data.Data.Static<typeof MyDatumSchema>
     const MyDatum = MyDatumSchema
 
     const datum: MyDatum = new Map([
@@ -167,7 +170,7 @@ describe("Data", () => {
       PlutusData.Object({ Up: PlutusData.Tuple([PlutusData.Bytes()]) }),
     ])
 
-    type MyDatum = PlutusData.Static<typeof MyDatumSchema>
+    type MyDatum = plutus.data.Data.Static<typeof MyDatumSchema>
     const MyDatum = MyDatumSchema
 
     const datumLeft: MyDatum = "Left"
@@ -200,7 +203,7 @@ describe("Data", () => {
       PlutusData.Object({ Right: PlutusData.Tuple([PlutusData.Bytes()]) }),
       PlutusData.Object({ Up: PlutusData.Object({ x: PlutusData.Integer(), y: PlutusData.Bytes() }) }),
     ])
-    type MyDatum = PlutusData.Static<typeof MyDatumSchema>
+    type MyDatum = plutus.data.Data.Static<typeof MyDatumSchema>
     const MyDatum = MyDatumSchema
 
     const datumLeft: MyDatum = "Left"
@@ -243,7 +246,7 @@ describe("Data", () => {
       type MyDatum = Void
     */
     const MyDatum = PlutusData.Void()
-    type MyDatum = PlutusData.Static<typeof MyDatum>
+    type MyDatum = plutus.data.Data.Static<typeof MyDatum>
     const datum: MyDatum = void 0
     const newDatum = PlutusData.from(PlutusData.to(void 0, MyDatum), MyDatum)
     assert.deepEqual(datum, newDatum)
@@ -260,7 +263,7 @@ describe("Data", () => {
       type MyDatum = (Int, ByteArray)
     */
     const MyDatumSchema = PlutusData.Tuple([PlutusData.Integer(), PlutusData.Bytes()])
-    type MyDatum = PlutusData.Static<typeof MyDatumSchema>
+    type MyDatum = plutus.data.Data.Static<typeof MyDatumSchema>
     const MyDatum = MyDatumSchema
     const datum: MyDatum = [123n, "313131"]
     const newDatum = PlutusData.from(PlutusData.to(datum, MyDatum), MyDatum)
@@ -297,7 +300,7 @@ describe("Data", () => {
       }),
       PlutusData.Literal("Down"),
     ])
-    type MyDatum = PlutusData.Static<typeof MyDatumSchema>
+    type MyDatum = plutus.data.Data.Static<typeof MyDatumSchema>
     const MyDatum = MyDatumSchema
     const datum: MyDatum = {
       Up: [

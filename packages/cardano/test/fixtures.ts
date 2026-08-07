@@ -1,4 +1,4 @@
-import type { AccountDerivationPath, AddressDerivationPath, Utxo } from "@xray-network/xray-js-cardano"
+import type { types } from "@xray-network/xray-js-cardano"
 
 // Preview Network
 export const testData = {
@@ -8,8 +8,8 @@ export const testData = {
     "xpub1nyyqpaq3hgsqzzmw8hzz5qgjw3z22uypxn0z7afhucww4r2de6r576k36sufu06wz42l8s3f2pul5g9dq83hx8fn92usvdaerp8mjtqyusz8e",
   xprvKey:
     "xprv1mqxe3f9anrqpuwh80nypu5twu7m0fryp834p49es3x5wyln5heyys5lt2ezl2v4dsdc4uxeacfm0ugj2nj4jcjt9vjtjv8emnrv3ek0ksr9mfp82hzza3zfu8h30gmr9rxa6std89kmyylf2y55c0xmytsld3s4n",
-  accountPath: [1852, 1815, 0] as AccountDerivationPath,
-  addressPath: [0, 0] as AddressDerivationPath,
+  accountPath: [1852, 1815, 0] as types.AccountDerivationPath,
+  addressPath: [0, 0] as types.AddressDerivationPath,
   checksumId: "XPPX-4012",
   checksumImage:
     "5751762ac8c0e9005efc68e624d3323e917109b1ab77b484baf2c256cb57ababca6b0879cbe753ed403b3b22971f81e1a4c6c7f4dd02977be41c41050a57f0f2",
@@ -52,7 +52,7 @@ export const testData = {
   },
 }
 
-export const ownedUtxo: Utxo = {
+export const ownedUtxo: types.Utxo = {
   transaction: { id: "0".repeat(64) },
   index: 0,
   address: testData.paymentAddress,

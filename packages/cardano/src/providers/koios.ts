@@ -4,6 +4,9 @@ import KoiosClient, { KoiosTypes } from "cardano-koios-client"
 import type * as CardanoTypes from "../types.js"
 import { createProviderResolvers, pollUntil } from "./provider.js"
 
+export { default as Client } from "cardano-koios-client"
+export type { KoiosTypes as Types } from "cardano-koios-client"
+
 export const createKoiosProvider = (baseUrl: string, headers?: CardanoTypes.Headers): CardanoTypes.Provider => {
   const koiosClient = KoiosClient(baseUrl, headers)
 

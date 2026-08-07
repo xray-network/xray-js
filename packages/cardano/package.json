@@ -38,9 +38,10 @@
   },
   "dependencies": {
     "@scure/bip39": "2.2.0",
-    "@xray-network/xray-cardano-lib": "0.1.0",
+    "@xray-network/xray-cardano-lib-chain": "0.1.0",
     "@xray-network/xray-cardano-lib-cip": "0.1.0",
     "@xray-network/xray-cardano-lib-core": "0.1.0",
+    "@xray-network/xray-cardano-lib-crypto": "0.1.0",
     "@xray-network/xray-cardano-lib-plutus": "0.1.0",
     "cardano-koios-client": "^1.0.10",
     "cardano-kupo-client": "^1.0.1",

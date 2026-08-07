@@ -1,6 +1,7 @@
 import { DEFAULT_ACCOUNT_DERIVATION_PATH, DEFAULT_ADDRESS_DERIVATION_PATH, SLOT_CONFIG_NETWORK, TTL } from "./config.js"
-import * as CardanoLib from "@xray-network/xray-cardano-lib"
-import { CIP8Message as Message } from "@xray-network/xray-cardano-lib"
+import * as CardanoLib from "@xray-network/xray-cardano-lib-chain"
+import { PrivateKey } from "@xray-network/xray-cardano-lib-crypto"
+import { CIP8Message } from "@xray-network/xray-cardano-lib-cip/cip8"
 import KoiosClient from "cardano-koios-client"
 import KupoClient from "cardano-kupo-client"
 import NftcdnClient from "cardano-nftcdn-client"
@@ -127,9 +128,9 @@ export const createCardano = (config: CardanoConfig = {}): Cardano => {
     const hexAddress = CardanoLib.Address.from_bech32(address).to_hex()
     const hexMessage = encoding.fromStringToHex(message)
     const { paymentCred } = addresses.getCredentials(address)
-    const hash = CardanoLib.PrivateKey.from_bech32(privateKey).to_public().hash().to_hex()
+    const hash = PrivateKey.from_bech32(privateKey).to_public().hash().to_hex()
     if (!paymentCred?.hash || paymentCred.hash !== hash) throw new Error("Private key does not match the address")
-    return Message.signData(hexAddress, hexMessage, privateKey)
+    return CIP8Message.signData(hexAddress, hexMessage, privateKey)
   }
 
   const messages = Object.freeze({
@@ -150,7 +151,7 @@ export const createCardano = (config: CardanoConfig = {}): Cardano => {
       const { paymentCred, stakingCred } = addresses.getCredentials(address)
       const hash = paymentCred?.hash ?? stakingCred?.hash
       if (!hash) throw new Error("Invalid address")
-      return Message.verifyData(hexAddress, hash, hexMessage, signedMessage)
+      return CIP8Message.verifyData(hexAddress, hash, hexMessage, signedMessage)
     },
   })
 

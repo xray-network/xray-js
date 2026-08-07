@@ -1,4 +1,4 @@
-import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import { emip3_decrypt_with_password, emip3_encrypt_with_password } from "@xray-network/xray-cardano-lib-crypto"
 import { bytesToHex, hexToBytes } from "@xray-network/xray-cardano-lib-core"
 
 const textEncoder = new TextEncoder()
@@ -25,7 +25,7 @@ export const fromStringToHex = (text: string): string => {
 }
 
 export const encryptDataWithPass = (data: string, password: string): string => {
-  return CardanoLib.emip3_encrypt_with_password(
+  return emip3_encrypt_with_password(
     fromStringToHex(password),
     toHex(randomBytes(32)),
     toHex(randomBytes(12)),
@@ -34,7 +34,7 @@ export const encryptDataWithPass = (data: string, password: string): string => {
 }
 
 export const decryptDataWithPass = (data: string, password: string): string => {
-  return toStringFromHex(CardanoLib.emip3_decrypt_with_password(fromStringToHex(password), data))
+  return toStringFromHex(emip3_decrypt_with_password(fromStringToHex(password), data))
 }
 
 export const randomBytes = (length: number): Uint8Array => {

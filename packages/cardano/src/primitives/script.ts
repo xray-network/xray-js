@@ -4,9 +4,10 @@ import {
   type DataSchema,
   type PlutusDataValue,
   type StaticSchema,
-} from "@xray-network/xray-cardano-lib"
-import * as CardanoLib from "@xray-network/xray-cardano-lib"
-import * as UPLC from "@xray-network/xray-cardano-lib"
+} from "@xray-network/xray-cardano-lib-plutus"
+import * as CardanoLib from "@xray-network/xray-cardano-lib-chain"
+import { ScriptHash } from "@xray-network/xray-cardano-lib-crypto"
+import * as UPLC from "@xray-network/xray-cardano-lib-plutus"
 import type * as CardanoTypes from "../types.js"
 import { fromHex, toHex } from "./misc.js"
 
@@ -79,17 +80,17 @@ export const scriptToAddress = (
   if (stakeCredential) {
     return CardanoLib.BaseAddress.new(
       networkId,
-      CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(validatorHash)),
+      CardanoLib.Credential.new_script(ScriptHash.from_hex(validatorHash)),
       stakeCredential.type === "key"
         ? CardanoLib.Credential.new_pub_key(CardanoLib.Ed25519KeyHash.from_hex(stakeCredential.hash))
-        : CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(stakeCredential.hash))
+        : CardanoLib.Credential.new_script(ScriptHash.from_hex(stakeCredential.hash))
     )
       .to_address()
       .to_bech32(undefined)
   } else {
     return CardanoLib.EnterpriseAddress.new(
       networkId,
-      CardanoLib.Credential.new_script(CardanoLib.ScriptHash.from_hex(validatorHash))
+      CardanoLib.Credential.new_script(ScriptHash.from_hex(validatorHash))
     )
       .to_address()
       .to_bech32(undefined)

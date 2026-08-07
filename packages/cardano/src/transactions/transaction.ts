@@ -1,4 +1,5 @@
-import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import * as CardanoLib from "@xray-network/xray-cardano-lib-chain"
+import { PrivateKey } from "@xray-network/xray-cardano-lib-crypto"
 import type { CardanoAccount } from "../accounts/account.js"
 import { createTransaction, getTransactionParts } from "../internal/transaction.js"
 import * as keys from "../primitives/keys.js"
@@ -58,10 +59,10 @@ export const signTransaction = async (
   for (const account of Array.isArray(accounts) ? accounts : [accounts]) {
     if (account.type === "private-key") {
       const material = account.getSigningMaterial(options.password)
-      const paymentKey = CardanoLib.PrivateKey.from_bech32(
+      const paymentKey = PrivateKey.from_bech32(
         keys.derivePrivateKey(material.rootPrivateKey, material.accountPath, material.addressPath)
       )
-      const stakingKey = CardanoLib.PrivateKey.from_bech32(
+      const stakingKey = PrivateKey.from_bech32(
         keys.derivePrivateKey(material.rootPrivateKey, material.accountPath, [2, 0])
       )
       const paymentKeyHash = paymentKey.to_public().hash().to_hex()
@@ -98,7 +99,7 @@ export const signTransaction = async (
 
 export const signTransactionWithPrivateKey = (unsigned: UnsignedTransaction, privateKey: string): SignedTransaction => {
   const transaction = CardanoLib.Transaction.from_cbor_hex(unsigned.cbor)
-  const key = CardanoLib.PrivateKey.from_bech32(privateKey)
+  const key = PrivateKey.from_bech32(privateKey)
   const witnessBuilder = CardanoLib.TransactionWitnessSetBuilder.new()
   witnessBuilder.add_existing(getTransactionParts(transaction).witnessSet)
   witnessBuilder.add_vkey(

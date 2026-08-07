@@ -17,6 +17,7 @@ Target: cardano
 | `0003` | Adopt functional Cardano API         | [Instruction](./implementations/cardano/0003-IMPL-INSTR.md) | `REVIEW`   | [Result](./implementations/cardano/0003-IMPL-RESULT.md) | `LOCAL`       | Implementation completed and validation recorded; awaiting human review.           |
 | `0004` | Simplify Cardano source structure    | [Instruction](./implementations/cardano/0004-IMPL-INSTR.md) | `REVIEW`   | [Result](./implementations/cardano/0004-IMPL-RESULT.md) | `LOCAL`       | Implementation completed and validation recorded; awaiting human review.           |
 | `0005` | Normalize Cardano library namespaces | [Instruction](./implementations/cardano/0005-IMPL-INSTR.md) | `REVIEW`   | [Result](./implementations/cardano/0005-IMPL-RESULT.md) | `LOCAL`       | Focused facade exports and consumer consolidation validate and await human review. |
+| `0006` | Group Cardano application exports | [Instruction](./implementations/cardano/0006-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/cardano/0006-IMPL-RESULT.md) | `LOCAL` | Grouped application and low-level boundaries, tests, docs, and every active downstream build pass. |
 
 ## Mini App Bridge implementation status
 

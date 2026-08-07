@@ -6,6 +6,11 @@ import type * as CardanoTypes from "../types.js"
 import * as KupmiosProviderTypes from "./kupmios-types.js"
 import { createProviderResolvers, pollUntil } from "./provider.js"
 
+export { default as KupoClient } from "cardano-kupo-client"
+export type { KupoTypes } from "cardano-kupo-client"
+export { default as OgmiosClient } from "cardano-ogmios-client"
+export type { OgmiosTypes } from "cardano-ogmios-client"
+
 export const createKupmiosProvider = ({
   ogmiosUrl,
   ogmiosHeaders,

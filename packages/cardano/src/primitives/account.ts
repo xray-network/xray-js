@@ -1,4 +1,3 @@
-import * as CardanoLib from "@xray-network/xray-cardano-lib"
 import cip4 from "../internal/cip4/checksum.js"
 import type * as CardanoTypes from "../types.js"
 import { getFingerprint, assetNameToAssetNameAscii } from "./asset.js"

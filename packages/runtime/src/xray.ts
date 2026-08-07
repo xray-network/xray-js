@@ -1,7 +1,7 @@
-import { createCardano, type Cardano, type CardanoConfig } from "@xray-network/xray-js-cardano"
+import { createCardano, type Cardano, type types } from "@xray-network/xray-js-cardano"
 import type { XrayChainModule } from "./common.js"
 
-const cardano: XrayChainModule<CardanoConfig, Cardano> = Object.freeze({
+const cardano: XrayChainModule<types.CardanoConfig, Cardano> = Object.freeze({
   create: createCardano,
 })
 

@@ -1,4 +1,4 @@
-import * as CardanoLib from "@xray-network/xray-cardano-lib"
+import * as CardanoLib from "@xray-network/xray-cardano-lib-chain"
 
 export type TransactionParts = {
   body: CardanoLib.TransactionBody

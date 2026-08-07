@@ -1,9 +1,9 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import { createInMemoryProvider, createProviderResolvers, pollUntil } from "@xray-network/xray-js-cardano/testing"
-import type { Script, Utxo } from "@xray-network/xray-js-cardano"
+import type { types } from "@xray-network/xray-js-cardano"
 
-const unresolvedUtxo: Utxo = {
+const unresolvedUtxo: types.Utxo = {
   transaction: { id: "1".repeat(64) },
   index: 0,
   address: "addr_test1_provider",
@@ -18,7 +18,7 @@ const unresolvedUtxo: Utxo = {
 
 describe("provider utilities", () => {
   it("shares address and datum/script resolution", async () => {
-    const script: Script = { language: "PlutusV2", script: "5900" }
+    const script: types.Script = { language: "PlutusV2", script: "5900" }
     const provider = createInMemoryProvider({
       utxos: [unresolvedUtxo],
       datums: { "datum-hash": "d87980" },
