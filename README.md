@@ -28,8 +28,10 @@ const tip = await cardano.chain.getTip()
 Use the Cardano subpath for direct factories, providers, primitives, and types:
 
 ```ts
-import { createCardano, createKoiosProvider, type Utxo } from "@xray-network/xray-js/cardano"
+import { cip8, cip67, createCardano, createKoiosProvider, uplc, type Utxo } from "@xray-network/xray-js/cardano"
 import { Address } from "@xray-network/xray-js/cardano/lib"
+
+const assetLabel = cip67.decode_asset_name_label(Uint8Array.from([0x00, 0x0d, 0xe1, 0x40])) // 222
 ```
 
 The Cardano API is classless: factories create frozen clients, accounts, wallets, transaction plans, and transaction values. Client and transaction-plan creation are synchronous. Promises are reserved for APIs that may cross a provider or wallet boundary:
@@ -96,6 +98,8 @@ npm run test:integration
 ## Cardano library
 
 Cardano primitives, cryptography, ledger types, CIP implementations, transaction builders, Plutus Data, and UPLC are provided by the universal pure-JavaScript [`@xray-network/xray-cardano-lib`](https://github.com/xray-network/xray-cardano-lib) package. No WebAssembly initialization or environment-specific build is required.
+
+CIP modules and UPLC use focused lowercase namespaces: `cip8`, `cip67`, and `uplc`. CIP-67 remains a proposal API and is not flattened into the Cardano root.
 
 ```ts
 import { CardanoLib } from "@xray-network/xray-js/cardano"

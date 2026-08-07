@@ -41,6 +41,7 @@
     "@xray-network/xray-cardano-lib": "0.1.0",
     "@xray-network/xray-cardano-lib-cip": "0.1.0",
     "@xray-network/xray-cardano-lib-core": "0.1.0",
+    "@xray-network/xray-cardano-lib-plutus": "0.1.0",
     "cardano-koios-client": "^1.0.10",
     "cardano-kupo-client": "^1.0.1",
     "cardano-nftcdn-client": "^1.0.6",

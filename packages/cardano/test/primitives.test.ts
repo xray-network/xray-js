@@ -9,8 +9,11 @@ import {
   accounts,
   addresses,
   assets,
+  cip8,
+  cip67,
   encoding,
   keys,
+  uplc,
 } from "@xray-network/xray-js-cardano"
 import { testData } from "./fixtures.js"
 
@@ -25,9 +28,19 @@ describe("Cardano primitives", () => {
 
   it("keeps direct library and generated-client exports", () => {
     assert.equal(typeof CardanoLib.Address.from_bech32, "function")
+    assert.equal(typeof cip8.CIP8Message.signData, "function")
+    assert.equal(typeof cip8.CIP8Message.verifyData, "function")
+    assert.equal(typeof uplc.evaluateProgram, "function")
     assert.equal(typeof KoiosClient, "function")
     assert.equal(typeof KupoClient, "function")
     assert.equal(typeof NftcdnClient, "function")
     assert.equal(typeof OgmiosClient, "function")
+  })
+
+  it("exposes the focused cardano-lib CIP-67 codec", () => {
+    const label = cip67.encode_asset_name_label(222)
+    assert.equal(encoding.toHex(label), "000de140")
+    assert.equal(cip67.decode_asset_name_label(label), 222)
+    assert.throws(() => cip67.decode_asset_name_label(Uint8Array.of(0, 0, 0, 1)))
   })
 })

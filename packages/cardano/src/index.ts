@@ -21,8 +21,9 @@ export {
 export type * from "./types.js"
 
 export * as CardanoLib from "@xray-network/xray-cardano-lib"
-export * as CIP8 from "@xray-network/xray-cardano-lib"
-export * as UPLC from "@xray-network/xray-cardano-lib"
+export * as cip8 from "@xray-network/xray-cardano-lib-cip/cip8"
+export * as cip67 from "@xray-network/xray-cardano-lib-cip/cip67"
+export * as uplc from "@xray-network/xray-cardano-lib-plutus/uplc"
 export { Data as PlutusData, Constr as PlutusConstr } from "@xray-network/xray-cardano-lib"
 export { CIP8Message as Message } from "@xray-network/xray-cardano-lib"
 
