@@ -15,23 +15,23 @@
       "import": "./dist/esm/index.js",
       "default": "./dist/esm/index.js"
     },
-    "./protocol": {
-      "types": "./dist/esm/protocol/index.d.ts",
-      "browser": "./dist/esm/protocol/index.js",
-      "import": "./dist/esm/protocol/index.js",
-      "default": "./dist/esm/protocol/index.js"
+    "./transport": {
+      "types": "./dist/esm/transport/index.d.ts",
+      "browser": "./dist/esm/transport/index.js",
+      "import": "./dist/esm/transport/index.js",
+      "default": "./dist/esm/transport/index.js"
     },
     "./client": {
-      "types": "./dist/esm/client/index.d.ts",
-      "browser": "./dist/esm/client/index.js",
-      "import": "./dist/esm/client/index.js",
-      "default": "./dist/esm/client/index.js"
+      "types": "./dist/esm/platform/client.d.ts",
+      "browser": "./dist/esm/platform/client.js",
+      "import": "./dist/esm/platform/client.js",
+      "default": "./dist/esm/platform/client.js"
     },
     "./host": {
-      "types": "./dist/esm/host/index.d.ts",
-      "browser": "./dist/esm/host/index.js",
-      "import": "./dist/esm/host/index.js",
-      "default": "./dist/esm/host/index.js"
+      "types": "./dist/esm/platform/host.d.ts",
+      "browser": "./dist/esm/platform/host.js",
+      "import": "./dist/esm/platform/host.js",
+      "default": "./dist/esm/platform/host.js"
     },
     "./testing": {
       "types": "./dist/esm/testing/index.d.ts",
@@ -45,6 +45,54 @@
       "import": "./dist/esm/react/index.js",
       "default": "./dist/esm/react/index.js"
     },
+    "./cardano": {
+      "types": "./dist/esm/cardano/index.d.ts",
+      "browser": "./dist/esm/cardano/index.js",
+      "import": "./dist/esm/cardano/index.js",
+      "default": "./dist/esm/cardano/index.js"
+    },
+    "./cardano/client": {
+      "types": "./dist/esm/cardano/client.d.ts",
+      "browser": "./dist/esm/cardano/client.js",
+      "import": "./dist/esm/cardano/client.js",
+      "default": "./dist/esm/cardano/client.js"
+    },
+    "./cardano/host": {
+      "types": "./dist/esm/cardano/host.d.ts",
+      "browser": "./dist/esm/cardano/host.js",
+      "import": "./dist/esm/cardano/host.js",
+      "default": "./dist/esm/cardano/host.js"
+    },
+    "./cardano/react": {
+      "types": "./dist/esm/cardano/react/index.d.ts",
+      "browser": "./dist/esm/cardano/react/index.js",
+      "import": "./dist/esm/cardano/react/index.js",
+      "default": "./dist/esm/cardano/react/index.js"
+    },
+    "./cardano/testing": {
+      "types": "./dist/esm/cardano/testing.d.ts",
+      "browser": "./dist/esm/cardano/testing.js",
+      "import": "./dist/esm/cardano/testing.js",
+      "default": "./dist/esm/cardano/testing.js"
+    },
+    "./cardano/cip30": {
+      "types": "./dist/esm/cardano/cip30/index.d.ts",
+      "browser": "./dist/esm/cardano/cip30/index.js",
+      "import": "./dist/esm/cardano/cip30/index.js",
+      "default": "./dist/esm/cardano/cip30/index.js"
+    },
+    "./cardano/cip30/client": {
+      "types": "./dist/esm/cardano/cip30/client.d.ts",
+      "browser": "./dist/esm/cardano/cip30/client.js",
+      "import": "./dist/esm/cardano/cip30/client.js",
+      "default": "./dist/esm/cardano/cip30/client.js"
+    },
+    "./cardano/cip30/host": {
+      "types": "./dist/esm/cardano/cip30/host.d.ts",
+      "browser": "./dist/esm/cardano/cip30/host.js",
+      "import": "./dist/esm/cardano/cip30/host.js",
+      "default": "./dist/esm/cardano/cip30/host.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -53,9 +101,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "node -e \"process.exit(0)\"",
+    "test": "npm run clean:test && tsc -p test/tsconfig.json && node --test .test-dist/*.test.js",
     "test:integration": "node -e \"process.exit(0)\"",
-    "clean": "rm -rf dist"
+    "clean:test": "rm -rf .test-dist",
+    "clean": "rm -rf dist .test-dist"
   },
   "dependencies": {
     "zod": "^3.24.1"

@@ -49,11 +49,11 @@
       "import": "./dist/esm/mini-app-bridge.js",
       "default": "./dist/esm/mini-app-bridge.js"
     },
-    "./mini-app-bridge/protocol": {
-      "types": "./dist/esm/mini-app-bridge-protocol.d.ts",
-      "browser": "./dist/esm/mini-app-bridge-protocol.js",
-      "import": "./dist/esm/mini-app-bridge-protocol.js",
-      "default": "./dist/esm/mini-app-bridge-protocol.js"
+    "./mini-app-bridge/transport": {
+      "types": "./dist/esm/mini-app-bridge-transport.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-transport.js",
+      "import": "./dist/esm/mini-app-bridge-transport.js",
+      "default": "./dist/esm/mini-app-bridge-transport.js"
     },
     "./mini-app-bridge/client": {
       "types": "./dist/esm/mini-app-bridge-client.d.ts",
@@ -78,6 +78,54 @@
       "browser": "./dist/esm/mini-app-bridge-testing.js",
       "import": "./dist/esm/mini-app-bridge-testing.js",
       "default": "./dist/esm/mini-app-bridge-testing.js"
+    },
+    "./mini-app-bridge/cardano": {
+      "types": "./dist/esm/mini-app-bridge-cardano.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-cardano.js",
+      "import": "./dist/esm/mini-app-bridge-cardano.js",
+      "default": "./dist/esm/mini-app-bridge-cardano.js"
+    },
+    "./mini-app-bridge/cardano/client": {
+      "types": "./dist/esm/mini-app-bridge-cardano-client.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-cardano-client.js",
+      "import": "./dist/esm/mini-app-bridge-cardano-client.js",
+      "default": "./dist/esm/mini-app-bridge-cardano-client.js"
+    },
+    "./mini-app-bridge/cardano/host": {
+      "types": "./dist/esm/mini-app-bridge-cardano-host.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-cardano-host.js",
+      "import": "./dist/esm/mini-app-bridge-cardano-host.js",
+      "default": "./dist/esm/mini-app-bridge-cardano-host.js"
+    },
+    "./mini-app-bridge/cardano/react": {
+      "types": "./dist/esm/mini-app-bridge-cardano-react.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-cardano-react.js",
+      "import": "./dist/esm/mini-app-bridge-cardano-react.js",
+      "default": "./dist/esm/mini-app-bridge-cardano-react.js"
+    },
+    "./mini-app-bridge/cardano/testing": {
+      "types": "./dist/esm/mini-app-bridge-cardano-testing.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-cardano-testing.js",
+      "import": "./dist/esm/mini-app-bridge-cardano-testing.js",
+      "default": "./dist/esm/mini-app-bridge-cardano-testing.js"
+    },
+    "./mini-app-bridge/cardano/cip30": {
+      "types": "./dist/esm/mini-app-bridge-cardano-cip30.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-cardano-cip30.js",
+      "import": "./dist/esm/mini-app-bridge-cardano-cip30.js",
+      "default": "./dist/esm/mini-app-bridge-cardano-cip30.js"
+    },
+    "./mini-app-bridge/cardano/cip30/client": {
+      "types": "./dist/esm/mini-app-bridge-cardano-cip30-client.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-cardano-cip30-client.js",
+      "import": "./dist/esm/mini-app-bridge-cardano-cip30-client.js",
+      "default": "./dist/esm/mini-app-bridge-cardano-cip30-client.js"
+    },
+    "./mini-app-bridge/cardano/cip30/host": {
+      "types": "./dist/esm/mini-app-bridge-cardano-cip30-host.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-cardano-cip30-host.js",
+      "import": "./dist/esm/mini-app-bridge-cardano-cip30-host.js",
+      "default": "./dist/esm/mini-app-bridge-cardano-cip30-host.js"
     },
     "./package.json": "./package.json"
   },

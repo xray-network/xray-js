@@ -67,17 +67,33 @@ Shared XRAY primitives are available from the package root:
 import { XrayError, type XrayChain, type RequestOptions } from "@xray-network/xray-js"
 ```
 
-## Mini App Bridge imports
+## Mini App Bridge
 
-The chain-neutral Mini App Bridge lives in `packages/mini-app-bridge`, with Cardano support provided by its CIP-30 modules.
+The Mini App Bridge is blockchain-neutral at its core. Transport owns contextual request/response delivery, while the
+platform layer owns only XRAY host concerns such as handshake, theme, currency, privacy settings, and routing. The
+handshake advertises which independent blockchain protocols the current host can execute.
 
 ```ts
-import { miniAppClient } from "@xray-network/xray-js/mini-app-bridge/client"
-import { miniAppHost } from "@xray-network/xray-js/mini-app-bridge/host"
+import * as miniAppClient from "@xray-network/xray-js/mini-app-bridge/client"
+import * as miniAppHost from "@xray-network/xray-js/mini-app-bridge/host"
 import { MiniAppProvider } from "@xray-network/xray-js/mini-app-bridge/react"
+
+const handshake = await miniAppClient.handshake()
+console.log(handshake?.context.blockchain, handshake?.payload.protocols)
 ```
 
-React is an optional peer dependency and is only needed for the `/react` entry.
+Blockchain-specific models and wallet standards live in adapter subpaths rather than the shared bridge. Cardano is the
+first adapter; future adapters can add their own native and compatibility protocols without changing platform APIs.
+
+```ts
+import * as cardanoClient from "@xray-network/xray-js/mini-app-bridge/cardano/client"
+import * as cardanoCip30Client from "@xray-network/xray-js/mini-app-bridge/cardano/cip30/client"
+import { useAccountState } from "@xray-network/xray-js/mini-app-bridge/cardano/react"
+
+cardanoCip30Client.installConnector() // window.cardano.xrayBridge -> XRAY App iframe host
+```
+
+React is an optional peer dependency and is needed only for React entrypoints.
 
 ## Development
 

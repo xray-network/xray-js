@@ -9,12 +9,5 @@ export {
   useNetwork,
   useCurrency,
   useHideBalances,
-  useExplorer,
-  useTip,
-  useAccountState,
   useHostMessage,
-  useSignTx,
-  useSubmitTx,
-  useSignAndSubmitTx,
-  useSignData,
 } from "./hooks.js"

@@ -29,6 +29,9 @@ Target: mini-app-bridge
 | ------ | ----------------------- | ------------------------------------------------------------------- | ---------- | --------------------------------------------------------------- | ------------- | ------------------------------------------------- |
 | `0001` | Rename Mini App package | [Instruction](./implementations/mini-app-bridge/0001-IMPL-INSTR.md) | `ACCEPTED` | [Result](./implementations/mini-app-bridge/0001-IMPL-RESULT.md) | `LOCAL`       | Human explicitly accepted `mini-app-bridge/0001`. |
 | `0002` | Expose bridge host context | [Instruction](./implementations/mini-app-bridge/0002-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0002-IMPL-RESULT.md) | `LOCAL` | Contextual envelopes, transports, mocks, and React hooks validate and await human review. |
+| `0003` | Separate Cardano bridge adapter | [Instruction](./implementations/mini-app-bridge/0003-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0003-IMPL-RESULT.md) | `LOCAL` | Platform, Cardano-native, and CIP-30 boundaries plus all downstream builds pass and await human review. |
+| `0004` | Remove bridge entrypoint shims | [Instruction](./implementations/mini-app-bridge/0004-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0004-IMPL-RESULT.md) | `LOCAL` | Direct exports, neutral documentation, and all consumer validations pass and await human review. |
+| `0005` | Rename default connector key | [Instruction](./implementations/mini-app-bridge/0005-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0005-IMPL-RESULT.md) | `LOCAL` | The xrayBridge default, tests, and builds pass and await human review. |
 
 ## Repository implementation status
 

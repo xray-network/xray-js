@@ -1,9 +1,5 @@
 import { z } from "zod"
 
-// Every postMessage payload travels inside an envelope carrying its routing
-// `type` and a `requestId` used to correlate responses with requests. Host
-// envelopes additionally carry validated blockchain context.
-
 export const messageEnvelopeSchema = z.object({
   type: z.string(),
   payload: z.unknown(),
@@ -18,29 +14,28 @@ export type Envelope<Type extends string, Payload, Context = never> = {
   requestId: string
 } & ([Context] extends [never] ? object : { context: Context })
 
-type ParsedEnvelope<Schemas extends Record<string, z.ZodTypeAny>, Context = never> = {
+export type PayloadMap<Schemas extends Record<string, z.ZodTypeAny>> = {
+  [K in keyof Schemas]: z.infer<Schemas[K]>
+}
+
+export type MessageFromSchemas<Schemas extends Record<string, z.ZodTypeAny>, Context = never> = {
   [K in keyof Schemas & string]: Envelope<K, z.infer<Schemas[K]>, Context>
 }[keyof Schemas & string]
 
-/**
- * Validate an unknown value (e.g. `event.data`) against a map of payload
- * schemas keyed by message type. Returns the typed message or null when the
- * value is not a well-formed message of one of the given types.
- */
 export function parseMessage<Schemas extends Record<string, z.ZodTypeAny>, Context>(
   schemas: Schemas,
   data: unknown,
   contextSchema: z.ZodType<Context>
-): ParsedEnvelope<Schemas, Context> | null
+): MessageFromSchemas<Schemas, Context> | null
 export function parseMessage<Schemas extends Record<string, z.ZodTypeAny>>(
   schemas: Schemas,
   data: unknown
-): ParsedEnvelope<Schemas> | null
+): MessageFromSchemas<Schemas> | null
 export function parseMessage<Schemas extends Record<string, z.ZodTypeAny>>(
   schemas: Schemas,
   data: unknown,
   contextSchema?: z.ZodTypeAny
-): ParsedEnvelope<Schemas, unknown> | ParsedEnvelope<Schemas> | null {
+): MessageFromSchemas<Schemas, unknown> | MessageFromSchemas<Schemas> | null {
   const envelope = messageEnvelopeSchema.safeParse(data)
   if (!envelope.success) return null
   const schema = schemas[envelope.data.type]

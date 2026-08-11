@@ -1,6 +1,4 @@
-// Root entry re-exports the shared protocol (types, zod schemas, constants).
-// The client, host, and testing surfaces live behind subpath exports:
-//   @xray-network/xray-js-mini-app-bridge/client
-//   @xray-network/xray-js-mini-app-bridge/host
-//   @xray-network/xray-js-mini-app-bridge/testing
-export * from "./protocol/index.js"
+// Root is blockchain-neutral: transport primitives and XRAY platform messages.
+// Chain protocols are published from explicit subpaths such as `./cardano`.
+export * from "./transport/index.js"
+export * from "./platform/index.js"

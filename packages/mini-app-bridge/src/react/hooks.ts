@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"
-import { miniAppClient } from "../client/index.js"
-import type { HostMessagePayloadMap } from "../protocol/index.js"
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react"
+import * as miniAppClient from "../platform/client.js"
+import type { PlatformHostMessagePayloadMap } from "../platform/protocol.js"
 import { useMiniAppStore } from "./context.js"
 import type { MiniAppValueKey, MiniAppValues } from "./store.js"
 
@@ -32,7 +32,8 @@ export const useMiniApp = () => {
     () => store.isConnected()
   )
   const context = useStoreValue("hostContext")
-  return { connected, connecting: connected === null, context }
+  const protocols = useStoreValue("protocols")
+  return { connected, connecting: connected === null, context, protocols }
 }
 
 /** Authoritative blockchain and network selected by the embedding host. */
@@ -53,30 +54,13 @@ export const useCurrency = () => useStoreValue("currency")
 /** Privacy flag for hiding balances, fetched once and kept live. Null until known. */
 export const useHideBalances = () => useStoreValue("hideBalances")
 
-/** Preferred explorer, fetched once and kept live. Null until known. */
-export const useExplorer = () => useStoreValue("explorer")
-
-/** Chain tip, fetched once; call `refresh` to refetch. */
-export const useTip = () => {
-  const store = useMiniAppStore()
-  const tip = useStoreValue("tip")
-  return { tip, refresh: useCallback(() => store.refresh("tip"), [store]) }
-}
-
-/** Wallet account state, fetched once; call `refresh` to refetch. */
-export const useAccountState = () => {
-  const store = useMiniAppStore()
-  const accountState = useStoreValue("accountState")
-  return { accountState, refresh: useCallback(() => store.refresh("accountState"), [store]) }
-}
-
 /**
  * Subscribe to a host message for the component's lifetime. The handler is
  * kept in a ref, so re-renders never resubscribe.
  */
-export const useHostMessage = <MessageType extends keyof HostMessagePayloadMap>(
+export const useHostMessage = <MessageType extends keyof PlatformHostMessagePayloadMap>(
   messageType: MessageType,
-  handler: (payload: HostMessagePayloadMap[MessageType]) => void
+  handler: (payload: PlatformHostMessagePayloadMap[MessageType]) => void
 ) => {
   const handlerRef = useRef(handler)
   useEffect(() => {
@@ -85,60 +69,4 @@ export const useHostMessage = <MessageType extends keyof HostMessagePayloadMap>(
   useEffect(() => {
     return miniAppClient.listen(messageType, ({ payload }) => handlerRef.current(payload))
   }, [messageType])
-}
-
-const useInteractive = <Args extends unknown[], Result>(request: (...args: Args) => Promise<Result | null>) => {
-  const [pending, setPending] = useState(false)
-  const [result, setResult] = useState<Result | null>(null)
-  const execute = useCallback(
-    async (...args: Args) => {
-      setPending(true)
-      try {
-        const response = await request(...args)
-        setResult(response)
-        return response
-      } finally {
-        setPending(false)
-      }
-    },
-    [request]
-  )
-  const reset = useCallback(() => setResult(null), [])
-  return { execute, pending, result, reset }
-}
-
-/** Request a tx signature. `result` is null until resolved (or on timeout). */
-export const useSignTx = () => {
-  const { execute, ...rest } = useInteractive(
-    useCallback((tx: string) => miniAppClient.signTx(tx).then((response) => response?.payload ?? null), [])
-  )
-  return { signTx: execute, ...rest }
-}
-
-/** Request a tx submission. `result` is null until resolved (or on timeout). */
-export const useSubmitTx = () => {
-  const { execute, ...rest } = useInteractive(
-    useCallback((tx: string) => miniAppClient.submitTx(tx).then((response) => response?.payload ?? null), [])
-  )
-  return { submitTx: execute, ...rest }
-}
-
-/** Request sign-and-submit. `result` is null until resolved (or on timeout). */
-export const useSignAndSubmitTx = () => {
-  const { execute, ...rest } = useInteractive(
-    useCallback((tx: string) => miniAppClient.signAndSubmitTx(tx).then((response) => response?.payload ?? null), [])
-  )
-  return { signAndSubmitTx: execute, ...rest }
-}
-
-/** Request an arbitrary data signature. `result` is null until resolved (or on timeout). */
-export const useSignData = () => {
-  const { execute, ...rest } = useInteractive(
-    useCallback(
-      (address: string, data: string) =>
-        miniAppClient.signData(address, data).then((response) => response?.payload ?? null),
-      []
-    )
-  )
-  return { signData: execute, ...rest }
 }

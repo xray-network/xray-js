@@ -1,14 +1,10 @@
-import { miniAppClient } from "../client/index.js"
+import * as miniAppClient from "../platform/client.js"
 import type {
-  HostThemePayload,
-  HostNetworkPayload,
-  HostCurrencyPayload,
-  HostHideBalancesPayload,
-  HostExplorerPayload,
-  HostTipPayload,
-  HostAccountStatePayload,
-  HostContext,
-} from "../protocol/index.js"
+  PlatformHostCurrencyPayload,
+  PlatformHostHideBalancesPayload,
+  PlatformHostThemePayload,
+} from "../platform/protocol.js"
+import type { HostContext } from "../transport/context.js"
 
 // Framework-free connection store backing the React hooks. Hooks read from the
 // module-level `defaultMiniAppStore` unless a <MiniAppProvider> supplies its
@@ -16,13 +12,10 @@ import type {
 
 export type MiniAppValues = {
   hostContext: HostContext | null
-  theme: HostThemePayload | null
-  network: HostNetworkPayload | null
-  currency: HostCurrencyPayload | null
-  hideBalances: HostHideBalancesPayload | null
-  explorer: HostExplorerPayload | null
-  tip: HostTipPayload | null
-  accountState: HostAccountStatePayload | null
+  protocols: string[]
+  theme: PlatformHostThemePayload | null
+  currency: PlatformHostCurrencyPayload | null
+  hideBalances: PlatformHostHideBalancesPayload | null
 }
 
 export type MiniAppValueKey = keyof MiniAppValues
@@ -46,25 +39,18 @@ export type MiniAppStore = {
 
 const emptyValues = (): MiniAppValues => ({
   hostContext: null,
+  protocols: [],
   theme: null,
-  network: null,
   currency: null,
   hideBalances: null,
-  explorer: null,
-  tip: null,
-  accountState: null,
 })
 
 const getters: Partial<{
   [K in MiniAppValueKey]: () => Promise<{ payload: MiniAppValues[K]; context: HostContext } | null>
 }> = {
   theme: miniAppClient.getTheme,
-  network: miniAppClient.getNetwork,
   currency: miniAppClient.getCurrency,
   hideBalances: miniAppClient.getHideBalances,
-  explorer: miniAppClient.getExplorer,
-  tip: miniAppClient.getTip,
-  accountState: miniAppClient.getAccountState,
 }
 
 export const createMiniAppStore = (): MiniAppStore => {
@@ -89,7 +75,7 @@ export const createMiniAppStore = (): MiniAppStore => {
   // toggles, network switches) and any in-flight getter responses.
   const startListening = () => {
     if (stopListening.length > 0) return
-    const receive = <K extends Exclude<MiniAppValueKey, "hostContext">>(
+    const receive = <K extends Exclude<MiniAppValueKey, "hostContext" | "protocols">>(
       key: K,
       message: { payload: MiniAppValues[K]; context: HostContext }
     ) => {
@@ -98,20 +84,17 @@ export const createMiniAppStore = (): MiniAppStore => {
     }
     stopListening = [
       miniAppClient.listen("xray.host.theme", (message) => receive("theme", message)),
-      miniAppClient.listen("xray.host.network", (message) => receive("network", message)),
       miniAppClient.listen("xray.host.currency", (message) => receive("currency", message)),
       miniAppClient.listen("xray.host.hideBalances", (message) => receive("hideBalances", message)),
-      miniAppClient.listen("xray.host.explorer", (message) => receive("explorer", message)),
-      miniAppClient.listen("xray.host.tip", (message) => receive("tip", message)),
-      miniAppClient.listen("xray.host.accountState", (message) => receive("accountState", message)),
     ]
   }
 
   const connect = () =>
-    (handshakePromise ??= miniAppClient.sendHandshake().then((response) => {
-      connected = !!response?.payload
+    (handshakePromise ??= miniAppClient.handshake().then((response) => {
+      connected = response !== null
       if (response) {
         setValue("hostContext", response.context)
+        setValue("protocols", response.payload.protocols)
       }
       if (connected) startListening()
       notify("connected")
@@ -119,9 +102,12 @@ export const createMiniAppStore = (): MiniAppStore => {
     }))
 
   const refresh = async (key: MiniAppValueKey) => {
-    if (key === "hostContext") {
-      const response = await miniAppClient.sendHandshake()
-      if (response) setValue("hostContext", response.context)
+    if (key === "hostContext" || key === "protocols") {
+      const response = await miniAppClient.handshake()
+      if (response) {
+        setValue("hostContext", response.context)
+        setValue("protocols", response.payload.protocols)
+      }
       return
     }
     const getter = getters[key]
@@ -139,7 +125,7 @@ export const createMiniAppStore = (): MiniAppStore => {
     ensure: (key) => {
       if (fetched.has(key)) return
       fetched.add(key)
-      if (key === "hostContext") void connect()
+      if (key === "hostContext" || key === "protocols") void connect()
       else void refresh(key)
     },
     refresh,

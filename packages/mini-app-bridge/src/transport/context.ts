@@ -23,5 +23,6 @@ export const hostContextSchema = z.discriminatedUnion("blockchain", [
 ])
 
 export type HostContext = z.infer<typeof hostContextSchema>
+export type CardanoHostContext = z.infer<typeof cardanoHostContextSchema>
 export type HostBlockchain = HostContext["blockchain"]
 export type HostNetwork = HostContext["network"]
