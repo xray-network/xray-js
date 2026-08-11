@@ -7,6 +7,7 @@ import type {
   HostExplorerPayload,
   HostTipPayload,
   HostAccountStatePayload,
+  HostContext,
 } from "../protocol/index.js"
 
 // Framework-free connection store backing the React hooks. Hooks read from the
@@ -14,6 +15,7 @@ import type {
 // own instance, so the provider stays strictly optional.
 
 export type MiniAppValues = {
+  hostContext: HostContext | null
   theme: HostThemePayload | null
   network: HostNetworkPayload | null
   currency: HostCurrencyPayload | null
@@ -43,6 +45,7 @@ export type MiniAppStore = {
 }
 
 const emptyValues = (): MiniAppValues => ({
+  hostContext: null,
   theme: null,
   network: null,
   currency: null,
@@ -52,7 +55,9 @@ const emptyValues = (): MiniAppValues => ({
   accountState: null,
 })
 
-const getters: { [K in MiniAppValueKey]: () => Promise<{ payload: MiniAppValues[K] } | null> } = {
+const getters: Partial<{
+  [K in MiniAppValueKey]: () => Promise<{ payload: MiniAppValues[K]; context: HostContext } | null>
+}> = {
   theme: miniAppClient.getTheme,
   network: miniAppClient.getNetwork,
   currency: miniAppClient.getCurrency,
@@ -84,28 +89,47 @@ export const createMiniAppStore = (): MiniAppStore => {
   // toggles, network switches) and any in-flight getter responses.
   const startListening = () => {
     if (stopListening.length > 0) return
+    const receive = <K extends Exclude<MiniAppValueKey, "hostContext">>(
+      key: K,
+      message: { payload: MiniAppValues[K]; context: HostContext }
+    ) => {
+      setValue("hostContext", message.context)
+      setValue(key, message.payload)
+    }
     stopListening = [
-      miniAppClient.listen("xray.host.theme", ({ payload }) => setValue("theme", payload)),
-      miniAppClient.listen("xray.host.network", ({ payload }) => setValue("network", payload)),
-      miniAppClient.listen("xray.host.currency", ({ payload }) => setValue("currency", payload)),
-      miniAppClient.listen("xray.host.hideBalances", ({ payload }) => setValue("hideBalances", payload)),
-      miniAppClient.listen("xray.host.explorer", ({ payload }) => setValue("explorer", payload)),
-      miniAppClient.listen("xray.host.tip", ({ payload }) => setValue("tip", payload)),
-      miniAppClient.listen("xray.host.accountState", ({ payload }) => setValue("accountState", payload)),
+      miniAppClient.listen("xray.host.theme", (message) => receive("theme", message)),
+      miniAppClient.listen("xray.host.network", (message) => receive("network", message)),
+      miniAppClient.listen("xray.host.currency", (message) => receive("currency", message)),
+      miniAppClient.listen("xray.host.hideBalances", (message) => receive("hideBalances", message)),
+      miniAppClient.listen("xray.host.explorer", (message) => receive("explorer", message)),
+      miniAppClient.listen("xray.host.tip", (message) => receive("tip", message)),
+      miniAppClient.listen("xray.host.accountState", (message) => receive("accountState", message)),
     ]
   }
 
   const connect = () =>
     (handshakePromise ??= miniAppClient.sendHandshake().then((response) => {
       connected = !!response?.payload
+      if (response) {
+        setValue("hostContext", response.context)
+      }
       if (connected) startListening()
       notify("connected")
       return connected
     }))
 
   const refresh = async (key: MiniAppValueKey) => {
-    const response = await getters[key]()
-    if (response) setValue(key, response.payload as MiniAppValues[typeof key])
+    if (key === "hostContext") {
+      const response = await miniAppClient.sendHandshake()
+      if (response) setValue("hostContext", response.context)
+      return
+    }
+    const getter = getters[key]
+    const response = await getter?.()
+    if (response) {
+      setValue("hostContext", response.context)
+      setValue(key, response.payload as MiniAppValues[typeof key])
+    }
   }
 
   return {
@@ -115,7 +139,8 @@ export const createMiniAppStore = (): MiniAppStore => {
     ensure: (key) => {
       if (fetched.has(key)) return
       fetched.add(key)
-      void refresh(key)
+      if (key === "hostContext") void connect()
+      else void refresh(key)
     },
     refresh,
     subscribe: (key, listener) => {

@@ -14,88 +14,138 @@ import type {
   HostSignDataPayload,
   ClientMessagePayloadMap,
   ClientMessage,
+  HostContext,
 } from "../protocol/index.js"
 import { sendMessage, listenToWindow, listenAllFromWindow } from "./messaging.js"
 
 /** Confirm to the mini-app that the host is reachable and ready. */
-export const sendHandshake = (iframe: Window | null | undefined, payload: HostHandshakePayload, requestId: string) => {
-  sendMessage(iframe, "xray.host.handshake", payload, requestId)
+export const sendHandshake = (
+  iframe: Window | null | undefined,
+  payload: HostHandshakePayload,
+  requestId: string,
+  context: HostContext
+) => {
+  sendMessage(iframe, "xray.host.handshake", payload, requestId, context)
 }
 
 /** Provide current chain tip metadata. */
-export const sendTip = (iframe: Window | null | undefined, payload: HostTipPayload, requestId: string) => {
-  sendMessage(iframe, "xray.host.tip", payload, requestId)
+export const sendTip = (
+  iframe: Window | null | undefined,
+  payload: HostTipPayload,
+  requestId: string,
+  context: HostContext
+) => {
+  sendMessage(iframe, "xray.host.tip", payload, requestId, context)
 }
 
 /** Provide account state (balance, nonce, etc) to the mini-app. */
 export const sendAccountState = (
   iframe: Window | null | undefined,
   payload: HostAccountStatePayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.host.accountState", payload, requestId)
+  sendMessage(iframe, "xray.host.accountState", payload, requestId, context)
 }
 
 /** Provide network information to the mini-app. */
-export const sendNetwork = (iframe: Window | null | undefined, payload: HostNetworkPayload, requestId: string) => {
-  sendMessage(iframe, "xray.host.network", payload, requestId)
+export const sendNetwork = (
+  iframe: Window | null | undefined,
+  payload: HostNetworkPayload,
+  requestId: string,
+  context: HostContext
+) => {
+  sendMessage(iframe, "xray.host.network", payload, requestId, context)
 }
 
 /** Tell the mini-app which theme to use. */
-export const sendTheme = (iframe: Window | null | undefined, payload: HostThemePayload, requestId: string) => {
-  sendMessage(iframe, "xray.host.theme", payload, requestId)
+export const sendTheme = (
+  iframe: Window | null | undefined,
+  payload: HostThemePayload,
+  requestId: string,
+  context: HostContext
+) => {
+  sendMessage(iframe, "xray.host.theme", payload, requestId, context)
 }
 
 /** Tell the mini-app which display currency to use. */
-export const sendCurrency = (iframe: Window | null | undefined, payload: HostCurrencyPayload, requestId: string) => {
-  sendMessage(iframe, "xray.host.currency", payload, requestId)
+export const sendCurrency = (
+  iframe: Window | null | undefined,
+  payload: HostCurrencyPayload,
+  requestId: string,
+  context: HostContext
+) => {
+  sendMessage(iframe, "xray.host.currency", payload, requestId, context)
 }
 
 /** Tell the mini-app whether to hide balances. */
 export const sendHideBalances = (
   iframe: Window | null | undefined,
   payload: HostHideBalancesPayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.host.hideBalances", payload, requestId)
+  sendMessage(iframe, "xray.host.hideBalances", payload, requestId, context)
 }
 
 /** Provide explorer type to the mini-app. */
-export const sendExplorer = (iframe: Window | null | undefined, payload: HostExplorerPayload, requestId: string) => {
-  sendMessage(iframe, "xray.host.explorer", payload, requestId)
+export const sendExplorer = (
+  iframe: Window | null | undefined,
+  payload: HostExplorerPayload,
+  requestId: string,
+  context: HostContext
+) => {
+  sendMessage(iframe, "xray.host.explorer", payload, requestId, context)
 }
 
 /** Inform the mini-app that the host route has changed (mirrors client -> host call). */
 export const sendRouteChanged = (
   iframe: Window | null | undefined,
   payload: HostRouteChangedPayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.host.routeChanged", payload, requestId)
+  sendMessage(iframe, "xray.host.routeChanged", payload, requestId, context)
 }
 
 /** Return the result of a signTx request, including any host-provided error message. */
-export const sendSignTx = (iframe: Window | null | undefined, payload: HostSignTxPayload, requestId: string) => {
-  sendMessage(iframe, "xray.host.signTx", payload, requestId)
+export const sendSignTx = (
+  iframe: Window | null | undefined,
+  payload: HostSignTxPayload,
+  requestId: string,
+  context: HostContext
+) => {
+  sendMessage(iframe, "xray.host.signTx", payload, requestId, context)
 }
 
 /** Return the result of a submitTx request, including any host-provided error message. */
-export const sendSubmitTx = (iframe: Window | null | undefined, payload: HostSubmitTxPayload, requestId: string) => {
-  sendMessage(iframe, "xray.host.submitTx", payload, requestId)
+export const sendSubmitTx = (
+  iframe: Window | null | undefined,
+  payload: HostSubmitTxPayload,
+  requestId: string,
+  context: HostContext
+) => {
+  sendMessage(iframe, "xray.host.submitTx", payload, requestId, context)
 }
 
 /** Return the result of a signAndSubmitTx request, including any host-provided error message. */
 export const sendSignAndSubmitTx = (
   iframe: Window | null | undefined,
   payload: HostSignAndSubmitTxPayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.host.signAndSubmitTx", payload, requestId)
+  sendMessage(iframe, "xray.host.signAndSubmitTx", payload, requestId, context)
 }
 
 /** Return the result of a signData request, including any host-provided error message. */
-export const sendSignData = (iframe: Window | null | undefined, payload: HostSignDataPayload, requestId: string) => {
-  sendMessage(iframe, "xray.host.signData", payload, requestId)
+export const sendSignData = (
+  iframe: Window | null | undefined,
+  payload: HostSignDataPayload,
+  requestId: string,
+  context: HostContext
+) => {
+  sendMessage(iframe, "xray.host.signData", payload, requestId, context)
 }
 
 /**

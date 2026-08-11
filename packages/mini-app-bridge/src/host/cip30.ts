@@ -14,6 +14,7 @@ import type {
   Cip30HostSubmitTxPayload,
   Cip30ClientMessagePayloadMap,
   Cip30ClientMessage,
+  HostContext,
 } from "../protocol/index.js"
 import { sendMessage, listenToWindow, listenAllFromWindow } from "./messaging.js"
 
@@ -21,105 +22,130 @@ import { sendMessage, listenToWindow, listenAllFromWindow } from "./messaging.js
 export const sendHandshake = (
   iframe: Window | null | undefined,
   payload: Cip30HostHandshakePayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.cip30.host.handshake", payload, requestId)
+  sendMessage(iframe, "xray.cip30.host.handshake", payload, requestId, context)
 }
 
 /** Provide supported CIP-30 extensions to the mini-app. */
 export const sendExtensions = (
   iframe: Window | null | undefined,
   payload: Cip30HostExtensionsPayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.cip30.host.extensions", payload, requestId)
+  sendMessage(iframe, "xray.cip30.host.extensions", payload, requestId, context)
 }
 
 /** Provide current network id to the mini-app. */
 export const sendNetworkId = (
   iframe: Window | null | undefined,
   payload: Cip30HostNetworkIdPayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.cip30.host.networkId", payload, requestId)
+  sendMessage(iframe, "xray.cip30.host.networkId", payload, requestId, context)
 }
 
 /** Provide UTXOs to the mini-app. */
-export const sendUtxos = (iframe: Window | null | undefined, payload: Cip30HostUtxosPayload, requestId: string) => {
-  sendMessage(iframe, "xray.cip30.host.utxos", payload, requestId)
+export const sendUtxos = (
+  iframe: Window | null | undefined,
+  payload: Cip30HostUtxosPayload,
+  requestId: string,
+  context: HostContext
+) => {
+  sendMessage(iframe, "xray.cip30.host.utxos", payload, requestId, context)
 }
 
 /** Provide collateral UTXOs to the mini-app. */
 export const sendCollateral = (
   iframe: Window | null | undefined,
   payload: Cip30HostCollateralPayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.cip30.host.collateral", payload, requestId)
+  sendMessage(iframe, "xray.cip30.host.collateral", payload, requestId, context)
 }
 
 /** Provide balance to the mini-app. */
-export const sendBalance = (iframe: Window | null | undefined, payload: Cip30HostBalancePayload, requestId: string) => {
-  sendMessage(iframe, "xray.cip30.host.balance", payload, requestId)
+export const sendBalance = (
+  iframe: Window | null | undefined,
+  payload: Cip30HostBalancePayload,
+  requestId: string,
+  context: HostContext
+) => {
+  sendMessage(iframe, "xray.cip30.host.balance", payload, requestId, context)
 }
 
 /** Provide used addresses to the mini-app. */
 export const sendUsedAddresses = (
   iframe: Window | null | undefined,
   payload: Cip30HostUsedAddressesPayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.cip30.host.usedAddresses", payload, requestId)
+  sendMessage(iframe, "xray.cip30.host.usedAddresses", payload, requestId, context)
 }
 
 /** Provide unused addresses to the mini-app. */
 export const sendUnusedAddresses = (
   iframe: Window | null | undefined,
   payload: Cip30HostUnusedAddressesPayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.cip30.host.unusedAddresses", payload, requestId)
+  sendMessage(iframe, "xray.cip30.host.unusedAddresses", payload, requestId, context)
 }
 
 /** Provide change address to the mini-app. */
 export const sendChangeAddress = (
   iframe: Window | null | undefined,
   payload: Cip30HostChangeAddressPayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.cip30.host.changeAddress", payload, requestId)
+  sendMessage(iframe, "xray.cip30.host.changeAddress", payload, requestId, context)
 }
 
 /** Provide reward addresses to the mini-app. */
 export const sendRewardAddresses = (
   iframe: Window | null | undefined,
   payload: Cip30HostRewardAddressesPayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.cip30.host.rewardAddresses", payload, requestId)
+  sendMessage(iframe, "xray.cip30.host.rewardAddresses", payload, requestId, context)
 }
 
 /** Provide signed transaction to the mini-app. */
-export const sendSignTx = (iframe: Window | null | undefined, payload: Cip30HostSignTxPayload, requestId: string) => {
-  sendMessage(iframe, "xray.cip30.host.signTx", payload, requestId)
+export const sendSignTx = (
+  iframe: Window | null | undefined,
+  payload: Cip30HostSignTxPayload,
+  requestId: string,
+  context: HostContext
+) => {
+  sendMessage(iframe, "xray.cip30.host.signTx", payload, requestId, context)
 }
 
 /** Provide signed data to the mini-app. */
 export const sendSignData = (
   iframe: Window | null | undefined,
   payload: Cip30HostSignDataPayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.cip30.host.signData", payload, requestId)
+  sendMessage(iframe, "xray.cip30.host.signData", payload, requestId, context)
 }
 
 /** Provide submitted transaction hash to the mini-app. */
 export const sendSubmitTx = (
   iframe: Window | null | undefined,
   payload: Cip30HostSubmitTxPayload,
-  requestId: string
+  requestId: string,
+  context: HostContext
 ) => {
-  sendMessage(iframe, "xray.cip30.host.submitTx", payload, requestId)
+  sendMessage(iframe, "xray.cip30.host.submitTx", payload, requestId, context)
 }
 
 /**

@@ -28,6 +28,7 @@ Target: mini-app-bridge
 | ID     | Title                   | Instruction                                                         | State      | Result                                                          | Evidence mode | Decision proof                                    |
 | ------ | ----------------------- | ------------------------------------------------------------------- | ---------- | --------------------------------------------------------------- | ------------- | ------------------------------------------------- |
 | `0001` | Rename Mini App package | [Instruction](./implementations/mini-app-bridge/0001-IMPL-INSTR.md) | `ACCEPTED` | [Result](./implementations/mini-app-bridge/0001-IMPL-RESULT.md) | `LOCAL`       | Human explicitly accepted `mini-app-bridge/0001`. |
+| `0002` | Expose bridge host context | [Instruction](./implementations/mini-app-bridge/0002-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0002-IMPL-RESULT.md) | `LOCAL` | Contextual envelopes, transports, mocks, and React hooks validate and await human review. |
 
 ## Repository implementation status
 

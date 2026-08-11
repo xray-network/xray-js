@@ -31,14 +31,21 @@ export const useMiniApp = () => {
     () => store.isConnected(),
     () => store.isConnected()
   )
-  return { connected, connecting: connected === null }
+  const context = useStoreValue("hostContext")
+  return { connected, connecting: connected === null, context }
 }
+
+/** Authoritative blockchain and network selected by the embedding host. */
+export const useHostContext = () => useStoreValue("hostContext")
+
+/** Host blockchain, derived from the discriminated host context. */
+export const useBlockchain = () => useHostContext()?.blockchain ?? null
 
 /** Host theme, fetched once and kept live via host pushes. Null until known. */
 export const useTheme = () => useStoreValue("theme")
 
-/** Host network, fetched once and kept live via host pushes. Null until known. */
-export const useNetwork = () => useStoreValue("network")
+/** Host network, derived from the discriminated host context. Null until known. */
+export const useNetwork = () => useHostContext()?.network ?? null
 
 /** Preferred display currency, fetched once and kept live. Null until known. */
 export const useCurrency = () => useStoreValue("currency")

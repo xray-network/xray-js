@@ -9,6 +9,10 @@ import {
   type ClientSubmitTxPayload,
   type ClientSignAndSubmitTxPayload,
   type ClientSignDataPayload,
+  type HostContext,
+  hostContextSchema,
+  hostMessageSchemas,
+  parseMessage,
 } from "../protocol/index.js"
 import { getHostWindow, getRequestId } from "./messaging.js"
 
@@ -26,7 +30,12 @@ const sendMessageAsync = async <
   timeout: number,
   requestId: string = getRequestId(),
   expectResponse: boolean = true
-): Promise<{ type: ResponseType; payload: HostMessagePayloadMap[ResponseType]; requestId: string } | null> => {
+): Promise<{
+  type: ResponseType
+  payload: HostMessagePayloadMap[ResponseType]
+  requestId: string
+  context: HostContext
+} | null> => {
   const hostWindow = getHostWindow()
   if (!hostWindow) return null
 
@@ -34,11 +43,11 @@ const sendMessageAsync = async <
     if (expectResponse) {
       const handleMessage = (event: MessageEvent) => {
         if (event.source !== hostWindow) return
-        const { type, payload: responsePayload, requestId: responseId } = event.data ?? {}
-        if (responseId !== requestId || type !== responseType) return
+        const message = parseMessage(hostMessageSchemas, event.data, hostContextSchema)
+        if (!message || message.requestId !== requestId || message.type !== responseType) return
         window.removeEventListener("message", handleMessage)
         clearTimeout(timer)
-        resolve({ type, payload: responsePayload, requestId: responseId })
+        resolve(message as never)
       }
       const timer = setTimeout(() => {
         window.removeEventListener("message", handleMessage)
@@ -242,18 +251,20 @@ export const listen = <MessageType extends keyof HostMessagePayloadMap>(
     type,
     payload,
     requestId,
+    context,
   }: {
     type: MessageType
     payload: HostMessagePayloadMap[MessageType]
     requestId?: string
+    context: HostContext
   }) => void
 ) => {
   const hostWindow = getHostWindow()
   const handleMessage = (event: MessageEvent) => {
     if (event.source !== hostWindow) return
-    const { type, payload, requestId } = event.data ?? {}
-    if (type !== messageType) return
-    handler({ type, payload, requestId })
+    const message = parseMessage(hostMessageSchemas, event.data, hostContextSchema)
+    if (!message || message.type !== messageType) return
+    handler(message as never)
   }
   if (hostWindow) {
     window.addEventListener("message", handleMessage)
@@ -271,9 +282,9 @@ export const listenAll = (handler: (message: HostMessage) => void) => {
   const hostWindow = getHostWindow()
   const handleMessage = (event: MessageEvent) => {
     if (event.source !== hostWindow) return
-    const { type, payload, requestId } = event.data ?? {}
-    if (typeof type !== "string") return
-    handler({ type, payload, requestId } as HostMessage)
+    const message = parseMessage(hostMessageSchemas, event.data, hostContextSchema)
+    if (!message) return
+    handler(message)
   }
   if (hostWindow) {
     window.addEventListener("message", handleMessage)

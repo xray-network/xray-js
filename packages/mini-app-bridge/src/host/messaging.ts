@@ -1,9 +1,17 @@
 // Low-level plumbing shared by the core and CIP-30 host surfaces.
 
-/** Post a message to an embedded iframe. Safe no-op when the iframe reference is missing. */
-export const sendMessage = (iframe: Window | null | undefined, type: string, payload: unknown, requestId: string) => {
+import type { HostContext } from "../protocol/index.js"
+
+/** Post a contextual host message to an embedded iframe. Safe no-op when the iframe reference is missing. */
+export const sendMessage = (
+  iframe: Window | null | undefined,
+  type: string,
+  payload: unknown,
+  requestId: string,
+  context: HostContext
+) => {
   if (!iframe) return
-  iframe.postMessage({ type, payload, requestId }, "*")
+  iframe.postMessage({ type, payload, requestId, context }, "*")
 }
 
 /**

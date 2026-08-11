@@ -8,6 +8,9 @@ import {
   type Cip30ClientSignTxPayload,
   type Cip30ClientSignDataPayload,
   type Cip30ClientSubmitTxPayload,
+  cip30HostMessageSchemas,
+  hostContextSchema,
+  parseMessage,
 } from "../protocol/index.js"
 import { getHostWindow, getRequestId } from "./messaging.js"
 
@@ -36,11 +39,11 @@ const sendMessageAsync = async <
   return new Promise((resolve, reject) => {
     const handleMessage = (event: MessageEvent) => {
       if (event.source !== hostWindow) return
-      const { type, payload: responsePayload, requestId: responseId } = event.data ?? {}
-      if (responseId !== requestId || type !== responseType) return
+      const message = parseMessage(cip30HostMessageSchemas, event.data, hostContextSchema)
+      if (!message || message.requestId !== requestId || message.type !== responseType) return
       window.removeEventListener("message", handleMessage)
       clearTimeout(timer)
-      resolve(responsePayload)
+      resolve(message.payload as Cip30HostMessagePayloadMap[ResponseType])
     }
     const timer = setTimeout(() => {
       window.removeEventListener("message", handleMessage)

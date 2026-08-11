@@ -30,9 +30,14 @@ export const createMockClient = (options: MockClientOptions = {}): MockClient =>
 
   const clientWindow = {
     postMessage: (data: unknown) => {
-      const { type, payload, requestId } = (data ?? {}) as { type?: string; payload?: unknown; requestId?: string }
+      const { type, payload, requestId, context } = (data ?? {}) as {
+        type?: string
+        payload?: unknown
+        requestId?: string
+        context?: unknown
+      }
       if (typeof type !== "string") return
-      const message = { type, payload, requestId } as HostMessage | Cip30HostMessage
+      const message = { type, payload, requestId, context } as HostMessage | Cip30HostMessage
       received.push(message)
       for (let i = waiters.length - 1; i >= 0; i--) {
         if (waiters[i].type === type) {

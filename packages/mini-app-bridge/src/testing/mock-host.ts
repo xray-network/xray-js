@@ -5,12 +5,14 @@ import type {
   Cip30HostMessagePayloadMap,
   HostAccountStatePayload,
   HostTipPayload,
+  HostContext,
 } from "../protocol/index.js"
 import { setHostWindow } from "../client/index.js"
 import { dispatchMessageEvent } from "./events.js"
 
 /** Canned responses the mock host serves for each request type. */
 export type MockHostState = {
+  context: HostContext
   handshake: HostMessagePayloadMap["xray.host.handshake"]
   tip: HostMessagePayloadMap["xray.host.tip"]
   accountState: HostMessagePayloadMap["xray.host.accountState"]
@@ -66,6 +68,7 @@ export const mockAccountState: HostAccountStatePayload = {
 }
 
 export const defaultMockHostState: MockHostState = {
+  context: { blockchain: "cardano", network: "preprod" },
   handshake: true,
   tip: mockTip,
   accountState: mockAccountState,
@@ -133,7 +136,7 @@ export const createMockHost = (options: MockHostOptions = {}): MockHost => {
   const sent: (ClientMessage | Cip30ClientMessage)[] = []
 
   const respond = (type: string, payload: unknown, requestId: string) => {
-    setTimeout(() => dispatchMessageEvent(target, { type, payload, requestId }, hostWindow), 0)
+    setTimeout(() => dispatchMessageEvent(target, { type, payload, requestId, context: state.context }, hostWindow), 0)
   }
 
   const responseFor = (type: string): { type: string; payload: unknown } | null => {
@@ -211,7 +214,7 @@ export const createMockHost = (options: MockHostOptions = {}): MockHost => {
     sent,
     state,
     emit: (type, payload, requestId = "mock-host-event") => {
-      dispatchMessageEvent(target, { type, payload, requestId }, hostWindow)
+      dispatchMessageEvent(target, { type, payload, requestId, context: state.context }, hostWindow)
     },
     destroy: () => {
       setHostWindow(null)

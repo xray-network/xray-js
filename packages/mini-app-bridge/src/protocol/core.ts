@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { Envelope } from "./envelope.js"
+import type { HostContext } from "./context.js"
 
 // Core protocol: zod schemas are the source of truth, payload types are
 // inferred from them so runtime validation and typings can never drift apart.
@@ -75,7 +76,7 @@ export const hostAccountStateSchema = z
   .nullable()
 export type HostAccountStatePayload = z.infer<typeof hostAccountStateSchema>
 
-export const hostNetworkSchema = z.enum(["mainnet", "preprod", "preview"])
+export const hostNetworkSchema = z.enum(["mainnet", "preprod", "preview", "testnet"])
 export type HostNetworkPayload = z.infer<typeof hostNetworkSchema>
 
 export const hostThemeSchema = z.enum(["light", "dark"])
@@ -138,7 +139,7 @@ export type HostMessagePayloadMap = {
 export type HostMessageType = keyof HostMessagePayloadMap
 
 export type HostMessage = {
-  [K in HostMessageType]: Envelope<K, HostMessagePayloadMap[K]>
+  [K in HostMessageType]: Envelope<K, HostMessagePayloadMap[K], HostContext>
 }[HostMessageType]
 
 export const clientRouteChangedSchema = z.string()

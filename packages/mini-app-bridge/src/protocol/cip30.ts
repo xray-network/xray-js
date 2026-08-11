@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { Envelope } from "./envelope.js"
+import type { HostContext } from "./context.js"
 
 // CIP-30 protocol: the wallet-style API surface exposed to mini apps that
 // expect a standard Cardano dApp connector. Kept separate from the core
@@ -71,7 +72,7 @@ export type Cip30HostMessagePayloadMap = {
 export type Cip30HostMessageType = keyof Cip30HostMessagePayloadMap
 
 export type Cip30HostMessage = {
-  [K in Cip30HostMessageType]: Envelope<K, Cip30HostMessagePayloadMap[K]>
+  [K in Cip30HostMessageType]: Envelope<K, Cip30HostMessagePayloadMap[K], HostContext>
 }[Cip30HostMessageType]
 
 export const cip30PaginateSchema = z.object({
