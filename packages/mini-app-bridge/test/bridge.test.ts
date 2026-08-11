@@ -18,14 +18,14 @@ afterEach(() => {
 })
 
 describe("multiblockchain mini-app bridge", () => {
-  it("separates platform, Cardano-native, and CIP-30 requests", async () => {
+  it("separates platform, Cardano bridge, and CIP-30 requests", async () => {
     installWindow()
     const host = createMockHost()
 
     const handshake = await miniAppClient.handshake()
     assert.deepEqual(handshake?.payload, {
       protocolVersion: 1,
-      protocols: ["cardano.native", "cardano.cip30"],
+      protocols: ["cardano.bridge", "cardano.cip30"],
     })
     assert.equal(handshake?.context.blockchain, "cardano")
 

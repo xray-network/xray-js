@@ -83,15 +83,35 @@ console.log(handshake?.context.blockchain, handshake?.payload.protocols)
 ```
 
 Blockchain-specific models and wallet standards live in adapter subpaths rather than the shared bridge. Cardano is the
-first adapter; future adapters can add their own native and compatibility protocols without changing platform APIs.
+first adapter and exposes two independently advertised protocols:
+
+- `cardano.bridge` provides XRAY Cardano context and wallet operations such as tip, account state, explorer, signing,
+  and submission.
+- `cardano.cip30` provides the CIP-30-compatible wallet API; call `enable()` before using its methods.
 
 ```ts
 import * as cardanoClient from "@xray-network/xray-js/mini-app-bridge/cardano/client"
 import * as cardanoCip30Client from "@xray-network/xray-js/mini-app-bridge/cardano/cip30/client"
+import { CARDANO_BRIDGE_PROTOCOL } from "@xray-network/xray-js/mini-app-bridge/cardano"
+import { CARDANO_CIP30_PROTOCOL } from "@xray-network/xray-js/mini-app-bridge/cardano/cip30"
 import { useAccountState } from "@xray-network/xray-js/mini-app-bridge/cardano/react"
 
-cardanoCip30Client.installConnector() // window.cardano.xrayBridge -> XRAY App iframe host
+const protocols = handshake?.payload.protocols ?? []
+
+if (protocols.includes(CARDANO_BRIDGE_PROTOCOL)) {
+  console.log((await cardanoClient.getTip())?.payload)
+}
+
+if (protocols.includes(CARDANO_CIP30_PROTOCOL)) {
+  const cip30 = await cardanoCip30Client.enable()
+  console.log(await cip30.getNetworkId())
+}
+
+cardanoCip30Client.installConnector() // optional window.cardano.xrayBridge compatibility connector
 ```
+
+Future blockchain adapters can add their own bridge and wallet-standard protocols without changing the shared platform
+APIs.
 
 React is an optional peer dependency and is needed only for React entrypoints.
 

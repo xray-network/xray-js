@@ -32,6 +32,7 @@ Target: mini-app-bridge
 | `0003` | Separate Cardano bridge adapter | [Instruction](./implementations/mini-app-bridge/0003-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0003-IMPL-RESULT.md) | `LOCAL` | Platform, Cardano-native, and CIP-30 boundaries plus all downstream builds pass and await human review. |
 | `0004` | Remove bridge entrypoint shims | [Instruction](./implementations/mini-app-bridge/0004-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0004-IMPL-RESULT.md) | `LOCAL` | Direct exports, neutral documentation, and all consumer validations pass and await human review. |
 | `0005` | Rename default connector key | [Instruction](./implementations/mini-app-bridge/0005-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0005-IMPL-RESULT.md) | `LOCAL` | The xrayBridge default, tests, and builds pass and await human review. |
+| `0006` | Rename Cardano bridge protocol | [Instruction](./implementations/mini-app-bridge/0006-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0006-IMPL-RESULT.md) | `LOCAL` | The renamed public contract, hooks, mocks, tests, README, and active consumers validate and await human review. |
 
 ## Repository implementation status
 

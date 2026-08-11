@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { useMiniApp } from "../../react/hooks.js"
 import * as cardanoClient from "../client.js"
-import { CARDANO_NATIVE_PROTOCOL, type CardanoHostMessagePayloadMap } from "../protocol.js"
+import { CARDANO_BRIDGE_PROTOCOL, type CardanoHostMessagePayloadMap } from "../protocol.js"
 import { useCardanoMiniAppStore } from "./context.js"
 import type { CardanoMiniAppValueKey, CardanoMiniAppValues } from "./store.js"
 
 const useCardanoValue = <K extends CardanoMiniAppValueKey>(key: K): CardanoMiniAppValues[K] => {
   const store = useCardanoMiniAppStore()
   const { context, protocols } = useMiniApp()
-  const enabled = context?.blockchain === "cardano" && protocols.includes(CARDANO_NATIVE_PROTOCOL)
+  const enabled = context?.blockchain === "cardano" && protocols.includes(CARDANO_BRIDGE_PROTOCOL)
   useEffect(() => {
     if (enabled) store.ensure(key)
   }, [enabled, key, store])

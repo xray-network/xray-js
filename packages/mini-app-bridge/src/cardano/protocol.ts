@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { CardanoHostContext } from "../transport/context.js"
 import type { MessageFromSchemas } from "../transport/envelope.js"
 
-export const CARDANO_NATIVE_PROTOCOL = "cardano.native" as const
+export const CARDANO_BRIDGE_PROTOCOL = "cardano.bridge" as const
 
 export const cardanoHostTipSchema = z
   .object({

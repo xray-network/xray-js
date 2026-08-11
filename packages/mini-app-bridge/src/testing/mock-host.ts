@@ -69,7 +69,7 @@ export const mockAccountState: CardanoHostAccountStatePayload = {
 
 export const defaultMockHostState: MockHostState = {
   context: { blockchain: "cardano", network: "preprod" },
-  handshake: { protocolVersion: 1, protocols: ["cardano.native", "cardano.cip30"] },
+  handshake: { protocolVersion: 1, protocols: ["cardano.bridge", "cardano.cip30"] },
   tip: mockTip,
   accountState: mockAccountState,
   theme: "light",
