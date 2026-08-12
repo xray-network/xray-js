@@ -2,7 +2,7 @@
 
 Standard-ID: xray/updates
 
-Standard-Version: 1.0.0
+Standard-Version: 1.2.0
 
 Canonical-URL: https://standards.xraynetwork.io/updates/v1/XRAY-UPDATES.md
 
@@ -22,7 +22,9 @@ The standard separates these operations:
 
 1. **Plan** one bounded implementation and create its instruction in `PLANNED`.
 2. **Implement** only that instruction, write the matching result, and move it to `REVIEW`.
-3. **Decide** as a human, moving the record to `ACCEPTED` or `REJECTED` with proof.
+3. **Revise** a pointed implementation within its instruction, update its result, and keep it in
+   `REVIEW`.
+4. **Decide** as a human, moving the record to `ACCEPTED` or `REJECTED` with proof.
 
 Installing the standard creates tracking files and the required accepted bootstrap record defined
 in §2. It must not modify product source, fetch provider evidence, invent any other implementation
@@ -31,6 +33,72 @@ plan, or mark any other work accepted.
 The standard does not prescribe a programming language, issue tracker, documentation platform,
 release process, or provider. Documentation mirrors such as Mintlify pages are optional
 repository integrations, never part of the core layout.
+
+### Explicit operation commands
+
+XRAY commands are concise selectors for existing operations. They do not create a parallel
+workflow or grant authority beyond the operation they select:
+
+| Syntax | Operation and stopping boundary |
+| --- | --- |
+| `XRAY HELP` | Read this command vocabulary and report every canonical command with its supported syntax, purpose, and stopping boundary without changing tracked files or lifecycle state. |
+| `XRAY HELP <command>` | Report the supported syntax, purpose, and stopping boundary for one canonical command without changing tracked files or lifecycle state. |
+| `XRAY PLAN <target>: <objective>` | Run the §8 planning workflow for one target, create the instruction and `PLANNED` row, and stop without modifying product source. |
+| `XRAY IMPLEMENT <target>/<NNNN>` | Run the §9 implementation workflow for the identified `PLANNED` record, validate it, create its result, move it to `REVIEW`, and stop. |
+| `XRAY REVISE <target>/<NNNN>: <requested changes>` | Run the §9 revision workflow for the identified `REVIEW` record, change only that implementation within its instruction, rerun applicable validation, update its existing result, keep it in `REVIEW`, and stop. |
+| `XRAY LIST` | Read the aggregate status ledger and list every target and implementation in every state. |
+| `XRAY LIST <target>` | Read the aggregate status ledger and list every implementation for one target. |
+| `XRAY LIST <target> <state>` | Read the aggregate status ledger and list one target's implementations filtered to the named lifecycle state. |
+| `XRAY STATUS <target>/<NNNN>` | Read the matching ledger row, instruction, and result when present, then report detailed status without changing tracked files or lifecycle state. |
+| `XRAY VALIDATE` | Run applicable §13 validation for the installed XRAY structure and report outcomes without changing tracked files or lifecycle state. |
+| `XRAY VALIDATE <target>/<NNNN>` | Run applicable instruction and §13 validation for one record and report outcomes without changing tracked files or lifecycle state. |
+| `XRAY ACCEPT <target>/<NNNN>: <decision proof>` | Record the current human's acceptance of a `REVIEW` record and only the matching ledger decision fields. |
+| `XRAY REJECT <target>/<NNNN>: <decision proof>` | Record the current human's rejection of a `REVIEW` record and only the matching ledger decision fields. |
+| `XRAY CANCEL <target>/<NNNN>: <reason>` | Record a human-authorized cancellation of a `PLANNED` record and only the matching ledger decision fields. |
+| `XRAY CAPTURE <provider>` | Run only the §12 provider evidence-capture workflow under the named provider contract; do not create or implement a target record. |
+
+The `XRAY` prefix, command word, command-name argument to `HELP`, and lifecycle-state filter are
+ASCII case-insensitive. Uppercase is the canonical documentation style, but lowercase and
+mixed-case forms have identical meaning.
+For example, `XRAY LIST updates PLANNED`, `xray list updates planned`, and
+`XrAy LiSt updates pLaNnEd` select the same query. Likewise, `XRAY IMPLEMENT updates/0002` and
+`xray implement updates/0002` select the same implementation operation, while
+`XRAY REVISE homepage/0002: adjust spacing` and
+`xray revise homepage/0002: adjust spacing` select the same revision operation, while
+`XRAY HELP IMPLEMENT` and `xray help implement` select the same command help. Other arguments
+retain their existing syntax and semantics: do not case-normalize identifiers or alter objective
+text, reasons, or decision proof.
+
+`HELP` reads only this local standard. Its unqualified form reports every command in the table;
+its qualified form reports one command. If the command name is unknown, report that it is not
+recognized and suggest `XRAY HELP` without selecting or running another operation.
+
+`LIST` output includes target, implementation ID, title, state, evidence mode, and whether a result
+exists. Its unfiltered forms include terminal records. `LIST` reads only the aggregate status
+ledger; it does not create records, inspect provider evidence, modify source, or change lifecycle
+state. `HELP`, `STATUS`, and `VALIDATE` likewise authorize no tracked-file or lifecycle changes,
+and validation reports remain ephemeral unless a separate authorized workflow requires them to
+be recorded.
+
+`CAPTURE` requires an existing provider contract and creates the next immutable snapshot of its
+declared upstream state. It preserves the contract and every prior snapshot, rejects duplicate
+immutable source identities, and does not maintain or overwrite mutable current-provider state.
+
+Natural-language requests remain supported. A command authorizes only its mapped operation and
+never implies a later operation or a human-only decision.
+
+For a requested tracked change, operation selection must be explicit through a command or
+unambiguous natural language. Generic requests such as "add," "change," "fix," or "update" do not
+select `PLAN`, `IMPLEMENT`, or `REVISE`. If the human has not clearly selected one, ask whether to
+plan a change, implement an existing plan, or revise an implementation in review before creating
+or updating records or modifying source. Do
+not ask this question for explanations or explicit `HELP`, `LIST`, `STATUS`, or `VALIDATE`
+operations. If the human selects `IMPLEMENT` without an exact implementation ID, list the eligible
+`PLANNED` records and ask them to identify one. If the human selects `REVISE`, require an exact
+`REVIEW` record ID unless unambiguous conversation context already points to exactly one such
+record; otherwise list eligible `REVIEW` records and ask them to identify one. Phrases such as
+"revise this implementation" or "edit the pointed implementation" select `REVISE` only under that
+single-record condition. Never create a plan and implement or revise it in the same operation.
 
 ## 2. Install
 
@@ -73,8 +141,11 @@ instruction and add only the missing heading or bullet:
 
 This repository uses the following XRAY standards:
 
-- Read `.xray/updates/XRAY-UPDATES.md` before planning or implementing tracked changes.
+- Read `.xray/updates/XRAY-UPDATES.md` before planning, implementing, or revising tracked changes.
 - If the user mentions `silent` or `silently`, do not create an implementation record for that request.
+- For a requested tracked change, if the human has not clearly selected `XRAY PLAN`,
+  `XRAY IMPLEMENT`, or `XRAY REVISE`, ask which operation they intend before creating or updating
+  records or modifying source.
 ```
 
 If the section already exists, merge the missing bullet into it. Never duplicate the heading,
@@ -236,12 +307,14 @@ Every normative input must be an explicit row in the instruction's input table. 
 PLANNED ──implement + validate──> REVIEW ──human decision──> ACCEPTED
     │                                  └──human decision──> REJECTED
     └────────human cancellation───────────────────────────> CANCELLED
+
+REVIEW ──revise + validate + update existing result──> REVIEW
 ```
 
 | State | Meaning | Who may enter it |
 | --- | --- | --- |
 | `PLANNED` | Complete, implementation-ready instruction; source is unchanged. | Human or agent. |
-| `REVIEW` | Work is implemented, validated, and recorded in a result. | Human or agent. |
+| `REVIEW` | Work is implemented, validated, and recorded in a result; bounded revisions may keep it in review. | Human or agent. |
 | `ACCEPTED` | Human approved the completed implementation. | Human only. |
 | `REJECTED` | Human rejected the completed implementation. | Human only. |
 | `CANCELLED` | Planned work will not be implemented. | Human only, unless the human explicitly delegates cancellation. |
@@ -299,14 +372,32 @@ Everyday planning prompt:
 
 ## 9. Implementation and review workflow
 
+Apply these implementation design rules:
+
+- Do not preserve backward compatibility. Remove obsolete paths instead of adding compatibility
+  layers, fallbacks, or migrations.
+- Choose the simplest implementation that fully meets the current requirements. Avoid speculative
+  abstractions, configuration, and indirection.
+- Grow the system in layers. Start from the smallest version that works end to end, and add each
+  new capability on top of a product that already works. Never trade a working product for
+  unfinished complexity.
+- Keep components modular and concerns clearly separated.
+- Prefer established, well-maintained libraries when they reduce overall complexity or improve
+  reliability. Do not reimplement common functionality without a clear reason.
+- Lean on the dependencies already in the project before writing a custom implementation or
+  adding packages. Do not assume a library lacks a capability without checking its documentation
+  and types.
+- Make architectural decisions for the long term. Do not accept a stopgap that only works for now
+  and is meant to be replaced later.
+
 To implement `<target>/<NNNN>`:
 
 1. Require exactly one matching `PLANNED` row and instruction. Refuse missing, duplicate,
    terminal, blocked, or mismatched records.
 2. Read the complete instruction, every declared input, target source/tests, and current
    repository guidance.
-3. Implement only the bounded objective from declared inputs. Preserve ownership, compatibility,
-   and exclusions.
+3. Implement only the bounded objective from declared inputs. Preserve ownership and exclusions,
+   and apply the compatibility rule above.
 4. Run every required validation command plus relevant repository completion checks. Never claim
    a command ran if it did not.
 5. Create exactly one matching result. Give every required Change ID one disposition:
@@ -321,6 +412,31 @@ Everyday implementation prompt:
 
 > Implement `<target>/<NNNN>` according to its declared inputs, run the required validation,
 > write its result, and move it to `REVIEW`.
+
+To revise `<target>/<NNNN>`:
+
+1. Require exactly one matching `REVIEW` row, instruction, and result. Refuse `PLANNED`, terminal,
+   missing, duplicate, or mismatched records.
+2. Read the requested changes, complete instruction, existing result, current target source and
+   tests, and applicable repository guidance.
+3. Confirm the requested changes remain within the instruction's objective, declared inputs,
+   compatibility boundary, and validation design. If they materially expand scope or introduce an
+   independently reviewable capability, stop without mutation and require a new `XRAY PLAN`.
+4. Implement only the requested bounded changes. Do not create or renumber an instruction, result,
+   ledger row, provider snapshot, migration, fallback, compatibility layer, or revision-history
+   structure.
+5. Rerun every affected instruction check plus relevant completion checks. Never claim a command
+   ran if it did not.
+6. Update the existing result in place with the final dispositions, outcome, actual changes,
+   validation, deviations, remaining review, and reproducibility. Record the human revision request
+   and any superseded review outcome honestly.
+7. Keep the ledger row and result link in `REVIEW`; update only its review proof when needed to
+   describe the revised work awaiting human decision. Stop without accepting or rejecting it.
+
+Everyday revision prompt:
+
+> Revise `<target>/<NNNN>` with these bounded changes: `<requested changes>`. Rerun applicable
+> validation, update its existing result, and keep it in `REVIEW`.
 
 Human acceptance prompt:
 
@@ -338,7 +454,7 @@ Install this content, replacing `<repository>` with the repository name:
 
 This directory is the canonical home for the XRAY Updates standard, aggregate lifecycle ledger,
 implementation instructions and results, and shared provider evidence. Read `XRAY-UPDATES.md`
-before planning, implementing, reviewing, or capturing evidence.
+before planning, implementing, revising, reviewing, or capturing evidence.
 
 - `XRAY-UPDATES-STATUS.md` is the only lifecycle and decision-proof authority for every target.
 - `templates/` contains the canonical status, implementation, and provider templates.

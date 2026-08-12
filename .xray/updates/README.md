@@ -2,7 +2,7 @@
 
 This directory is the canonical home for the XRAY Updates standard, aggregate lifecycle ledger,
 implementation instructions and results, and shared provider evidence. Read `XRAY-UPDATES.md`
-before planning, implementing, reviewing, or capturing evidence.
+before planning, implementing, revising, reviewing, or capturing evidence.
 
 - `XRAY-UPDATES-STATUS.md` is the only lifecycle and decision-proof authority for every target.
 - `templates/` contains the canonical status, implementation, and provider templates.
