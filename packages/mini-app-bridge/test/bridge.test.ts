@@ -3,7 +3,7 @@ import { afterEach, describe, it } from "node:test"
 import { client, host as bridgeHost, setHostWindow } from "@xray-network/xray-js-mini-app-bridge"
 import * as cardanoProtocol from "@xray-network/xray-js-mini-app-bridge/cardano"
 import * as bridgeReact from "@xray-network/xray-js-mini-app-bridge/react"
-import { createMockHost } from "@xray-network/xray-js-mini-app-bridge/testing"
+import { createMockHost, dispatchMessageEvent } from "@xray-network/xray-js-mini-app-bridge/testing"
 
 const miniAppClient = client.platform
 const cardanoClient = client.cardano.bridge
@@ -25,15 +25,105 @@ describe("multiblockchain mini-app bridge", () => {
     assert.equal(typeof client.platform.handshake, "function")
     assert.equal(typeof client.cardano.bridge.getTip, "function")
     assert.equal(typeof client.cardano.cip30.enable, "function")
+    assert.equal(typeof client.cardano.listenAll, "function")
     assert.equal(typeof bridgeHost.platform.sendHandshake, "function")
     assert.equal(typeof bridgeHost.cardano.bridge.sendTip, "function")
     assert.equal(typeof bridgeHost.cardano.cip30.sendEnable, "function")
+    assert.equal(typeof bridgeHost.cardano.listenAll, "function")
     assert.equal(typeof bridgeReact.useMiniApp, "function")
     assert.equal(typeof bridgeReact.cardano.bridge.useAccountState, "function")
     assert.equal(cardanoProtocol.CARDANO_BRIDGE_PROTOCOL, "cardano.bridge")
     assert.equal(cardanoProtocol.CARDANO_CIP30_PROTOCOL, "cardano.cip30")
     assert.equal(typeof cardanoProtocol.cardanoClientMessageSchemas, "object")
     assert.equal(typeof cardanoProtocol.cip30ClientMessageSchemas, "object")
+  })
+
+  it("listens to every Cardano-scoped host and client protocol through one facade", () => {
+    const target = installWindow()
+    const hostWindow = new EventTarget() as unknown as Window
+    const miniAppWindow = new EventTarget() as unknown as Window
+    const context = { blockchain: "cardano", network: "mainnet" } as const
+    const receivedHostTypes: string[] = []
+    const receivedClientTypes: string[] = []
+    setHostWindow(hostWindow)
+
+    const stopClient = client.cardano.listenAll((message) => receivedHostTypes.push(message.type))
+    const stopHost = bridgeHost.cardano.listenAll(miniAppWindow, (message) => receivedClientTypes.push(message.type))
+
+    dispatchMessageEvent(
+      target,
+      { type: "xray.host.theme", payload: "dark", requestId: "host-platform", context },
+      hostWindow
+    )
+    dispatchMessageEvent(
+      target,
+      { type: "xray.cardano.host.tip", payload: null, requestId: "host-bridge", context },
+      hostWindow
+    )
+    dispatchMessageEvent(
+      target,
+      { type: "xray.cardano.cip30.host.isEnabled", payload: true, requestId: "host-cip30", context },
+      hostWindow
+    )
+    dispatchMessageEvent(
+      target,
+      { type: "xray.client.getTheme", payload: null, requestId: "client-platform" },
+      miniAppWindow
+    )
+    dispatchMessageEvent(
+      target,
+      { type: "xray.cardano.client.getTip", payload: null, requestId: "client-bridge" },
+      miniAppWindow
+    )
+    dispatchMessageEvent(
+      target,
+      { type: "xray.cardano.cip30.client.isEnabled", payload: null, requestId: "client-cip30" },
+      miniAppWindow
+    )
+
+    assert.deepEqual(receivedHostTypes, [
+      "xray.host.theme",
+      "xray.cardano.host.tip",
+      "xray.cardano.cip30.host.isEnabled",
+    ])
+    assert.deepEqual(receivedClientTypes, [
+      "xray.client.getTheme",
+      "xray.cardano.client.getTip",
+      "xray.cardano.cip30.client.isEnabled",
+    ])
+
+    stopClient()
+    stopHost()
+  })
+
+  it("requests selected platform state only after a successful handshake", async () => {
+    installWindow()
+    const host = createMockHost({ autoRespond: false })
+    const store = bridgeReact.createMiniAppStore()
+
+    store.ensure("theme")
+    store.ensure("currency")
+    store.ensure("hideBalances")
+
+    assert.deepEqual(
+      host.sent.map((message) => message.type),
+      ["xray.client.handshake"]
+    )
+
+    host.emit("xray.host.handshake", host.state.handshake, host.sent[0]?.requestId)
+    assert.equal(await store.connect(), true)
+    assert.deepEqual(
+      host.sent.map((message) => message.type),
+      ["xray.client.handshake", "xray.client.getTheme", "xray.client.getCurrency", "xray.client.getHideBalances"]
+    )
+
+    host.emit("xray.host.theme", host.state.theme, host.sent[1]?.requestId)
+    host.emit("xray.host.currency", host.state.currency, host.sent[2]?.requestId)
+    host.emit("xray.host.hideBalances", host.state.hideBalances, host.sent[3]?.requestId)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    store.reset()
+    host.destroy()
   })
 
   it("separates platform, Cardano bridge, and CIP-30 requests", async () => {

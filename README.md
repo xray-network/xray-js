@@ -154,7 +154,15 @@ if (!handshake.payload.protocols.includes(CARDANO_BRIDGE_PROTOCOL)) {
 
 const tip = await client.cardano.bridge.getTip()
 console.log(tip?.payload)
+
+const stop = client.cardano.listenAll((message) => {
+  console.log(message.type, message.payload)
+})
 ```
+
+`client.cardano.listenAll` validates and receives every platform, Cardano Bridge, and CIP-30 host
+message for the active Cardano context through one subscription. Call `stop()` when the listener
+is no longer needed.
 
 #### CIP-30
 
@@ -211,12 +219,23 @@ host.platform.listen(miniAppWindow, "xray.client.handshake", ({ requestId }) => 
     context
   )
 })
+
+const stop = host.cardano.listenAll(miniAppWindow, (message) => {
+  console.log(message.type, message.payload)
+})
 ```
+
+`host.cardano.listenAll` provides the matching single subscription for validated platform,
+Cardano Bridge, and CIP-30 requests received from that iframe.
 
 ### React mini app
 
 React bindings are an optional, separate entry point. Platform hooks remain top-level, while Cardano hooks live under
 `cardano.bridge`:
+
+Platform value hooks first complete the shared handshake, then request only the values used by the
+mounted React tree. `useTheme`, `useCurrency`, and `useHideBalances` therefore never race their
+getter requests ahead of host discovery, and later host messages keep the cached values current.
 
 #### Cardano Bridge
 

@@ -126,7 +126,11 @@ export const createMiniAppStore = (): MiniAppStore => {
       if (fetched.has(key)) return
       fetched.add(key)
       if (key === "hostContext" || key === "protocols") void connect()
-      else void refresh(key)
+      else {
+        void connect().then((isConnected) => {
+          if (isConnected) return refresh(key)
+        })
+      }
     },
     refresh,
     subscribe: (key, listener) => {
