@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { createCardano, addresses, scripts, slots } from "@xray-network/xray-js-cardano"
+import { createCardano, utilities } from "@xray-network/xray-js-cardano"
 import { createInMemoryProvider } from "@xray-network/xray-js-cardano/testing"
 import { ownedUtxo, testData } from "./fixtures.js"
 
@@ -52,9 +52,9 @@ describe("Cardano transactions", () => {
 
   it("retains native minting and validity operations", async () => {
     const { cardano, account } = setup()
-    const paymentCredential = addresses.getCredentials(account.paymentAddress).paymentCred
+    const paymentCredential = utilities.addresses.getCredentials(account.paymentAddress).paymentCred
     assert.ok(paymentCredential)
-    const native = scripts.nativeScriptFromJson({ type: "sig", keyHash: paymentCredential.hash })
+    const native = utilities.scripts.nativeScriptFromJson({ type: "sig", keyHash: paymentCredential.hash })
     const mintedAsset = { policyId: native.policyId, assetName: "58524159", quantity: 1n }
     const unsigned = await cardano.transactions
       .create()
@@ -68,7 +68,10 @@ describe("Cardano transactions", () => {
       .build()
     assert.equal(typeof unsigned.cbor, "string")
     assert.equal(
-      slots.slotToUnixTime(slots.unixTimeToSlot(Date.now(), cardano.slotConfig), cardano.slotConfig) > 0,
+      utilities.slots.slotToUnixTime(
+        utilities.slots.unixTimeToSlot(Date.now(), cardano.slotConfig),
+        cardano.slotConfig
+      ) > 0,
       true
     )
   })

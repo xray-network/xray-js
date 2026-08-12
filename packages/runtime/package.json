@@ -14,17 +14,7 @@
     "access": "public"
   },
   "type": "module",
-  "main": "./dist/esm/index.js",
-  "module": "./dist/esm/index.js",
-  "browser": "./dist/esm/index.js",
-  "types": "./dist/esm/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/esm/index.d.ts",
-      "browser": "./dist/esm/index.js",
-      "import": "./dist/esm/index.js",
-      "default": "./dist/esm/index.js"
-    },
     "./cardano": {
       "types": "./dist/esm/cardano.d.ts",
       "browser": "./dist/esm/cardano.js",
@@ -49,24 +39,6 @@
       "import": "./dist/esm/mini-app-bridge.js",
       "default": "./dist/esm/mini-app-bridge.js"
     },
-    "./mini-app-bridge/transport": {
-      "types": "./dist/esm/mini-app-bridge-transport.d.ts",
-      "browser": "./dist/esm/mini-app-bridge-transport.js",
-      "import": "./dist/esm/mini-app-bridge-transport.js",
-      "default": "./dist/esm/mini-app-bridge-transport.js"
-    },
-    "./mini-app-bridge/client": {
-      "types": "./dist/esm/mini-app-bridge-client.d.ts",
-      "browser": "./dist/esm/mini-app-bridge-client.js",
-      "import": "./dist/esm/mini-app-bridge-client.js",
-      "default": "./dist/esm/mini-app-bridge-client.js"
-    },
-    "./mini-app-bridge/host": {
-      "types": "./dist/esm/mini-app-bridge-host.d.ts",
-      "browser": "./dist/esm/mini-app-bridge-host.js",
-      "import": "./dist/esm/mini-app-bridge-host.js",
-      "default": "./dist/esm/mini-app-bridge-host.js"
-    },
     "./mini-app-bridge/react": {
       "types": "./dist/esm/mini-app-bridge-react.d.ts",
       "browser": "./dist/esm/mini-app-bridge-react.js",
@@ -85,58 +57,18 @@
       "import": "./dist/esm/mini-app-bridge-cardano.js",
       "default": "./dist/esm/mini-app-bridge-cardano.js"
     },
-    "./mini-app-bridge/cardano/client": {
-      "types": "./dist/esm/mini-app-bridge-cardano-client.d.ts",
-      "browser": "./dist/esm/mini-app-bridge-cardano-client.js",
-      "import": "./dist/esm/mini-app-bridge-cardano-client.js",
-      "default": "./dist/esm/mini-app-bridge-cardano-client.js"
-    },
-    "./mini-app-bridge/cardano/host": {
-      "types": "./dist/esm/mini-app-bridge-cardano-host.d.ts",
-      "browser": "./dist/esm/mini-app-bridge-cardano-host.js",
-      "import": "./dist/esm/mini-app-bridge-cardano-host.js",
-      "default": "./dist/esm/mini-app-bridge-cardano-host.js"
-    },
-    "./mini-app-bridge/cardano/react": {
-      "types": "./dist/esm/mini-app-bridge-cardano-react.d.ts",
-      "browser": "./dist/esm/mini-app-bridge-cardano-react.js",
-      "import": "./dist/esm/mini-app-bridge-cardano-react.js",
-      "default": "./dist/esm/mini-app-bridge-cardano-react.js"
-    },
-    "./mini-app-bridge/cardano/testing": {
-      "types": "./dist/esm/mini-app-bridge-cardano-testing.d.ts",
-      "browser": "./dist/esm/mini-app-bridge-cardano-testing.js",
-      "import": "./dist/esm/mini-app-bridge-cardano-testing.js",
-      "default": "./dist/esm/mini-app-bridge-cardano-testing.js"
-    },
-    "./mini-app-bridge/cardano/cip30": {
-      "types": "./dist/esm/mini-app-bridge-cardano-cip30.d.ts",
-      "browser": "./dist/esm/mini-app-bridge-cardano-cip30.js",
-      "import": "./dist/esm/mini-app-bridge-cardano-cip30.js",
-      "default": "./dist/esm/mini-app-bridge-cardano-cip30.js"
-    },
-    "./mini-app-bridge/cardano/cip30/client": {
-      "types": "./dist/esm/mini-app-bridge-cardano-cip30-client.d.ts",
-      "browser": "./dist/esm/mini-app-bridge-cardano-cip30-client.js",
-      "import": "./dist/esm/mini-app-bridge-cardano-cip30-client.js",
-      "default": "./dist/esm/mini-app-bridge-cardano-cip30-client.js"
-    },
-    "./mini-app-bridge/cardano/cip30/host": {
-      "types": "./dist/esm/mini-app-bridge-cardano-cip30-host.d.ts",
-      "browser": "./dist/esm/mini-app-bridge-cardano-cip30-host.js",
-      "import": "./dist/esm/mini-app-bridge-cardano-cip30-host.js",
-      "default": "./dist/esm/mini-app-bridge-cardano-cip30-host.js"
-    },
     "./package.json": "./package.json"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "npm run clean:build && tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p test/tsconfig.json",
-    "test": "tsc -p test/tsconfig.json && node --test .test-dist/*.test.js",
+    "test": "npm run clean:test && tsc -p test/tsconfig.json && node --test .test-dist/*.test.js",
     "test:integration": "node -e \"process.exit(0)\"",
+    "clean:build": "rm -rf dist",
+    "clean:test": "rm -rf .test-dist",
     "clean": "rm -rf dist .test-dist"
   },
   "dependencies": {

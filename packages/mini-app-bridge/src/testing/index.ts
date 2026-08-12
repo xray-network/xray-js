@@ -1,3 +1,5 @@
 export { createMockClient } from "./mock-client.js"
 export type { MockClient, MockClientOptions } from "./mock-client.js"
+export { createMockHost, defaultMockHostState, mockTip, mockAccountState } from "./mock-host.js"
+export type { MockHost, MockHostOptions, MockHostState } from "./mock-host.js"
 export { dispatchMessageEvent } from "./events.js"

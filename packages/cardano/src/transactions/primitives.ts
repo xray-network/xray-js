@@ -1,9 +1,9 @@
 import * as CardanoLib from "@xray-network/xray-cardano-lib-chain"
 import { ScriptHash } from "@xray-network/xray-cardano-lib-crypto"
 import type * as CardanoTypes from "../types.js"
-import { fromHex } from "./misc.js"
-import { getShelleyOrByronAddress } from "./address.js"
-import { scriptToScriptRef } from "./script.js"
+import { fromHex } from "../utilities/encoding.js"
+import { getShelleyOrByronAddress } from "../utilities/addresses.js"
+import { scriptToScriptRef } from "../utilities/scripts.js"
 
 export const createCostModels = (costModels: CardanoTypes.CostModels): CardanoLib.CostModels => {
   return CardanoLib.CostModels.from_json(

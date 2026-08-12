@@ -4,6 +4,7 @@
   "description": "Cross-chain XRAY Mini App Bridge with Cardano CIP-30 support",
   "license": "MIT",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/esm/index.js",
   "module": "./dist/esm/index.js",
   "browser": "./dist/esm/index.js",
@@ -14,24 +15,6 @@
       "browser": "./dist/esm/index.js",
       "import": "./dist/esm/index.js",
       "default": "./dist/esm/index.js"
-    },
-    "./transport": {
-      "types": "./dist/esm/transport/index.d.ts",
-      "browser": "./dist/esm/transport/index.js",
-      "import": "./dist/esm/transport/index.js",
-      "default": "./dist/esm/transport/index.js"
-    },
-    "./client": {
-      "types": "./dist/esm/platform/client.d.ts",
-      "browser": "./dist/esm/platform/client.js",
-      "import": "./dist/esm/platform/client.js",
-      "default": "./dist/esm/platform/client.js"
-    },
-    "./host": {
-      "types": "./dist/esm/platform/host.d.ts",
-      "browser": "./dist/esm/platform/host.js",
-      "import": "./dist/esm/platform/host.js",
-      "default": "./dist/esm/platform/host.js"
     },
     "./testing": {
       "types": "./dist/esm/testing/index.d.ts",
@@ -50,48 +33,6 @@
       "browser": "./dist/esm/cardano/index.js",
       "import": "./dist/esm/cardano/index.js",
       "default": "./dist/esm/cardano/index.js"
-    },
-    "./cardano/client": {
-      "types": "./dist/esm/cardano/client.d.ts",
-      "browser": "./dist/esm/cardano/client.js",
-      "import": "./dist/esm/cardano/client.js",
-      "default": "./dist/esm/cardano/client.js"
-    },
-    "./cardano/host": {
-      "types": "./dist/esm/cardano/host.d.ts",
-      "browser": "./dist/esm/cardano/host.js",
-      "import": "./dist/esm/cardano/host.js",
-      "default": "./dist/esm/cardano/host.js"
-    },
-    "./cardano/react": {
-      "types": "./dist/esm/cardano/react/index.d.ts",
-      "browser": "./dist/esm/cardano/react/index.js",
-      "import": "./dist/esm/cardano/react/index.js",
-      "default": "./dist/esm/cardano/react/index.js"
-    },
-    "./cardano/testing": {
-      "types": "./dist/esm/cardano/testing.d.ts",
-      "browser": "./dist/esm/cardano/testing.js",
-      "import": "./dist/esm/cardano/testing.js",
-      "default": "./dist/esm/cardano/testing.js"
-    },
-    "./cardano/cip30": {
-      "types": "./dist/esm/cardano/cip30/index.d.ts",
-      "browser": "./dist/esm/cardano/cip30/index.js",
-      "import": "./dist/esm/cardano/cip30/index.js",
-      "default": "./dist/esm/cardano/cip30/index.js"
-    },
-    "./cardano/cip30/client": {
-      "types": "./dist/esm/cardano/cip30/client.d.ts",
-      "browser": "./dist/esm/cardano/cip30/client.js",
-      "import": "./dist/esm/cardano/cip30/client.js",
-      "default": "./dist/esm/cardano/cip30/client.js"
-    },
-    "./cardano/cip30/host": {
-      "types": "./dist/esm/cardano/cip30/host.d.ts",
-      "browser": "./dist/esm/cardano/cip30/host.js",
-      "import": "./dist/esm/cardano/cip30/host.js",
-      "default": "./dist/esm/cardano/cip30/host.js"
     },
     "./package.json": "./package.json"
   },

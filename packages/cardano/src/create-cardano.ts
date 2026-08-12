@@ -18,8 +18,6 @@ import {
 import type { CardanoContext } from "./internal/context.js"
 import { createProtocolParametersCache } from "./internal/protocol-parameters.js"
 import { createKoiosProvider } from "./providers/koios.js"
-import * as addresses from "./primitives/address.js"
-import * as encoding from "./primitives/misc.js"
 import { createTransactionPlan, type TransactionPlan } from "./transactions/plan.js"
 import {
   signTransaction,
@@ -29,6 +27,8 @@ import {
   type UnsignedTransaction,
   type SignedTransaction,
 } from "./transactions/transaction.js"
+import * as addresses from "./utilities/addresses.js"
+import * as encoding from "./utilities/encoding.js"
 import type {
   AccountDerivationPath,
   AccountExportV1,

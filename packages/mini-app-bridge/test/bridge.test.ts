@@ -1,10 +1,13 @@
 import assert from "node:assert/strict"
 import { afterEach, describe, it } from "node:test"
-import * as miniAppClient from "@xray-network/xray-js-mini-app-bridge/client"
-import * as cardanoClient from "@xray-network/xray-js-mini-app-bridge/cardano/client"
-import * as cardanoCip30Client from "@xray-network/xray-js-mini-app-bridge/cardano/cip30/client"
-import { setHostWindow } from "@xray-network/xray-js-mini-app-bridge/transport"
-import { createMockHost } from "@xray-network/xray-js-mini-app-bridge/cardano/testing"
+import { client, host as bridgeHost, setHostWindow } from "@xray-network/xray-js-mini-app-bridge"
+import * as cardanoProtocol from "@xray-network/xray-js-mini-app-bridge/cardano"
+import * as bridgeReact from "@xray-network/xray-js-mini-app-bridge/react"
+import { createMockHost } from "@xray-network/xray-js-mini-app-bridge/testing"
+
+const miniAppClient = client.platform
+const cardanoClient = client.cardano.bridge
+const cardanoCip30Client = client.cardano.cip30
 
 const installWindow = () => {
   const target = new EventTarget() as unknown as Window
@@ -18,6 +21,21 @@ afterEach(() => {
 })
 
 describe("multiblockchain mini-app bridge", () => {
+  it("exposes compact client, host, and React namespaces", () => {
+    assert.equal(typeof client.platform.handshake, "function")
+    assert.equal(typeof client.cardano.bridge.getTip, "function")
+    assert.equal(typeof client.cardano.cip30.enable, "function")
+    assert.equal(typeof bridgeHost.platform.sendHandshake, "function")
+    assert.equal(typeof bridgeHost.cardano.bridge.sendTip, "function")
+    assert.equal(typeof bridgeHost.cardano.cip30.sendEnable, "function")
+    assert.equal(typeof bridgeReact.useMiniApp, "function")
+    assert.equal(typeof bridgeReact.cardano.bridge.useAccountState, "function")
+    assert.equal(cardanoProtocol.CARDANO_BRIDGE_PROTOCOL, "cardano.bridge")
+    assert.equal(cardanoProtocol.CARDANO_CIP30_PROTOCOL, "cardano.cip30")
+    assert.equal(typeof cardanoProtocol.cardanoClientMessageSchemas, "object")
+    assert.equal(typeof cardanoProtocol.cip30ClientMessageSchemas, "object")
+  })
+
   it("separates platform, Cardano bridge, and CIP-30 requests", async () => {
     installWindow()
     const host = createMockHost()

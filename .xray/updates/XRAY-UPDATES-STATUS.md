@@ -18,6 +18,8 @@ Target: cardano
 | `0004` | Simplify Cardano source structure    | [Instruction](./implementations/cardano/0004-IMPL-INSTR.md) | `REVIEW`   | [Result](./implementations/cardano/0004-IMPL-RESULT.md) | `LOCAL`       | Implementation completed and validation recorded; awaiting human review.           |
 | `0005` | Normalize Cardano library namespaces | [Instruction](./implementations/cardano/0005-IMPL-INSTR.md) | `REVIEW`   | [Result](./implementations/cardano/0005-IMPL-RESULT.md) | `LOCAL`       | Focused facade exports and consumer consolidation validate and await human review. |
 | `0006` | Group Cardano application exports | [Instruction](./implementations/cardano/0006-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/cardano/0006-IMPL-RESULT.md) | `LOCAL` | Grouped application and low-level boundaries, tests, docs, and every active downstream build pass. |
+| `0007` | Isolate Cardano Lib exports | [Instruction](./implementations/cardano/0007-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/cardano/0007-IMPL-RESULT.md) | `LOCAL` | Strict application/library exports and all downstream validations pass and await human review. |
+| `0008` | Group Cardano utilities | [Instruction](./implementations/cardano/0008-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/cardano/0008-IMPL-RESULT.md) | `LOCAL` | Grouped utility exports, internal ownership cleanup, downstream migration, and complete validation await human review. |
 
 ## Mini App Bridge implementation status
 
@@ -33,6 +35,10 @@ Target: mini-app-bridge
 | `0004` | Remove bridge entrypoint shims | [Instruction](./implementations/mini-app-bridge/0004-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0004-IMPL-RESULT.md) | `LOCAL` | Direct exports, neutral documentation, and all consumer validations pass and await human review. |
 | `0005` | Rename default connector key | [Instruction](./implementations/mini-app-bridge/0005-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0005-IMPL-RESULT.md) | `LOCAL` | The xrayBridge default, tests, and builds pass and await human review. |
 | `0006` | Rename Cardano bridge protocol | [Instruction](./implementations/mini-app-bridge/0006-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0006-IMPL-RESULT.md) | `LOCAL` | The renamed public contract, hooks, mocks, tests, README, and active consumers validate and await human review. |
+| `0007` | Compact bridge role exports | [Instruction](./implementations/mini-app-bridge/0007-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0007-IMPL-RESULT.md) | `LOCAL` | Compact client/host namespaces, namespaced React hooks, and all local validations await human review. |
+| `0008` | Separate JavaScript React examples | [Instruction](./implementations/mini-app-bridge/0008-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0008-IMPL-RESULT.md) | `LOCAL` | Separate JavaScript client, host/relay, and React examples validate and await human review. |
+| `0009` | Separate CIP-30 examples | [Instruction](./implementations/mini-app-bridge/0009-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0009-IMPL-RESULT.md) | `LOCAL` | Independent Cardano Bridge and CIP-30 JavaScript/React examples validate and await human review. |
+| `0010` | Collapse CIP-30 protocol subpath | [Instruction](./implementations/mini-app-bridge/0010-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0010-IMPL-RESULT.md) | `LOCAL` | Unified Cardano contracts, retired nested path, and complete downstream validation await human review. |
 
 ## Repository implementation status
 
@@ -43,6 +49,7 @@ Target: repository
 | ID     | Title                | Instruction                                                    | State      | Result                                                     | Evidence mode | Decision proof                                |
 | ------ | -------------------- | -------------------------------------------------------------- | ---------- | ---------------------------------------------------------- | ------------- | --------------------------------------------- |
 | `0001` | Install XRAY Updates | [Instruction](./implementations/repository/0001-IMPL-INSTR.md) | `ACCEPTED` | [Result](./implementations/repository/0001-IMPL-RESULT.md) | `LOCAL`       | Human requested installation of XRAY Updates. |
+| `0002` | Organize blockchain examples | [Instruction](./implementations/repository/0002-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/repository/0002-IMPL-RESULT.md) | `LOCAL` | Cardano examples and explicit Bitcoin/Midnight placeholders validate and await human review. |
 
 ## Runtime implementation status
 
@@ -54,3 +61,6 @@ Target: runtime
 | ------ | --------------------------------- | ----------------------------------------------------------- | -------- | ------------------------------------------------------- | ------------- | ------------------------------------------------------------------------ |
 | `0001` | Introduce XRAY chain facade       | [Instruction](./implementations/runtime/0001-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/runtime/0001-IMPL-RESULT.md) | `LOCAL`       | Implementation completed and validation recorded; awaiting human review. |
 | `0002` | Make Cardano creation synchronous | [Instruction](./implementations/runtime/0002-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/runtime/0002-IMPL-RESULT.md) | `LOCAL`       | Implementation completed and validation recorded; awaiting human review. |
+| `0003` | Mirror compact bridge facade | [Instruction](./implementations/runtime/0003-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/runtime/0003-IMPL-RESULT.md) | `LOCAL` | Reduced runtime bridge wrappers and all local validations await human review. |
+| `0004` | Remove package root module | [Instruction](./implementations/runtime/0004-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/runtime/0004-IMPL-RESULT.md) | `LOCAL` | Explicit-only exports and complete local validation pass and await human review. |
+| `0005` | Collapse CIP-30 compatibility path | [Instruction](./implementations/runtime/0005-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/runtime/0005-IMPL-RESULT.md) | `LOCAL` | Unified runtime Cardano contract path and complete local validation await human review. |

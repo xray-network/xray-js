@@ -1,9 +1,8 @@
 import * as CardanoLib from "@xray-network/xray-cardano-lib-chain"
 import type { CardanoContext } from "../internal/context.js"
-import * as account from "../primitives/account.js"
-import * as addresses from "../primitives/address.js"
-import * as keys from "../primitives/keys.js"
-import * as encoding from "../primitives/misc.js"
+import * as addresses from "../utilities/addresses.js"
+import * as keys from "../utilities/keys.js"
+import * as security from "../utilities/security.js"
 import type {
   AccountConfig,
   AccountDelegation,
@@ -14,6 +13,7 @@ import type {
   AddressDerivationPath,
 } from "../types.js"
 import type { Cip30Wallet } from "../wallets/cip30.js"
+import * as account from "./primitives.js"
 
 export interface CardanoAccount {
   readonly type: AccountType
@@ -58,12 +58,12 @@ const createCardanoAccount = (client: CardanoContext, state: AccountConfig): Car
   const encryptPrivateKey = (password: string): string => {
     if (!state.xprvKey) throw new Error("Account has no private key")
     if (state.xprvKeyIsEncoded) throw new Error("Private key is already encrypted")
-    return encoding.encryptDataWithPass(state.xprvKey, password)
+    return security.encryptWithPassword(state.xprvKey, password)
   }
 
   const decryptPrivateKey = (password: string): string => {
     if (!state.xprvKey || !state.xprvKeyIsEncoded) throw new Error("Account has no encrypted private key")
-    return encoding.decryptDataWithPass(state.xprvKey, password)
+    return security.decryptWithPassword(state.xprvKey, password)
   }
 
   const getSigningMaterial = (password?: string) => {
@@ -135,7 +135,7 @@ const privateKeyState = (
     checksumImage: checksum.checksumImage,
     checksumId: checksum.checksumId,
     xpubKey: publicKey,
-    xprvKey: password ? encoding.encryptDataWithPass(privateKey, password) : privateKey,
+    xprvKey: password ? security.encryptWithPassword(privateKey, password) : privateKey,
     xprvKeyIsEncoded: Boolean(password),
     accountPath,
     addressPath,

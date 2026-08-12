@@ -2,9 +2,9 @@ import * as CardanoLib from "@xray-network/xray-cardano-lib-chain"
 import { PrivateKey } from "@xray-network/xray-cardano-lib-crypto"
 import type { CardanoAccount } from "../accounts/account.js"
 import { createTransaction, getTransactionParts } from "../internal/transaction.js"
-import * as keys from "../primitives/keys.js"
-import * as transactionPrimitives from "../primitives/tx.js"
 import type { Utxo } from "../types.js"
+import * as keys from "../utilities/keys.js"
+import * as transactionPrimitives from "./primitives.js"
 
 export interface AccountSignOptions {
   password?: string

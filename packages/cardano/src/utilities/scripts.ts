@@ -9,7 +9,7 @@ import * as CardanoLib from "@xray-network/xray-cardano-lib-chain"
 import { ScriptHash } from "@xray-network/xray-cardano-lib-crypto"
 import * as UPLC from "@xray-network/xray-cardano-lib-plutus"
 import type * as CardanoTypes from "../types.js"
-import { fromHex, toHex } from "./misc.js"
+import { fromHex, toHex } from "./encoding.js"
 
 const serializedPlutusScript = (script: string): SerializedPlutusScript => {
   const bytes = fromHex(script)

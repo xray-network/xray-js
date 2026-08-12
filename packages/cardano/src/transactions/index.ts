@@ -8,4 +8,4 @@ export {
   type SignedTransaction,
   type UnsignedTransaction,
 } from "./transaction.js"
-export * from "../primitives/tx.js"
+export * from "./primitives.js"

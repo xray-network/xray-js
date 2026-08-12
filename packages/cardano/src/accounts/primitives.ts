@@ -1,7 +1,7 @@
 import cip4 from "../internal/cip4/checksum.js"
 import type * as CardanoTypes from "../types.js"
-import { getFingerprint, assetNameToAssetNameAscii } from "./asset.js"
-import { deriveBase, getCredentials, getStakingAddress } from "./address.js"
+import { getFingerprint, assetNameToAssetNameAscii } from "../utilities/assets.js"
+import { deriveBase, getCredentials, getStakingAddress } from "../utilities/addresses.js"
 
 export const checksum = (
   xpubKey: string

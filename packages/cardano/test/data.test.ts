@@ -1,12 +1,13 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { plutus, scripts } from "@xray-network/xray-js-cardano"
+import * as plutus from "@xray-network/xray-cardano-lib-plutus"
+import { utilities } from "@xray-network/xray-js-cardano"
 
 const PlutusData = plutus.data.Data
 const PlutusConstr = plutus.data.Constr
 
 describe("Data", () => {
-  const { applyParamsToScript } = scripts
+  const { applyParamsToScript } = utilities.scripts
 
   it("Roundtrip data bigint", () => {
     /*

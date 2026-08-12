@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { createCardano, keys } from "@xray-network/xray-js-cardano"
+import { createCardano, utilities } from "@xray-network/xray-js-cardano"
 import { createInMemoryProvider } from "@xray-network/xray-js-cardano/testing"
 import { ownedUtxo, testData } from "./fixtures.js"
 
@@ -10,7 +10,7 @@ describe("Cardano accounts", () => {
       network: "preview",
       provider: createInMemoryProvider({ utxos: [ownedUtxo] }),
     })
-    const mnemonic = keys.mnemonicGenerate()
+    const mnemonic = utilities.keys.mnemonicGenerate()
     const generated = cardano.accounts.fromMnemonic(mnemonic)
     assert.equal(generated.publicKey?.length, 114)
 
