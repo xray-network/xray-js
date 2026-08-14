@@ -126,6 +126,33 @@ describe("multiblockchain mini-app bridge", () => {
     host.destroy()
   })
 
+  it("keeps the platform connected without a selected account", async () => {
+    installWindow()
+    const host = createMockHost({
+      state: {
+        context: null,
+        handshake: { protocolVersion: 1, protocols: [] },
+      },
+    })
+    const store = bridgeReact.createMiniAppStore()
+
+    assert.equal(await store.connect(), true)
+    assert.equal(store.isConnected(), true)
+    assert.equal(store.get("hostContext"), null)
+    assert.deepEqual(store.get("protocols"), [])
+
+    await store.refresh("theme")
+    assert.equal(store.get("theme"), "light")
+    assert.equal(store.get("hostContext"), null)
+
+    const accountlessHandshake = await miniAppClient.handshake()
+    assert.equal(accountlessHandshake?.context, null)
+    assert.deepEqual(accountlessHandshake?.payload.protocols, [])
+
+    store.reset()
+    host.destroy()
+  })
+
   it("separates platform, Cardano bridge, and CIP-30 requests", async () => {
     installWindow()
     const host = createMockHost()
@@ -135,7 +162,7 @@ describe("multiblockchain mini-app bridge", () => {
       protocolVersion: 1,
       protocols: ["cardano.bridge", "cardano.cip30"],
     })
-    assert.equal(handshake?.context.blockchain, "cardano")
+    assert.equal(handshake?.context?.blockchain, "cardano")
 
     const tip = await cardanoClient.getTip()
     assert.equal(tip?.payload?.blockNo, 10_000_000)

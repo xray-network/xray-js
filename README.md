@@ -128,6 +128,10 @@ The Mini App Bridge is blockchain-neutral at its core. Transport owns contextual
 platform layer owns only XRAY host concerns such as handshake, theme, currency, privacy settings, and routing. The
 handshake advertises which independent blockchain protocols the current host can execute.
 
+Platform messages carry the selected account context. The context is `null` when XRAY has no selected account; this
+still represents a successful platform connection, so handshake, theme, currency, privacy, and routing remain
+available. Blockchain adapter messages retain their non-null chain-specific contexts.
+
 Blockchain-specific models and wallet standards live in adapter subpaths rather than the shared bridge. Cardano is the
 first adapter and exposes two independently advertised protocols:
 

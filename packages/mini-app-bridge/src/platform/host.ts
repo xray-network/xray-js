@@ -1,4 +1,3 @@
-import type { HostContext } from "../transport/context.js"
 import { listenAllClient, listenClient, sendHost } from "../transport/host.js"
 import {
   platformClientMessageSchemas,
@@ -8,6 +7,7 @@ import {
   type PlatformHostCurrencyPayload,
   type PlatformHostHandshakePayload,
   type PlatformHostHideBalancesPayload,
+  type PlatformHostContext,
   type PlatformHostRouteChangedPayload,
   type PlatformHostThemePayload,
 } from "./protocol.js"
@@ -16,35 +16,35 @@ export const sendHandshake = (
   iframe: Window | null | undefined,
   payload: PlatformHostHandshakePayload,
   requestId: string,
-  context: HostContext
+  context: PlatformHostContext
 ) => sendHost(platformHostMessageSchemas, iframe, "xray.host.handshake", payload, requestId, context)
 
 export const sendTheme = (
   iframe: Window | null | undefined,
   payload: PlatformHostThemePayload,
   requestId: string,
-  context: HostContext
+  context: PlatformHostContext
 ) => sendHost(platformHostMessageSchemas, iframe, "xray.host.theme", payload, requestId, context)
 
 export const sendCurrency = (
   iframe: Window | null | undefined,
   payload: PlatformHostCurrencyPayload,
   requestId: string,
-  context: HostContext
+  context: PlatformHostContext
 ) => sendHost(platformHostMessageSchemas, iframe, "xray.host.currency", payload, requestId, context)
 
 export const sendHideBalances = (
   iframe: Window | null | undefined,
   payload: PlatformHostHideBalancesPayload,
   requestId: string,
-  context: HostContext
+  context: PlatformHostContext
 ) => sendHost(platformHostMessageSchemas, iframe, "xray.host.hideBalances", payload, requestId, context)
 
 export const sendRouteChanged = (
   iframe: Window | null | undefined,
   payload: PlatformHostRouteChangedPayload,
   requestId: string,
-  context: HostContext
+  context: PlatformHostContext
 ) => sendHost(platformHostMessageSchemas, iframe, "xray.host.routeChanged", payload, requestId, context)
 
 export const listen = <MessageType extends keyof PlatformClientMessagePayloadMap>(

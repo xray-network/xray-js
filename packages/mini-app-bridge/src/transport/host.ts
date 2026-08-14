@@ -5,13 +5,14 @@ import { parseMessage, type Envelope, type MessageFromSchemas, type PayloadMap }
 export const sendHost = <
   HostSchemas extends Record<string, z.ZodTypeAny>,
   MessageType extends keyof PayloadMap<HostSchemas> & string,
+  Context extends HostContext | null = HostContext,
 >(
   schemas: HostSchemas,
   iframe: Window | null | undefined,
   type: MessageType,
   payload: PayloadMap<HostSchemas>[MessageType],
   requestId: string,
-  context: HostContext
+  context: Context
 ) => {
   if (!iframe) return
   const message = parseMessage(schemas, { type, payload, requestId })

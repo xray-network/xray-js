@@ -1,4 +1,4 @@
-import type { PlatformClientMessage, PlatformHostMessagePayloadMap } from "../platform/protocol.js"
+import type { PlatformClientMessage, PlatformHostContext, PlatformHostMessagePayloadMap } from "../platform/protocol.js"
 import type {
   CardanoClientMessage,
   CardanoHostAccountStatePayload,
@@ -6,13 +6,12 @@ import type {
   CardanoHostTipPayload,
 } from "../cardano/protocol.js"
 import type { Cip30ClientMessage, Cip30HostMessagePayloadMap } from "../cardano/cip30/protocol.js"
-import type { CardanoHostContext } from "../transport/context.js"
 import { setHostWindow } from "../transport/client.js"
 import { dispatchMessageEvent } from "./events.js"
 
 /** Canned responses the mock host serves for each request type. */
 export type MockHostState = {
-  context: CardanoHostContext
+  context: PlatformHostContext
   handshake: PlatformHostMessagePayloadMap["xray.host.handshake"]
   tip: CardanoHostMessagePayloadMap["xray.cardano.host.tip"]
   accountState: CardanoHostMessagePayloadMap["xray.cardano.host.accountState"]

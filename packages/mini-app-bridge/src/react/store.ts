@@ -1,6 +1,7 @@
 import * as miniAppClient from "../platform/client.js"
 import type {
   PlatformHostCurrencyPayload,
+  PlatformHostContext,
   PlatformHostHideBalancesPayload,
   PlatformHostThemePayload,
 } from "../platform/protocol.js"
@@ -46,7 +47,7 @@ const emptyValues = (): MiniAppValues => ({
 })
 
 const getters: Partial<{
-  [K in MiniAppValueKey]: () => Promise<{ payload: MiniAppValues[K]; context: HostContext } | null>
+  [K in MiniAppValueKey]: () => Promise<{ payload: MiniAppValues[K]; context: PlatformHostContext } | null>
 }> = {
   theme: miniAppClient.getTheme,
   currency: miniAppClient.getCurrency,
@@ -77,7 +78,7 @@ export const createMiniAppStore = (): MiniAppStore => {
     if (stopListening.length > 0) return
     const receive = <K extends Exclude<MiniAppValueKey, "hostContext" | "protocols">>(
       key: K,
-      message: { payload: MiniAppValues[K]; context: HostContext }
+      message: { payload: MiniAppValues[K]; context: PlatformHostContext }
     ) => {
       setValue("hostContext", message.context)
       setValue(key, message.payload)

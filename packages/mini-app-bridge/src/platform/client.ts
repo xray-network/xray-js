@@ -2,7 +2,9 @@ import { DEFAULT_REQUEST_TIMEOUT } from "../transport/constants.js"
 import { listenAllHost, listenHost, requestHost } from "../transport/client.js"
 import {
   platformClientMessageSchemas,
+  platformHostContextSchema,
   platformHostMessageSchemas,
+  type PlatformHostContext,
   type PlatformClientRouteChangedPayload,
   type PlatformHostMessagePayloadMap,
 } from "./protocol.js"
@@ -16,6 +18,7 @@ export const handshake = async (requestId?: string, timeout: number = DEFAULT_RE
     responseType: "xray.host.handshake",
     timeout,
     requestId,
+    contextSchema: platformHostContextSchema,
   })
 
 export const getTheme = async (requestId?: string, timeout: number = DEFAULT_REQUEST_TIMEOUT) =>
@@ -27,6 +30,7 @@ export const getTheme = async (requestId?: string, timeout: number = DEFAULT_REQ
     responseType: "xray.host.theme",
     timeout,
     requestId,
+    contextSchema: platformHostContextSchema,
   })
 
 export const getCurrency = async (requestId?: string, timeout: number = DEFAULT_REQUEST_TIMEOUT) =>
@@ -38,6 +42,7 @@ export const getCurrency = async (requestId?: string, timeout: number = DEFAULT_
     responseType: "xray.host.currency",
     timeout,
     requestId,
+    contextSchema: platformHostContextSchema,
   })
 
 export const getHideBalances = async (requestId?: string, timeout: number = DEFAULT_REQUEST_TIMEOUT) =>
@@ -49,6 +54,7 @@ export const getHideBalances = async (requestId?: string, timeout: number = DEFA
     responseType: "xray.host.hideBalances",
     timeout,
     requestId,
+    contextSchema: platformHostContextSchema,
   })
 
 export const routeChanged = async (route: PlatformClientRouteChangedPayload, requestId?: string) =>
@@ -61,12 +67,14 @@ export const routeChanged = async (route: PlatformClientRouteChangedPayload, req
     timeout: DEFAULT_REQUEST_TIMEOUT,
     requestId,
     expectResponse: false,
+    contextSchema: platformHostContextSchema,
   })
 
 export const listen = <MessageType extends keyof PlatformHostMessagePayloadMap>(
   messageType: MessageType,
-  handler: Parameters<typeof listenHost<typeof platformHostMessageSchemas, MessageType>>[2]
-) => listenHost(platformHostMessageSchemas, messageType, handler)
+  handler: Parameters<typeof listenHost<typeof platformHostMessageSchemas, MessageType, PlatformHostContext>>[2]
+) => listenHost(platformHostMessageSchemas, messageType, handler, platformHostContextSchema)
 
-export const listenAll = (handler: Parameters<typeof listenAllHost<typeof platformHostMessageSchemas>>[1]) =>
-  listenAllHost(platformHostMessageSchemas, handler)
+export const listenAll = (
+  handler: Parameters<typeof listenAllHost<typeof platformHostMessageSchemas, PlatformHostContext>>[1]
+) => listenAllHost(platformHostMessageSchemas, handler, platformHostContextSchema)

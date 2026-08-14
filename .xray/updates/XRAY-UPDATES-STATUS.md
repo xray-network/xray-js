@@ -39,6 +39,7 @@ Target: mini-app-bridge
 | `0008` | Separate JavaScript React examples | [Instruction](./implementations/mini-app-bridge/0008-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0008-IMPL-RESULT.md) | `LOCAL` | Separate JavaScript client, host/relay, and React examples validate and await human review. |
 | `0009` | Separate CIP-30 examples | [Instruction](./implementations/mini-app-bridge/0009-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0009-IMPL-RESULT.md) | `LOCAL` | Independent Cardano Bridge and CIP-30 JavaScript/React examples validate and await human review. |
 | `0010` | Collapse CIP-30 protocol subpath | [Instruction](./implementations/mini-app-bridge/0010-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0010-IMPL-RESULT.md) | `LOCAL` | Unified Cardano contracts, retired nested path, and complete downstream validation await human review. |
+| `0011` | Allow nullable platform context | [Instruction](./implementations/mini-app-bridge/0011-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0011-IMPL-RESULT.md) | `LOCAL` | Accountless platform connectivity and complete SDK validation await human review. |
 
 ## Repository implementation status
 

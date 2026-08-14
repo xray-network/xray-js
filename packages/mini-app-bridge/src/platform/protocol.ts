@@ -1,8 +1,12 @@
 import { z } from "zod"
-import type { HostContext } from "../transport/context.js"
+import { hostContextSchema } from "../transport/context.js"
 import type { MessageFromSchemas } from "../transport/envelope.js"
 
 export const BRIDGE_PROTOCOL_VERSION = 1 as const
+
+/** Selected XRAY account context, or null when the host has no selected account. */
+export const platformHostContextSchema = hostContextSchema.nullable()
+export type PlatformHostContext = z.infer<typeof platformHostContextSchema>
 
 export const platformHostHandshakeSchema = z.object({
   protocolVersion: z.literal(BRIDGE_PROTOCOL_VERSION),
@@ -33,7 +37,7 @@ export const platformHostMessageSchemas = {
 export type PlatformHostMessagePayloadMap = {
   [K in keyof typeof platformHostMessageSchemas]: z.infer<(typeof platformHostMessageSchemas)[K]>
 }
-export type PlatformHostMessage = MessageFromSchemas<typeof platformHostMessageSchemas, HostContext>
+export type PlatformHostMessage = MessageFromSchemas<typeof platformHostMessageSchemas, PlatformHostContext>
 
 export const platformClientRouteChangedSchema = z.string()
 export type PlatformClientRouteChangedPayload = z.infer<typeof platformClientRouteChangedSchema>
