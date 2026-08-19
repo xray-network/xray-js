@@ -1,5 +1,6 @@
 import { createRemoteStore, useRemoteStore } from "../../../react/remote-store.js"
 import * as client from "./client.js"
+import type { PlatformContext, PlatformIdentity, PlatformStatus } from "./contract.js"
 
 const required = async <Value>(load: () => Promise<{ payload: Value } | null>) => {
   const response = await load()
@@ -19,13 +20,22 @@ const hideBalancesStore = createRemoteStore(
   () => required(client.getHideBalances),
   (receive) => client.listen("hideBalances", ({ payload }) => receive(payload))
 )
+
+const toPlatformStatus = ({
+  payload,
+  context,
+}: {
+  payload: PlatformIdentity
+  context: PlatformContext
+}): PlatformStatus => ({ ...payload, account: context })
+
 const statusStore = createRemoteStore(
   async () => {
-    const status = await client.getStatus()
-    if (!status) throw new Error("XRAY platform host is unavailable")
-    return status
+    const response = await client.getStatus()
+    if (!response) throw new Error("XRAY platform host is unavailable")
+    return toPlatformStatus(response)
   },
-  (receive) => client.listen("status", ({ payload }) => receive(payload))
+  (receive) => client.listen("status", (message) => receive(toPlatformStatus(message)))
 )
 
 export const useTheme = () => useRemoteStore(themeStore)

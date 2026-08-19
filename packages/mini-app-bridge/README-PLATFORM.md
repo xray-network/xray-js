@@ -19,11 +19,10 @@ const stop = clientPlatformV1.listen("status", ({ payload, context }) => {
 })
 ```
 
-`getStatus()` returns `{ host: "xray.app", account }`, where `account` is the selected
-`{ blockchain: "cardano", network }` or `null`. A `null` return means the platform host did not answer before the
-timeout. The status selects application behavior only; it is not a handshake, proof of trust, wallet grant, or
-operation authorization. Other getters return a correlated `{ payload, context, requestId }` response or `null` when
-the host does not answer before the timeout.
+`getStatus()` returns the same correlated envelope as the other getters: `{ payload: { host: "xray.app" }, context,
+requestId }`. `context` is the selected `{ blockchain: "cardano", network }` or `null`; only the context is nullable.
+A `null` response means the platform host did not answer before the timeout. The status selects application behavior
+only; it is not a handshake, proof of trust, wallet grant, or operation authorization.
 
 ## Host
 
@@ -31,14 +30,14 @@ the host does not answer before the timeout.
 import { hostPlatformV1 } from "@xray-network/xray-js/mini-app-bridge"
 
 const account = { blockchain: "cardano", network: "preview" } as const
-const status = { host: "xray.app", account } as const
+const identity = { host: "xray.app" } as const
 
 const stop = hostPlatformV1.handle(iframe.contentWindow, "getStatus", () => ({
-  result: status,
+  result: identity,
   context: account,
 }))
 
-hostPlatformV1.publish(iframe.contentWindow, "status", status, account)
+hostPlatformV1.publish(iframe.contentWindow, "status", identity, account)
 ```
 
 `listen()` receives all validated platform requests for manual relays. `handle()` installs an automatic typed handler,
@@ -58,7 +57,8 @@ const { data, loading, error, refresh } = platformV1.useStatus()
 ```
 
 `useTheme`, `useCurrency`, `useHideBalances`, and `useStatus` request lazily, share one store per value, subscribe only
-to platform v1 events, and clean up the host listener after the last component unmounts. `data.account: null` means the
+to platform v1 events, and clean up the host listener after the last component unmounts. React projects the wire
+envelope into `{ host, account: context }` for convenience. `data.account: null` means the
 XRAY host answered without a selected account; `data: undefined` is not loaded, while `error` records an unavailable or
 failed host request.
 

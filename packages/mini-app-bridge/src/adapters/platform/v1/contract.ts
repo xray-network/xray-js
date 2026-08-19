@@ -10,11 +10,12 @@ export type AccountType = z.infer<typeof accountTypeSchema>
 export const platformContextSchema = accountTypeSchema.nullable()
 export type PlatformContext = z.infer<typeof platformContextSchema>
 
-export const platformStatusSchema = z.object({
+export const platformIdentitySchema = z.object({
   host: z.literal("xray.app"),
-  account: platformContextSchema,
 })
-export type PlatformStatus = z.infer<typeof platformStatusSchema>
+export type PlatformIdentity = z.infer<typeof platformIdentitySchema>
+
+export type PlatformStatus = PlatformIdentity & { account: PlatformContext }
 
 export const themeSchema = z.enum(["light", "dark"])
 export type Theme = z.infer<typeof themeSchema>
@@ -32,14 +33,14 @@ export const platformV1Contract = {
     getTheme: { request: z.null(), result: themeSchema },
     getCurrency: { request: z.null(), result: currencySchema },
     getHideBalances: { request: z.null(), result: hideBalancesSchema },
-    getStatus: { request: z.null(), result: platformStatusSchema },
+    getStatus: { request: z.null(), result: platformIdentitySchema },
     routeChanged: { request: routeSchema, result: z.null() },
   },
   events: {
     theme: themeSchema,
     currency: currencySchema,
     hideBalances: hideBalancesSchema,
-    status: platformStatusSchema,
+    status: platformIdentitySchema,
     routeChanged: routeSchema,
   },
   context: platformContextSchema,

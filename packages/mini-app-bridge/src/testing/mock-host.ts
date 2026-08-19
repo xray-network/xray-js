@@ -1,5 +1,5 @@
 import type { AccountState, CardanoContext, Tip } from "../adapters/cardano/v1/contract.js"
-import type { Currency, PlatformStatus, Theme } from "../adapters/platform/v1/contract.js"
+import type { Currency, PlatformIdentity, Theme } from "../adapters/platform/v1/contract.js"
 import { setHostWindow } from "../transport/client.js"
 import {
   requestMessageSchema,
@@ -10,8 +10,8 @@ import {
 import { dispatchMessageEvent } from "./events.js"
 
 export type MockHostState = {
-  status: PlatformStatus
-  context: CardanoContext
+  status: PlatformIdentity
+  context: CardanoContext | null
   theme: Theme
   currency: Currency
   hideBalances: boolean
@@ -59,7 +59,6 @@ export const mockAccountState: AccountState = {
 export const defaultMockHostState: MockHostState = {
   status: {
     host: "xray.app",
-    account: { blockchain: "cardano", network: "preprod" },
   },
   context: { blockchain: "cardano", network: "preprod" },
   theme: "light",
@@ -167,7 +166,7 @@ export const createMockHost = (options: MockHostOptions = {}): MockHost => {
       if (options.autoRespond === false || request.method === "routeChanged") return
       const result = responseFor(state, request)
       if (result === undefined) return
-      const context = request.scope === "platform" ? state.status.account : state.context
+      const context = state.context
       setTimeout(
         () =>
           dispatchMessageEvent(
@@ -192,7 +191,7 @@ export const createMockHost = (options: MockHostOptions = {}): MockHost => {
     hostWindow,
     sent,
     state,
-    emit: (scope, event, payload, context = scope === "platform" ? state.status.account : state.context) =>
+    emit: (scope, event, payload, context = state.context) =>
       dispatchMessageEvent(
         target,
         { type: "xray.bridge.event", scope, version: "v1", event, payload, context },

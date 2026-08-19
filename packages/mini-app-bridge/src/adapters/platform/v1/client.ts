@@ -16,8 +16,7 @@ export const getCurrency = (timeout = DEFAULT_REQUEST_TIMEOUT) =>
   request(platformV1Contract, "getCurrency", null, timeout)
 export const getHideBalances = (timeout = DEFAULT_REQUEST_TIMEOUT) =>
   request(platformV1Contract, "getHideBalances", null, timeout)
-export const getStatus = (timeout = DEFAULT_REQUEST_TIMEOUT) =>
-  request(platformV1Contract, "getStatus", null, timeout).then((response) => response?.payload ?? null)
+export const getStatus = (timeout = DEFAULT_REQUEST_TIMEOUT) => request(platformV1Contract, "getStatus", null, timeout)
 export const routeChanged = (route: string) => notify(platformV1Contract, "routeChanged", route)
 
 export const listen = <Event extends AdapterEventName<PlatformV1Contract>>(
@@ -28,4 +27,4 @@ export const listen = <Event extends AdapterEventName<PlatformV1Contract>>(
 export const listenAll = (handler: Parameters<typeof listenAllEvents<PlatformV1Contract>>[1]) =>
   listenAllEvents(platformV1Contract, handler)
 
-export type { AccountType, Currency, PlatformContext, PlatformStatus, Theme } from "./contract.js"
+export type { AccountType, Currency, PlatformContext, PlatformIdentity, PlatformStatus, Theme } from "./contract.js"

@@ -25,7 +25,7 @@ import {
 ```ts
 const status = await clientPlatformV1.getStatus()
 
-if (status?.account?.blockchain === "cardano") {
+if (status?.context?.blockchain === "cardano") {
   const tip = await clientCardanoV1.getTip()
   console.log(tip?.payload)
 }
@@ -38,7 +38,7 @@ console.log(await wallet.getNetworkId())
 
 ```ts
 const account = { blockchain: "cardano", network: "preview" } as const
-const status = { host: "xray.app", account } as const
+const identity = { host: "xray.app" } as const
 
 const stopTheme = hostPlatformV1.handle(iframe.contentWindow, "getTheme", () => ({
   result: "dark",
@@ -50,7 +50,7 @@ const stopTip = hostCardanoV1.handle(iframe.contentWindow, "getTip", async () =>
   context: account,
 }))
 
-hostPlatformV1.publish(iframe.contentWindow, "status", status, account)
+hostPlatformV1.publish(iframe.contentWindow, "status", identity, account)
 ```
 
 A production host must validate the trusted iframe origin in addition to the SDK's source-window check.

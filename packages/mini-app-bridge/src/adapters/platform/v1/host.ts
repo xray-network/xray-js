@@ -48,4 +48,4 @@ export const publish = <Event extends AdapterEventName<PlatformV1Contract>>(
   context: PlatformContext
 ) => publishEvent(platformV1Contract, iframe, event, payload, context)
 
-export type { AccountType, Currency, PlatformContext, PlatformStatus, Theme } from "./contract.js"
+export type { AccountType, Currency, PlatformContext, PlatformIdentity, PlatformStatus, Theme } from "./contract.js"

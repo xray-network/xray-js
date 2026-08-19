@@ -62,10 +62,10 @@ describe("scope-versioned Mini App Bridge", () => {
     const host = createMockHost()
 
     assert.equal((await clientPlatformV1.getTheme())?.payload, "light")
-    assert.deepEqual(await clientPlatformV1.getStatus(), {
-      host: "xray.app",
-      account: { blockchain: "cardano", network: "preprod" },
-    })
+    const status = await clientPlatformV1.getStatus()
+    assert.deepEqual(status?.payload, { host: "xray.app" })
+    assert.deepEqual(status?.context, { blockchain: "cardano", network: "preprod" })
+    assert.equal(typeof status?.requestId, "string")
     assert.equal((await clientCardanoV1.getTip())?.payload?.blockNo, 10_000_000)
     assert.equal(await clientCardanoCip30V1.isEnabled(), true)
 
@@ -264,7 +264,7 @@ describe("scope-versioned Mini App Bridge", () => {
         version: "v2",
         event: "theme",
         payload: "light",
-        context: host.state.status.account,
+        context: host.state.context,
       },
       host.hostWindow
     )
@@ -276,7 +276,7 @@ describe("scope-versioned Mini App Bridge", () => {
         version: "v1",
         event: "theme",
         payload: "invalid",
-        context: host.state.status.account,
+        context: host.state.context,
       },
       host.hostWindow
     )
@@ -313,7 +313,7 @@ describe("scope-versioned Mini App Bridge", () => {
 
   it("loads React stores lazily, deduplicates refreshes, and identifies an accountless XRAY host", async () => {
     installWindow()
-    const host = createMockHost({ state: { status: { host: "xray.app", account: null } } })
+    const host = createMockHost({ state: { status: { host: "xray.app" }, context: null } })
     const store = bridgeReact.platformV1.stores.status
     assert.deepEqual(store.getSnapshot().data, undefined)
     assert.equal(host.sent.length, 0)
@@ -330,13 +330,18 @@ describe("scope-versioned Mini App Bridge", () => {
     const secondRefresh = store.refresh()
     assert.equal(firstRefresh, secondRefresh)
     await firstRefresh
-    stopFirst()
-    stopSecond()
-    host.emit("platform", "status", {
+    host.emit("platform", "status", { host: "xray.app" }, { blockchain: "cardano", network: "mainnet" })
+    assert.deepEqual(store.getSnapshot().data, {
       host: "xray.app",
       account: { blockchain: "cardano", network: "mainnet" },
     })
-    assert.deepEqual(store.getSnapshot().data, { host: "xray.app", account: null })
+    stopFirst()
+    stopSecond()
+    host.emit("platform", "status", { host: "xray.app" }, null)
+    assert.deepEqual(store.getSnapshot().data, {
+      host: "xray.app",
+      account: { blockchain: "cardano", network: "mainnet" },
+    })
     host.destroy()
   })
 
