@@ -28,22 +28,18 @@
       "import": "./dist/esm/react/index.js",
       "default": "./dist/esm/react/index.js"
     },
-    "./cardano": {
-      "types": "./dist/esm/cardano/index.d.ts",
-      "browser": "./dist/esm/cardano/index.js",
-      "import": "./dist/esm/cardano/index.js",
-      "default": "./dist/esm/cardano/index.js"
-    },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "README-*.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "npm run clean:build && tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "npm run clean:test && tsc -p test/tsconfig.json && node --test .test-dist/*.test.js",
     "test:integration": "node -e \"process.exit(0)\"",
+    "clean:build": "rm -rf dist",
     "clean:test": "rm -rf .test-dist",
     "clean": "rm -rf dist .test-dist"
   },

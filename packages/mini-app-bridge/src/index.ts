@@ -1,6 +1,9 @@
-// Root is blockchain-neutral: transport primitives and XRAY platform messages.
-// Chain protocols are published from explicit subpaths such as `./cardano`.
-export * from "./transport/index.js"
-export * from "./platform/index.js"
-export * as client from "./client/index.js"
-export * as host from "./host/index.js"
+export * as clientPlatformV1 from "./adapters/platform/v1/client.js"
+export * as clientCardanoV1 from "./adapters/cardano/v1/client.js"
+export * as clientCardanoCip30V1 from "./adapters/cardano-cip30/v1/client.js"
+export * as hostPlatformV1 from "./adapters/platform/v1/host.js"
+export * as hostCardanoV1 from "./adapters/cardano/v1/host.js"
+export * as hostCardanoCip30V1 from "./adapters/cardano-cip30/v1/host.js"
+export { BridgeError } from "./transport/errors.js"
+export type { BridgeErrorCode } from "./transport/errors.js"
+export type { ClientEvent, ClientResponse, HostRequest, HostResult } from "./adapters/types.js"

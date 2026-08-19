@@ -1,118 +1,148 @@
-import type { z } from "zod"
-import { hostContextSchema, type HostContext } from "./context.js"
-import { parseMessage, type Envelope, type MessageFromSchemas, type PayloadMap } from "./envelope.js"
+import type {
+  AdapterContext,
+  AdapterContract,
+  AdapterEventName,
+  AdapterMethodName,
+  ClientEvent,
+  ClientResponse,
+  EventPayload,
+  MethodPayload,
+  MethodResult,
+} from "../adapters/types.js"
+import { BridgeError } from "./errors.js"
+import { eventMessageSchema, responseMessageSchema, type RequestMessage } from "./messages.js"
+
+export const DEFAULT_REQUEST_TIMEOUT = 5_000
+export const DEFAULT_INTERACTIVE_TIMEOUT = 120_000
 
 let hostWindowOverride: Window | null = null
 
-export const setHostWindow = (win: Window | null) => {
-  hostWindowOverride = win
+export const setHostWindow = (hostWindow: Window | null) => {
+  hostWindowOverride = hostWindow
 }
 
 export const getHostWindow = () => {
   if (hostWindowOverride) return hostWindowOverride
-  if (typeof window === "undefined") return null
-  if (!window.parent || window.parent === window) return null
+  if (typeof window === "undefined" || !window.parent || window.parent === window) return null
   return window.parent
 }
 
-export const getRequestId = () => {
+const getRequestId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID()
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-export const requestHost = async <
-  ClientSchemas extends Record<string, z.ZodTypeAny>,
-  HostSchemas extends Record<string, z.ZodTypeAny>,
-  RequestType extends keyof PayloadMap<ClientSchemas> & string,
-  ResponseType extends keyof PayloadMap<HostSchemas> & string,
-  Context = HostContext,
-  ErrorType extends keyof PayloadMap<HostSchemas> & string = never,
->(options: {
-  clientSchemas: ClientSchemas
-  hostSchemas: HostSchemas
-  requestType: RequestType
-  payload: PayloadMap<ClientSchemas>[RequestType]
-  responseType: ResponseType
+export const request = <Contract extends AdapterContract, Method extends AdapterMethodName<Contract>>(
+  contract: Contract,
+  method: Method,
+  payload: MethodPayload<Contract, Method>,
   timeout: number
-  requestId?: string
-  expectResponse?: boolean
-  contextSchema?: z.ZodType<Context>
-  errorResponseType?: ErrorType
-  mapError?: (payload: PayloadMap<HostSchemas>[ErrorType]) => unknown
-}): Promise<Envelope<ResponseType, PayloadMap<HostSchemas>[ResponseType], Context> | null> => {
+): Promise<ClientResponse<MethodResult<Contract, Method>, AdapterContext<Contract>> | null> => {
   const hostWindow = getHostWindow()
-  if (!hostWindow) return null
-  const requestId = options.requestId ?? getRequestId()
-  const request = parseMessage(options.clientSchemas, {
-    type: options.requestType,
-    payload: options.payload,
+  if (!hostWindow || typeof window === "undefined") return Promise.resolve(null)
+  const requestPayload = contract.methods[method].request.safeParse(payload)
+  if (!requestPayload.success) throw new BridgeError("INVALID_REQUEST", `Invalid ${contract.scope}/${method} payload`)
+  const requestId = getRequestId()
+  const message: RequestMessage = {
+    type: "xray.bridge.request",
+    scope: contract.scope,
+    version: contract.version,
+    method,
     requestId,
-  })
-  if (!request) throw new Error(`Invalid mini-app request payload: ${options.requestType}`)
+    payload: requestPayload.data,
+  }
 
   return new Promise((resolve, reject) => {
-    if (options.expectResponse !== false) {
-      const handleMessage = (event: MessageEvent) => {
-        if (event.source !== hostWindow) return
-        const contextSchema = options.contextSchema ?? (hostContextSchema as unknown as z.ZodType<Context>)
-        const message = parseMessage(options.hostSchemas, event.data, contextSchema)
-        if (!message || message.requestId !== requestId) return
-        if (message.type === options.errorResponseType) {
-          window.removeEventListener("message", handleMessage)
-          clearTimeout(timer)
-          reject(options.mapError?.(message.payload as PayloadMap<HostSchemas>[ErrorType]) ?? message.payload)
-          return
-        }
-        if (message.type !== options.responseType) return
-        window.removeEventListener("message", handleMessage)
-        clearTimeout(timer)
-        resolve(message as never)
-      }
-      const timer = setTimeout(() => {
-        window.removeEventListener("message", handleMessage)
-        resolve(null)
-        console.log(`MiniAppSDKTimeout: ${options.requestType} :: ${options.timeout}ms :: ${requestId}`)
-      }, options.timeout)
-      window.addEventListener("message", handleMessage)
-    } else {
-      resolve(null)
+    const stop = () => {
+      window.removeEventListener("message", receive)
+      clearTimeout(timer)
     }
-    hostWindow.postMessage(request, "*")
+    const receive = (event: MessageEvent) => {
+      if (event.source !== hostWindow) return
+      const parsed = responseMessageSchema.safeParse(event.data)
+      if (!parsed.success) return
+      const response = parsed.data
+      if (
+        response.scope !== contract.scope ||
+        response.version !== contract.version ||
+        response.requestId !== requestId
+      )
+        return
+      if ("error" in response) {
+        stop()
+        reject(new BridgeError(response.error.code, response.error.message, response.error.data))
+        return
+      }
+      const result = contract.methods[method].result.safeParse(response.result)
+      const context = contract.context.safeParse(response.context)
+      if (!result.success || !context.success) return
+      stop()
+      resolve({ payload: result.data, context: context.data, requestId } as never)
+    }
+    const timer = setTimeout(() => {
+      window.removeEventListener("message", receive)
+      resolve(null)
+    }, timeout)
+    window.addEventListener("message", receive)
+    hostWindow.postMessage(message, "*")
   })
 }
 
-export const listenHost = <
-  HostSchemas extends Record<string, z.ZodTypeAny>,
-  MessageType extends keyof PayloadMap<HostSchemas> & string,
-  Context = HostContext,
->(
-  schemas: HostSchemas,
-  messageType: MessageType,
-  handler: (message: Envelope<MessageType, PayloadMap<HostSchemas>[MessageType], Context>) => void,
-  contextSchema: z.ZodType<Context> = hostContextSchema as unknown as z.ZodType<Context>
+export const notify = <Contract extends AdapterContract, Method extends AdapterMethodName<Contract>>(
+  contract: Contract,
+  method: Method,
+  payload: MethodPayload<Contract, Method>
 ) => {
   const hostWindow = getHostWindow()
-  const handleMessage = (event: MessageEvent) => {
-    if (event.source !== hostWindow) return
-    const message = parseMessage(schemas, event.data, contextSchema)
-    if (!message || message.type !== messageType) return
-    handler(message as never)
-  }
-  if (hostWindow) window.addEventListener("message", handleMessage)
-  return () => window.removeEventListener("message", handleMessage)
+  if (!hostWindow) return false
+  const requestPayload = contract.methods[method].request.safeParse(payload)
+  if (!requestPayload.success) throw new BridgeError("INVALID_REQUEST", `Invalid ${contract.scope}/${method} payload`)
+  hostWindow.postMessage(
+    {
+      type: "xray.bridge.request",
+      scope: contract.scope,
+      version: contract.version,
+      method,
+      requestId: getRequestId(),
+      payload: requestPayload.data,
+    } satisfies RequestMessage,
+    "*"
+  )
+  return true
 }
 
-export const listenAllHost = <HostSchemas extends Record<string, z.ZodTypeAny>, Context = HostContext>(
-  schemas: HostSchemas,
-  handler: (message: MessageFromSchemas<HostSchemas, Context>) => void,
-  contextSchema: z.ZodType<Context> = hostContextSchema as unknown as z.ZodType<Context>
+export const listen = <Contract extends AdapterContract, Event extends AdapterEventName<Contract>>(
+  contract: Contract,
+  eventName: Event,
+  handler: (event: ClientEvent<Event, EventPayload<Contract, Event>, AdapterContext<Contract>>) => void
 ) => {
   const hostWindow = getHostWindow()
-  const handleMessage = (event: MessageEvent) => {
+  if (!hostWindow || typeof window === "undefined") return () => undefined
+  const receive = (event: MessageEvent) => {
     if (event.source !== hostWindow) return
-    const message = parseMessage(schemas, event.data, contextSchema)
-    if (message) handler(message)
+    const parsed = eventMessageSchema.safeParse(event.data)
+    if (!parsed.success) return
+    const message = parsed.data
+    if (message.scope !== contract.scope || message.version !== contract.version || message.event !== eventName) return
+    const payload = contract.events[eventName].safeParse(message.payload)
+    const context = contract.context.safeParse(message.context)
+    if (!payload.success || !context.success) return
+    handler({ event: eventName, payload: payload.data, context: context.data } as never)
   }
-  if (hostWindow) window.addEventListener("message", handleMessage)
-  return () => window.removeEventListener("message", handleMessage)
+  window.addEventListener("message", receive)
+  return () => window.removeEventListener("message", receive)
+}
+
+export const listenAll = <Contract extends AdapterContract>(
+  contract: Contract,
+  handler: (
+    event: {
+      [Event in AdapterEventName<Contract>]: ClientEvent<Event, EventPayload<Contract, Event>, AdapterContext<Contract>>
+    }[AdapterEventName<Contract>]
+  ) => void
+) => {
+  const stops = (Object.keys(contract.events) as AdapterEventName<Contract>[]).map((event) =>
+    listen(contract, event, handler as never)
+  )
+  return () => stops.forEach((stop) => stop())
 }

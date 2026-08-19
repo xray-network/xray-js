@@ -1,14 +1,3 @@
-export { MiniAppProvider, useMiniAppStore } from "./context.js"
-export { createMiniAppStore, defaultMiniAppStore } from "./store.js"
-export type { MiniAppStore, MiniAppValues, MiniAppValueKey } from "./store.js"
-export {
-  useMiniApp,
-  useHostContext,
-  useBlockchain,
-  useTheme,
-  useNetwork,
-  useCurrency,
-  useHideBalances,
-  useHostMessage,
-} from "./hooks.js"
-export * as cardano from "./cardano.js"
+export * as platformV1 from "../adapters/platform/v1/react.js"
+export * as cardanoV1 from "../adapters/cardano/v1/react.js"
+export * as cardanoCip30V1 from "../adapters/cardano-cip30/v1/react.js"

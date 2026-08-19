@@ -40,6 +40,8 @@ Target: mini-app-bridge
 | `0009` | Separate CIP-30 examples | [Instruction](./implementations/mini-app-bridge/0009-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0009-IMPL-RESULT.md) | `LOCAL` | Independent Cardano Bridge and CIP-30 JavaScript/React examples validate and await human review. |
 | `0010` | Collapse CIP-30 protocol subpath | [Instruction](./implementations/mini-app-bridge/0010-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0010-IMPL-RESULT.md) | `LOCAL` | Unified Cardano contracts, retired nested path, and complete downstream validation await human review. |
 | `0011` | Allow nullable platform context | [Instruction](./implementations/mini-app-bridge/0011-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0011-IMPL-RESULT.md) | `LOCAL` | Accountless platform connectivity and complete SDK validation await human review. |
+| `0012` | Version Mini App Bridge protocol | [Instruction](./implementations/mini-app-bridge/0012-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0012-IMPL-RESULT.md) | `LOCAL` | Revised explicit v1 ownership to the bridge package only, kept the aggregate runtime current-facing, and reran all validations; coordinated XRAY App and mini-app migration awaits human review. |
+| `0013` | Simplify bridge adapter scopes | [Instruction](./implementations/mini-app-bridge/0013-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0013-IMPL-RESULT.md) | `LOCAL` | Platform status now identifies `xray.app` and its nullable account without a handshake; packaging and all validations pass and await human review. |
 
 ## Repository implementation status
 

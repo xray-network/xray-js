@@ -1,77 +1,67 @@
-import type { PlatformHostMessage } from "../platform/protocol.js"
-import type { CardanoHostMessage } from "../cardano/protocol.js"
-import type { Cip30HostMessage } from "../cardano/cip30/protocol.js"
+import {
+  eventMessageSchema,
+  responseMessageSchema,
+  type EventMessage,
+  type RequestMessage,
+  type ResponseMessage,
+} from "../transport/messages.js"
 import { dispatchMessageEvent } from "./events.js"
 
-type MockHostMessage = PlatformHostMessage | CardanoHostMessage | Cip30HostMessage
+export type MockClientMessage = ResponseMessage | EventMessage
 
 export type MockClient = {
-  /** Fake iframe window; pass it to host SDK helpers as the `iframe` argument. */
   clientWindow: Window
-  /** Every host -> client message received, in order. */
-  received: MockHostMessage[]
-  /** Emit a client -> host message as if the mini app posted it. Returns the requestId. */
-  send: (type: string, payload: unknown, requestId?: string) => string
-  /** Resolve once a host -> client message of the given type arrives. */
-  waitFor: (type: string, timeout?: number) => Promise<MockHostMessage>
+  received: MockClientMessage[]
+  send: (scope: string, method: string, payload: unknown, requestId?: string, version?: string) => string
+  waitFor: (predicate: (message: MockClientMessage) => boolean, timeout?: number) => Promise<MockClientMessage>
 }
 
-export type MockClientOptions = {
-  /** Window the host app code is listening on. Defaults to the global window. */
-  target?: Window
-}
+export type MockClientOptions = { target?: Window }
 
-/**
- * Create a fake mini app for testing host apps (host SDK consumers) without an
- * iframe. Host code treats `clientWindow` as the iframe's contentWindow: SDK
- * `send*` helpers deliver into `received`, and `send()` fires client messages
- * at the host's `listen`/`listenAll` subscriptions.
- */
-export const createMockClient = (options: MockClientOptions = {}): MockClient => {
-  const target = options.target ?? window
-  const received: MockHostMessage[] = []
-  const waiters: { type: string; resolve: (message: MockHostMessage) => void }[] = []
-
+export const createMockClient = ({ target = window }: MockClientOptions = {}): MockClient => {
+  const received: MockClientMessage[] = []
+  const waiters: {
+    predicate: (message: MockClientMessage) => boolean
+    resolve: (message: MockClientMessage) => void
+  }[] = []
   const clientWindow = {
     postMessage: (data: unknown) => {
-      const { type, payload, requestId, context } = (data ?? {}) as {
-        type?: string
-        payload?: unknown
-        requestId?: string
-        context?: unknown
-      }
-      if (typeof type !== "string") return
-      const message = { type, payload, requestId, context } as MockHostMessage
+      const response = responseMessageSchema.safeParse(data)
+      const event = eventMessageSchema.safeParse(data)
+      const message = response.success ? response.data : event.success ? event.data : null
+      if (!message) return
       received.push(message)
-      for (let i = waiters.length - 1; i >= 0; i--) {
-        if (waiters[i].type === type) {
-          waiters[i].resolve(message)
-          waiters.splice(i, 1)
-        }
+      for (let index = waiters.length - 1; index >= 0; index--) {
+        const waiter = waiters[index]
+        if (!waiter.predicate(message)) continue
+        waiter.resolve(message)
+        waiters.splice(index, 1)
       }
     },
   } as unknown as Window
-
-  let requestCounter = 0
-
+  let counter = 0
   return {
     clientWindow,
     received,
-    send: (type, payload, requestId = `mock-client-${++requestCounter}`) => {
-      dispatchMessageEvent(target, { type, payload, requestId }, clientWindow)
+    send: (scope, method, payload, requestId = `mock-client-${++counter}`, version = "v1") => {
+      dispatchMessageEvent(
+        target,
+        { type: "xray.bridge.request", scope, version, method, requestId, payload } satisfies RequestMessage,
+        clientWindow
+      )
       return requestId
     },
-    waitFor: (type, timeout = 1_000) => {
-      const existing = received.find((message) => message.type === type)
+    waitFor: (predicate, timeout = 1_000) => {
+      const existing = received.find(predicate)
       if (existing) return Promise.resolve(existing)
       return new Promise((resolve, reject) => {
-        const waiter = { type, resolve: (message: MockHostMessage) => resolve(message) }
+        const waiter = { predicate, resolve }
         waiters.push(waiter)
         setTimeout(() => {
           const index = waiters.indexOf(waiter)
-          if (index === -1) return
+          if (index < 0) return
           waiters.splice(index, 1)
-          reject(new Error(`Timeout waiting for host message ${type}`))
+          reject(new Error("Timeout waiting for bridge message"))
         }, timeout)
       })
     },

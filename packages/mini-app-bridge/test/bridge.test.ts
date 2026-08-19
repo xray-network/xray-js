@@ -1,13 +1,21 @@
 import assert from "node:assert/strict"
 import { afterEach, describe, it } from "node:test"
-import { client, host as bridgeHost, setHostWindow } from "@xray-network/xray-js-mini-app-bridge"
-import * as cardanoProtocol from "@xray-network/xray-js-mini-app-bridge/cardano"
+import * as bridge from "@xray-network/xray-js-mini-app-bridge"
+import {
+  BridgeError,
+  clientCardanoCip30V1,
+  clientCardanoV1,
+  clientPlatformV1,
+  hostCardanoV1,
+  hostPlatformV1,
+} from "@xray-network/xray-js-mini-app-bridge"
 import * as bridgeReact from "@xray-network/xray-js-mini-app-bridge/react"
-import { createMockHost, dispatchMessageEvent } from "@xray-network/xray-js-mini-app-bridge/testing"
-
-const miniAppClient = client.platform
-const cardanoClient = client.cardano.bridge
-const cardanoCip30Client = client.cardano.cip30
+import {
+  createMockClient,
+  createMockHost,
+  dispatchMessageEvent,
+  setHostWindow,
+} from "@xray-network/xray-js-mini-app-bridge/testing"
 
 const installWindow = () => {
   const target = new EventTarget() as unknown as Window
@@ -17,185 +25,324 @@ const installWindow = () => {
 
 afterEach(() => {
   setHostWindow(null)
+  bridgeReact.platformV1.stores.theme.reset()
+  bridgeReact.platformV1.stores.currency.reset()
+  bridgeReact.platformV1.stores.hideBalances.reset()
+  bridgeReact.platformV1.stores.status.reset()
+  bridgeReact.cardanoV1.stores.tip.reset()
+  bridgeReact.cardanoV1.stores.accountState.reset()
+  bridgeReact.cardanoV1.stores.explorer.reset()
   Reflect.deleteProperty(globalThis, "window")
 })
 
-describe("multiblockchain mini-app bridge", () => {
-  it("exposes compact client, host, and React namespaces", () => {
-    assert.equal(typeof client.platform.handshake, "function")
-    assert.equal(typeof client.cardano.bridge.getTip, "function")
-    assert.equal(typeof client.cardano.cip30.enable, "function")
-    assert.equal(typeof client.cardano.listenAll, "function")
-    assert.equal(typeof bridgeHost.platform.sendHandshake, "function")
-    assert.equal(typeof bridgeHost.cardano.bridge.sendTip, "function")
-    assert.equal(typeof bridgeHost.cardano.cip30.sendEnable, "function")
-    assert.equal(typeof bridgeHost.cardano.listenAll, "function")
-    assert.equal(typeof bridgeReact.useMiniApp, "function")
-    assert.equal(typeof bridgeReact.cardano.bridge.useAccountState, "function")
-    assert.equal(cardanoProtocol.CARDANO_BRIDGE_PROTOCOL, "cardano.bridge")
-    assert.equal(cardanoProtocol.CARDANO_CIP30_PROTOCOL, "cardano.cip30")
-    assert.equal(typeof cardanoProtocol.cardanoClientMessageSchemas, "object")
-    assert.equal(typeof cardanoProtocol.cip30ClientMessageSchemas, "object")
-  })
-
-  it("listens to every Cardano-scoped host and client protocol through one facade", () => {
-    const target = installWindow()
-    const hostWindow = new EventTarget() as unknown as Window
-    const miniAppWindow = new EventTarget() as unknown as Window
-    const context = { blockchain: "cardano", network: "mainnet" } as const
-    const receivedHostTypes: string[] = []
-    const receivedClientTypes: string[] = []
-    setHostWindow(hostWindow)
-
-    const stopClient = client.cardano.listenAll((message) => receivedHostTypes.push(message.type))
-    const stopHost = bridgeHost.cardano.listenAll(miniAppWindow, (message) => receivedClientTypes.push(message.type))
-
-    dispatchMessageEvent(
-      target,
-      { type: "xray.host.theme", payload: "dark", requestId: "host-platform", context },
-      hostWindow
-    )
-    dispatchMessageEvent(
-      target,
-      { type: "xray.cardano.host.tip", payload: null, requestId: "host-bridge", context },
-      hostWindow
-    )
-    dispatchMessageEvent(
-      target,
-      { type: "xray.cardano.cip30.host.isEnabled", payload: true, requestId: "host-cip30", context },
-      hostWindow
-    )
-    dispatchMessageEvent(
-      target,
-      { type: "xray.client.getTheme", payload: null, requestId: "client-platform" },
-      miniAppWindow
-    )
-    dispatchMessageEvent(
-      target,
-      { type: "xray.cardano.client.getTip", payload: null, requestId: "client-bridge" },
-      miniAppWindow
-    )
-    dispatchMessageEvent(
-      target,
-      { type: "xray.cardano.cip30.client.isEnabled", payload: null, requestId: "client-cip30" },
-      miniAppWindow
-    )
-
-    assert.deepEqual(receivedHostTypes, [
-      "xray.host.theme",
-      "xray.cardano.host.tip",
-      "xray.cardano.cip30.host.isEnabled",
+describe("scope-versioned Mini App Bridge", () => {
+  it("exports only direct core and React adapter namespaces", () => {
+    assert.deepEqual(Object.keys(bridge).sort(), [
+      "BridgeError",
+      "clientCardanoCip30V1",
+      "clientCardanoV1",
+      "clientPlatformV1",
+      "hostCardanoCip30V1",
+      "hostCardanoV1",
+      "hostPlatformV1",
     ])
-    assert.deepEqual(receivedClientTypes, [
-      "xray.client.getTheme",
-      "xray.cardano.client.getTip",
-      "xray.cardano.cip30.client.isEnabled",
-    ])
-
-    stopClient()
-    stopHost()
+    assert.deepEqual(Object.keys(bridgeReact).sort(), ["cardanoCip30V1", "cardanoV1", "platformV1"])
+    assert.equal("client" in bridge, false)
+    assert.equal("host" in bridge, false)
+    assert.equal("react" in bridgeReact, false)
+    assert.equal(typeof clientPlatformV1.getTheme, "function")
+    assert.equal(typeof clientCardanoV1.getTip, "function")
+    assert.equal(typeof clientCardanoCip30V1.enable, "function")
+    assert.equal(typeof hostPlatformV1.handle, "function")
+    assert.equal(typeof hostCardanoV1.publish, "function")
   })
 
-  it("requests selected platform state only after a successful handshake", async () => {
-    installWindow()
-    const host = createMockHost({ autoRespond: false })
-    const store = bridgeReact.createMiniAppStore()
-
-    store.ensure("theme")
-    store.ensure("currency")
-    store.ensure("hideBalances")
-
-    assert.deepEqual(
-      host.sent.map((message) => message.type),
-      ["xray.client.handshake"]
-    )
-
-    host.emit("xray.host.handshake", host.state.handshake, host.sent[0]?.requestId)
-    assert.equal(await store.connect(), true)
-    assert.deepEqual(
-      host.sent.map((message) => message.type),
-      ["xray.client.handshake", "xray.client.getTheme", "xray.client.getCurrency", "xray.client.getHideBalances"]
-    )
-
-    host.emit("xray.host.theme", host.state.theme, host.sent[1]?.requestId)
-    host.emit("xray.host.currency", host.state.currency, host.sent[2]?.requestId)
-    host.emit("xray.host.hideBalances", host.state.hideBalances, host.sent[3]?.requestId)
-    await new Promise((resolve) => setTimeout(resolve, 0))
-
-    store.reset()
-    host.destroy()
-  })
-
-  it("keeps the platform connected without a selected account", async () => {
-    installWindow()
-    const host = createMockHost({
-      state: {
-        context: null,
-        handshake: { protocolVersion: 1, protocols: [] },
-      },
-    })
-    const store = bridgeReact.createMiniAppStore()
-
-    assert.equal(await store.connect(), true)
-    assert.equal(store.isConnected(), true)
-    assert.equal(store.get("hostContext"), null)
-    assert.deepEqual(store.get("protocols"), [])
-
-    await store.refresh("theme")
-    assert.equal(store.get("theme"), "light")
-    assert.equal(store.get("hostContext"), null)
-
-    const accountlessHandshake = await miniAppClient.handshake()
-    assert.equal(accountlessHandshake?.context, null)
-    assert.deepEqual(accountlessHandshake?.payload.protocols, [])
-
-    store.reset()
-    host.destroy()
-  })
-
-  it("separates platform, Cardano bridge, and CIP-30 requests", async () => {
+  it("stamps each client request with its independent scope and version", async () => {
     installWindow()
     const host = createMockHost()
 
-    const handshake = await miniAppClient.handshake()
-    assert.deepEqual(handshake?.payload, {
-      protocolVersion: 1,
-      protocols: ["cardano.bridge", "cardano.cip30"],
+    assert.equal((await clientPlatformV1.getTheme())?.payload, "light")
+    assert.deepEqual(await clientPlatformV1.getStatus(), {
+      host: "xray.app",
+      account: { blockchain: "cardano", network: "preprod" },
     })
-    assert.equal(handshake?.context?.blockchain, "cardano")
+    assert.equal((await clientCardanoV1.getTip())?.payload?.blockNo, 10_000_000)
+    assert.equal(await clientCardanoCip30V1.isEnabled(), true)
 
-    const tip = await cardanoClient.getTip()
-    assert.equal(tip?.payload?.blockNo, 10_000_000)
-    assert.equal(tip?.context.blockchain, "cardano")
-
-    assert.equal(await cardanoCip30Client.isEnabled(), true)
-    assert.deepEqual(cardanoCip30Client.supportedExtensions, [])
-    assert.equal(cardanoCip30Client.installConnector(), cardanoCip30Client.connector)
-    assert.equal(
-      (window as Window & { cardano?: { xrayBridge?: unknown } }).cardano?.xrayBridge,
-      cardanoCip30Client.connector
+    assert.deepEqual(
+      host.sent.map(({ type, scope, version, method }) => ({ type, scope, version, method })),
+      [
+        { type: "xray.bridge.request", scope: "platform", version: "v1", method: "getTheme" },
+        { type: "xray.bridge.request", scope: "platform", version: "v1", method: "getStatus" },
+        { type: "xray.bridge.request", scope: "cardano", version: "v1", method: "getTip" },
+        { type: "xray.bridge.request", scope: "cardano-cip30", version: "v1", method: "isEnabled" },
+      ]
     )
-    await cardanoCip30Client.api.getCollateral({ amount: "1a4c4b40" })
-    assert.deepEqual(host.sent.at(-1)?.payload, { amount: "1a4c4b40" })
-
     host.destroy()
   })
 
-  it("maps correlated host failures to CIP-30 errors", async () => {
+  it("retains every platform, Cardano, and CIP-30 operation without a handshake", async () => {
+    installWindow()
+    const host = createMockHost()
+
+    const [theme, currency, hideBalances, tip, account, explorer, signed, submitted, signedAndSubmitted, signedData] =
+      await Promise.all([
+        clientPlatformV1.getTheme(),
+        clientPlatformV1.getCurrency(),
+        clientPlatformV1.getHideBalances(),
+        clientCardanoV1.getTip(),
+        clientCardanoV1.getAccountState(),
+        clientCardanoV1.getExplorer(),
+        clientCardanoV1.signTx("tx"),
+        clientCardanoV1.submitTx("tx"),
+        clientCardanoV1.signAndSubmitTx("tx"),
+        clientCardanoV1.signData("addr", "data"),
+      ])
+    assert.equal(theme?.payload, "light")
+    assert.equal(currency?.payload, "usd")
+    assert.equal(hideBalances?.payload, false)
+    assert.equal(tip?.payload?.blockNo, 10_000_000)
+    assert.equal(account?.payload?.paymentAddress, "addr1_mock_payment_address")
+    assert.equal(explorer?.payload, "cexplorer")
+    assert.equal(signed?.payload.success, true)
+    assert.equal(submitted?.payload.success, true)
+    assert.equal(signedAndSubmitted?.payload.success, true)
+    assert.equal(signedData?.payload.success, true)
+    assert.equal(clientPlatformV1.routeChanged("/swap"), true)
+
+    assert.equal(await clientCardanoCip30V1.isEnabled(), true)
+    const wallet = await clientCardanoCip30V1.enable()
+    assert.deepEqual(await wallet.getExtensions(), [{ cip: 30 }])
+    assert.equal(await wallet.getNetworkId(), 0)
+    assert.deepEqual(await wallet.getUtxos(), [])
+    assert.deepEqual(await wallet.getCollateral({ amount: "1a" }), [])
+    assert.equal(await wallet.getBalance(), "1a3b9aca00")
+    assert.deepEqual(await wallet.getUsedAddresses(), ["addr1_mock_used"])
+    assert.deepEqual(await wallet.getUnusedAddresses(), ["addr1_mock_unused"])
+    assert.equal(await wallet.getChangeAddress(), "addr1_mock_change")
+    assert.deepEqual(await wallet.getRewardAddresses(), ["stake1_mock_reward"])
+    assert.equal(await wallet.signTx("tx"), "84a300_mock_signed_tx")
+    assert.deepEqual(await wallet.signData("addr", "data"), {
+      key: "mock_key",
+      signature: "mock_signature",
+    })
+    assert.equal(await wallet.submitTx("tx"), "e".repeat(64))
+    assert.equal(
+      host.sent.some(({ method }) => method === "enable"),
+      true
+    )
+    assert.equal(
+      host.sent.some(({ type }) => type.includes("handshake")),
+      false
+    )
+    host.destroy()
+  })
+
+  it("routes host handlers and publications through exact adapter versions", async () => {
+    const target = installWindow()
+    const client = createMockClient({ target })
+    const context = { blockchain: "cardano", network: "preview" } as const
+    const stops = [
+      hostPlatformV1.handle(client.clientWindow, "getTheme", () => ({ result: "dark", context })),
+      hostCardanoV1.handle(client.clientWindow, "getTip", () => ({
+        result: {
+          hash: "a".repeat(64),
+          epochNo: 1,
+          absSlot: 2,
+          epochSlot: 3,
+          blockNo: 4,
+          blockTime: 5,
+        },
+        context,
+      })),
+    ]
+
+    const themeRequestId = client.send("platform", "getTheme", null)
+    const theme = await client.waitFor(
+      (message) => message.type === "xray.bridge.response" && message.requestId === themeRequestId
+    )
+    assert.deepEqual(theme, {
+      type: "xray.bridge.response",
+      scope: "platform",
+      version: "v1",
+      requestId: themeRequestId,
+      result: "dark",
+      context,
+    })
+
+    hostCardanoV1.publish(client.clientWindow, "tip", null, context)
+    const event = await client.waitFor((message) => message.type === "xray.bridge.event")
+    assert.deepEqual(event, {
+      type: "xray.bridge.event",
+      scope: "cardano",
+      version: "v1",
+      event: "tip",
+      payload: null,
+      context,
+    })
+    stops.forEach((stop) => stop())
+  })
+
+  it("returns immediate typed routing errors and ignores wrong sources", async () => {
+    const target = installWindow()
+    const client = createMockClient({ target })
+    const stop = hostPlatformV1.listen(client.clientWindow, () => undefined)
+
+    const unsupportedScope = client.send("cardano", "getTip", null)
+    const scopeError = await client.waitFor(
+      (message) => message.type === "xray.bridge.response" && message.requestId === unsupportedScope
+    )
+    assert.equal(scopeError.type, "xray.bridge.response")
+    assert.equal("error" in scopeError && scopeError.error.code, "UNSUPPORTED_SCOPE_VERSION")
+
+    const unsupportedMethod = client.send("platform", "missing", null)
+    const methodError = await client.waitFor(
+      (message) => message.type === "xray.bridge.response" && message.requestId === unsupportedMethod
+    )
+    assert.equal(methodError.type, "xray.bridge.response")
+    assert.equal("error" in methodError && methodError.error.code, "UNSUPPORTED_METHOD")
+
+    const invalidPayload = client.send("platform", "getTheme", "invalid")
+    const invalidError = await client.waitFor(
+      (message) => message.type === "xray.bridge.response" && message.requestId === invalidPayload
+    )
+    assert.equal(invalidError.type, "xray.bridge.response")
+    assert.equal("error" in invalidError && invalidError.error.code, "INVALID_REQUEST")
+
+    dispatchMessageEvent(
+      target,
+      {
+        type: "xray.bridge.request",
+        scope: "platform",
+        version: "v1",
+        method: "getTheme",
+        requestId: "wrong-source",
+        payload: null,
+      },
+      {} as Window
+    )
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    assert.equal(
+      client.received.some(
+        (message) => message.type === "xray.bridge.response" && message.requestId === "wrong-source"
+      ),
+      false
+    )
+    stop()
+  })
+
+  it("accepts supported unhandled methods without manufacturing a response", async () => {
+    const target = installWindow()
+    const client = createMockClient({ target })
+    const stop = hostPlatformV1.listen(client.clientWindow, () => undefined)
+    client.send("platform", "getTheme", null, "accepted-unanswered")
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    assert.equal(client.received.length, 0)
+    stop()
+  })
+
+  it("preserves client timeout behavior for a host that does not answer", async () => {
     installWindow()
     const host = createMockHost({ autoRespond: false })
+    assert.equal(await clientPlatformV1.getTheme(5), null)
+    host.destroy()
+  })
 
-    const balance = cardanoCip30Client.api.getBalance()
+  it("filters events by source, scope, version, event, payload, and context", () => {
+    const target = installWindow()
+    const host = createMockHost({ target })
+    const themes: string[] = []
+    const stop = clientPlatformV1.listen("theme", ({ payload }) => themes.push(payload))
+
+    host.emit("platform", "theme", "dark")
+    host.emit("cardano", "theme", "light")
+    dispatchMessageEvent(
+      target,
+      {
+        type: "xray.bridge.event",
+        scope: "platform",
+        version: "v2",
+        event: "theme",
+        payload: "light",
+        context: host.state.status.account,
+      },
+      host.hostWindow
+    )
+    dispatchMessageEvent(
+      target,
+      {
+        type: "xray.bridge.event",
+        scope: "platform",
+        version: "v1",
+        event: "theme",
+        payload: "invalid",
+        context: host.state.status.account,
+      },
+      host.hostWindow
+    )
+    assert.deepEqual(themes, ["dark"])
+    stop()
+    host.destroy()
+  })
+
+  it("preserves CIP-30 connector behavior and maps typed host failures", async () => {
+    installWindow()
+    const host = createMockHost({ autoRespond: false })
+    assert.equal(clientCardanoCip30V1.installConnector(), clientCardanoCip30V1.connector)
+    assert.equal(clientCardanoCip30V1.installConnector(), clientCardanoCip30V1.connector)
+    assert.equal(
+      (window as Window & { cardano?: Record<string, unknown> }).cardano?.xrayBridge,
+      clientCardanoCip30V1.connector
+    )
+
+    const pending = clientCardanoCip30V1.api.getBalance()
     const requestId = host.sent.at(-1)?.requestId
     assert.equal(typeof requestId, "string")
-    host.emit("xray.cardano.cip30.host.error", { code: -3, info: "Access refused" }, requestId)
-
-    await assert.rejects(balance, (error: unknown) => {
+    host.fail(requestId!, {
+      code: "HOST_ERROR",
+      message: "Access refused",
+      data: { code: -3, info: "Access refused" },
+    })
+    await assert.rejects(pending, (error: unknown) => {
       assert.equal((error as { code?: number }).code, -3)
       assert.equal((error as { info?: string }).info, "Access refused")
       return true
     })
-
     host.destroy()
+  })
+
+  it("loads React stores lazily, deduplicates refreshes, and identifies an accountless XRAY host", async () => {
+    installWindow()
+    const host = createMockHost({ state: { status: { host: "xray.app", account: null } } })
+    const store = bridgeReact.platformV1.stores.status
+    assert.deepEqual(store.getSnapshot().data, undefined)
+    assert.equal(host.sent.length, 0)
+
+    const stopFirst = store.subscribe(() => undefined)
+    const stopSecond = store.subscribe(() => undefined)
+    assert.equal(host.sent.length, 1)
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    assert.deepEqual(store.getSnapshot().data, { host: "xray.app", account: null })
+    assert.equal(store.getSnapshot().loading, false)
+    assert.equal(store.getSnapshot().error, undefined)
+
+    const firstRefresh = store.refresh()
+    const secondRefresh = store.refresh()
+    assert.equal(firstRefresh, secondRefresh)
+    await firstRefresh
+    stopFirst()
+    stopSecond()
+    host.emit("platform", "status", {
+      host: "xray.app",
+      account: { blockchain: "cardano", network: "mainnet" },
+    })
+    assert.deepEqual(store.getSnapshot().data, { host: "xray.app", account: null })
+    host.destroy()
+  })
+
+  it("uses BridgeError for generic host routing failures", () => {
+    const error = new BridgeError("UNSUPPORTED_METHOD", "unsupported")
+    assert.equal(error.name, "BridgeError")
+    assert.equal(error.code, "UNSUPPORTED_METHOD")
   })
 })

@@ -51,12 +51,6 @@
       "import": "./dist/esm/mini-app-bridge-testing.js",
       "default": "./dist/esm/mini-app-bridge-testing.js"
     },
-    "./mini-app-bridge/cardano": {
-      "types": "./dist/esm/mini-app-bridge-cardano.d.ts",
-      "browser": "./dist/esm/mini-app-bridge-cardano.js",
-      "import": "./dist/esm/mini-app-bridge-cardano.js",
-      "default": "./dist/esm/mini-app-bridge-cardano.js"
-    },
     "./package.json": "./package.json"
   },
   "files": [

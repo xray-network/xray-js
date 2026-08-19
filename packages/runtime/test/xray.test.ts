@@ -3,7 +3,9 @@ import { describe, it } from "node:test"
 import * as cardanoApplication from "@xray-network/xray-js/cardano"
 import * as cardanoLib from "@xray-network/xray-js/cardano/lib"
 import { createInMemoryProvider } from "@xray-network/xray-js/cardano/testing"
-import * as cardanoBridge from "@xray-network/xray-js/mini-app-bridge/cardano"
+import * as miniAppBridge from "@xray-network/xray-js/mini-app-bridge"
+import * as miniAppBridgeReact from "@xray-network/xray-js/mini-app-bridge/react"
+import * as miniAppBridgeTesting from "@xray-network/xray-js/mini-app-bridge/testing"
 
 describe("Cardano application entry", () => {
   it("creates isolated Cardano clients synchronously", () => {
@@ -44,11 +46,20 @@ describe("Cardano package boundaries", () => {
   })
 })
 
-describe("Mini App Bridge Cardano contract", () => {
-  it("exposes Cardano Bridge and CIP-30 from one subpath", () => {
-    assert.equal(cardanoBridge.CARDANO_BRIDGE_PROTOCOL, "cardano.bridge")
-    assert.equal(cardanoBridge.CARDANO_CIP30_PROTOCOL, "cardano.cip30")
-    assert.equal(typeof cardanoBridge.cardanoHostMessageSchemas, "object")
-    assert.equal(typeof cardanoBridge.cip30HostMessageSchemas, "object")
+describe("Mini App Bridge boundaries", () => {
+  it("mirrors direct versioned adapters and optional entries", () => {
+    assert.deepEqual(Object.keys(miniAppBridge).sort(), [
+      "BridgeError",
+      "clientCardanoCip30V1",
+      "clientCardanoV1",
+      "clientPlatformV1",
+      "hostCardanoCip30V1",
+      "hostCardanoV1",
+      "hostPlatformV1",
+    ])
+    assert.deepEqual(Object.keys(miniAppBridgeReact).sort(), ["cardanoCip30V1", "cardanoV1", "platformV1"])
+    assert.equal(typeof miniAppBridgeTesting.createMockHost, "function")
+    assert.equal("client" in miniAppBridge, false)
+    assert.equal("host" in miniAppBridge, false)
   })
 })
