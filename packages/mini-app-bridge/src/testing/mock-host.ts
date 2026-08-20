@@ -1,4 +1,4 @@
-import type { AccountState, CardanoContext, Tip } from "../adapters/cardano/v1/contract.js"
+import type { AccountState, CardanoContext, Explorer, Tip } from "../adapters/cardano/v1/contract.js"
 import type { Currency, PlatformIdentity, Theme } from "../adapters/platform/v1/contract.js"
 import { setHostWindow } from "../transport/client.js"
 import {
@@ -17,7 +17,7 @@ export type MockHostState = {
   hideBalances: boolean
   tip: Tip
   accountState: AccountState
-  explorer: "cardanoscan" | "cexplorer" | "adastat" | "xray"
+  explorer: Explorer
   signTx: { success: boolean; hash: string }
   submitTx: { success: true; hash: string } | { success: false; error: string }
   signAndSubmitTx: { success: true; hash: string } | { success: false; error: string }

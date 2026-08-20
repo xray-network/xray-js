@@ -25,6 +25,10 @@ const stop = clientCardanoV1.listen("accountState", ({ payload, context }) => {
 Calls return correlated `{ payload, context, requestId }` responses or `null` on timeout. Every successful Cardano
 response and event has a non-null Cardano context.
 
+Explorer identifiers are host-controlled nonempty strings. Existing values include `cardanoscan`, `cexplorer`,
+`adastat`, and `xray`, but clients must handle unfamiliar identifiers generically. Adding another identifier does not
+change the Cardano v1 schema or require a new protocol version.
+
 ## Host
 
 ```ts

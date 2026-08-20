@@ -285,6 +285,49 @@ describe("scope-versioned Mini App Bridge", () => {
     host.destroy()
   })
 
+  it("accepts future explorer identifiers and rejects invalid explorer values", async () => {
+    const target = installWindow()
+    const host = createMockHost({ target, state: { explorer: "future-explorer" } })
+
+    assert.equal((await clientCardanoV1.getExplorer())?.payload, "future-explorer")
+
+    const store = bridgeReact.cardanoV1.stores.explorer
+    const stop = store.subscribe(() => undefined)
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    assert.equal(store.getSnapshot().data, "future-explorer")
+
+    host.emit("cardano", "explorer", "another-explorer")
+    assert.equal(store.getSnapshot().data, "another-explorer")
+    host.emit("cardano", "explorer", "")
+    host.emit("cardano", "explorer", 42)
+    assert.equal(store.getSnapshot().data, "another-explorer")
+    stop()
+    host.destroy()
+
+    const invalidHost = createMockHost({ target, autoRespond: false })
+    const expectInvalidResultToTimeout = async (result: unknown) => {
+      const pending = clientCardanoV1.getExplorer(10)
+      const requestId = invalidHost.sent.at(-1)?.requestId
+      assert.equal(typeof requestId, "string")
+      dispatchMessageEvent(
+        target,
+        {
+          type: "xray.bridge.response",
+          scope: "cardano",
+          version: "v1",
+          requestId: requestId!,
+          result,
+          context: invalidHost.state.context,
+        },
+        invalidHost.hostWindow
+      )
+      assert.equal(await pending, null)
+    }
+    await expectInvalidResultToTimeout("")
+    await expectInvalidResultToTimeout(42)
+    invalidHost.destroy()
+  })
+
   it("preserves CIP-30 connector behavior and maps typed host failures", async () => {
     installWindow()
     const host = createMockHost({ autoRespond: false })

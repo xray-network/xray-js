@@ -65,7 +65,7 @@ export const accountStateSchema = z
   .nullable()
 export type AccountState = z.infer<typeof accountStateSchema>
 
-export const explorerSchema = z.enum(["cardanoscan", "cexplorer", "adastat", "xray"])
+export const explorerSchema = z.string().min(1)
 export type Explorer = z.infer<typeof explorerSchema>
 
 export const signTxResultSchema = z.object({ success: z.boolean(), hash: z.string() })
