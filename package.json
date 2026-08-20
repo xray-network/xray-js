@@ -1,5 +1,5 @@
 {
-  "name": "xray-js-monorepo",
+  "name": "@xray-network/xray-js-workspace",
   "version": "0.0.0",
   "private": true,
   "packageManager": "npm@10.8.2",
