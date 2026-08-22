@@ -24,6 +24,7 @@ import {
 
 ```ts
 const status = await clientPlatformV1.getStatus()
+const locale = await clientPlatformV1.getLocale()
 
 if (status?.context?.blockchain === "cardano") {
   const tip = await clientCardanoV1.getTip()
@@ -39,6 +40,11 @@ console.log(await wallet.getNetworkId())
 ```ts
 const account = { blockchain: "cardano", network: "preview" } as const
 const identity = { host: "xray.app" } as const
+
+const stopLocale = hostPlatformV1.handle(iframe.contentWindow, "getLocale", () => ({
+  result: "en",
+  context: account,
+}))
 
 const stopTheme = hostPlatformV1.handle(iframe.contentWindow, "getTheme", () => ({
   result: "dark",

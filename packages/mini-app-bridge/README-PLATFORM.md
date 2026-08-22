@@ -11,6 +11,7 @@ import { clientPlatformV1 } from "@xray-network/xray-js/mini-app-bridge"
 const status = await clientPlatformV1.getStatus()
 const theme = await clientPlatformV1.getTheme()
 const currency = await clientPlatformV1.getCurrency()
+const locale = await clientPlatformV1.getLocale()
 const hideBalances = await clientPlatformV1.getHideBalances()
 
 clientPlatformV1.routeChanged("/swap")
@@ -32,6 +33,11 @@ import { hostPlatformV1 } from "@xray-network/xray-js/mini-app-bridge"
 const account = { blockchain: "cardano", network: "preview" } as const
 const identity = { host: "xray.app" } as const
 
+const stopLocale = hostPlatformV1.handle(iframe.contentWindow, "getLocale", () => ({
+  result: "en",
+  context: account,
+}))
+
 const stop = hostPlatformV1.handle(iframe.contentWindow, "getStatus", () => ({
   result: identity,
   context: account,
@@ -45,8 +51,9 @@ hostPlatformV1.publish(iframe.contentWindow, "status", identity, account)
 handler marks `platform/v1` as supported for that iframe. Unknown methods receive `UNSUPPORTED_METHOD`; unknown
 scope/version pairs receive `UNSUPPORTED_SCOPE_VERSION`.
 
-Platform methods are `getTheme`, `getCurrency`, `getHideBalances`, `getStatus`, and `routeChanged`. Events are `theme`,
-`currency`, `hideBalances`, `status`, and `routeChanged`.
+Platform methods are `getTheme`, `getCurrency`, `getLocale`, `getHideBalances`, `getStatus`, and `routeChanged`. Locale
+is a host-owned, nonempty BCP 47 identifier such as `en`; it is request-only and has no Platform v1 event or React
+hook. Events are `theme`, `currency`, `hideBalances`, `status`, and `routeChanged`.
 
 ## React
 

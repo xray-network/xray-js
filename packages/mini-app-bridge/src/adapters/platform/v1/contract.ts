@@ -23,6 +23,9 @@ export type Theme = z.infer<typeof themeSchema>
 export const currencySchema = z.enum(["usd", "eur", "gbp", "jpy", "cny"])
 export type Currency = z.infer<typeof currencySchema>
 
+export const localeSchema = z.string().min(1)
+export type Locale = z.infer<typeof localeSchema>
+
 export const hideBalancesSchema = z.boolean()
 export const routeSchema = z.string()
 
@@ -32,6 +35,7 @@ export const platformV1Contract = {
   methods: {
     getTheme: { request: z.null(), result: themeSchema },
     getCurrency: { request: z.null(), result: currencySchema },
+    getLocale: { request: z.null(), result: localeSchema },
     getHideBalances: { request: z.null(), result: hideBalancesSchema },
     getStatus: { request: z.null(), result: platformIdentitySchema },
     routeChanged: { request: routeSchema, result: z.null() },

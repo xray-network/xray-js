@@ -44,6 +44,7 @@ Target: mini-app-bridge
 | `0013` | Simplify bridge adapter scopes | [Instruction](./implementations/mini-app-bridge/0013-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0013-IMPL-RESULT.md) | `LOCAL` | Platform status now identifies `xray.app` and its nullable account without a handshake; packaging and all validations pass and await human review. |
 | `0014` | Normalize platform status envelope | [Instruction](./implementations/mini-app-bridge/0014-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0014-IMPL-RESULT.md) | `LOCAL` | Normalized raw status envelopes and unchanged React projection validate across the SDK and await human review. |
 | `0015` | Open Cardano explorer identifiers | [Instruction](./implementations/mini-app-bridge/0015-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0015-IMPL-RESULT.md) | `LOCAL` | Open nonempty explorer identifiers and full SDK validation pass and await human review. |
+| `0016` | Expose platform locale | [Instruction](./implementations/mini-app-bridge/0016-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0016-IMPL-RESULT.md) | `LOCAL` | Typed request-only locale contract, mocks, tests, docs, and full SDK validation pass and await human review. |
 
 ## Repository implementation status
 

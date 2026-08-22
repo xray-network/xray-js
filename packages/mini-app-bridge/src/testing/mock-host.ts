@@ -1,5 +1,5 @@
 import type { AccountState, CardanoContext, Explorer, Tip } from "../adapters/cardano/v1/contract.js"
-import type { Currency, PlatformIdentity, Theme } from "../adapters/platform/v1/contract.js"
+import type { Currency, Locale, PlatformIdentity, Theme } from "../adapters/platform/v1/contract.js"
 import { setHostWindow } from "../transport/client.js"
 import {
   requestMessageSchema,
@@ -14,6 +14,7 @@ export type MockHostState = {
   context: CardanoContext | null
   theme: Theme
   currency: Currency
+  locale: Locale
   hideBalances: boolean
   tip: Tip
   accountState: AccountState
@@ -63,6 +64,7 @@ export const defaultMockHostState: MockHostState = {
   context: { blockchain: "cardano", network: "preprod" },
   theme: "light",
   currency: "usd",
+  locale: "en",
   hideBalances: false,
   tip: mockTip,
   accountState: mockAccountState,
@@ -94,6 +96,7 @@ const responseFor = (state: MockHostState, request: RequestMessage): unknown => 
     const values = {
       getTheme: state.theme,
       getCurrency: state.currency,
+      getLocale: state.locale,
       getHideBalances: state.hideBalances,
       getStatus: state.status,
       routeChanged: null,

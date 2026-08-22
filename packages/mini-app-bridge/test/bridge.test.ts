@@ -51,6 +51,7 @@ describe("scope-versioned Mini App Bridge", () => {
     assert.equal("host" in bridge, false)
     assert.equal("react" in bridgeReact, false)
     assert.equal(typeof clientPlatformV1.getTheme, "function")
+    assert.equal(typeof clientPlatformV1.getLocale, "function")
     assert.equal(typeof clientCardanoV1.getTip, "function")
     assert.equal(typeof clientCardanoCip30V1.enable, "function")
     assert.equal(typeof hostPlatformV1.handle, "function")
@@ -62,6 +63,7 @@ describe("scope-versioned Mini App Bridge", () => {
     const host = createMockHost()
 
     assert.equal((await clientPlatformV1.getTheme())?.payload, "light")
+    assert.equal((await clientPlatformV1.getLocale())?.payload, "en")
     const status = await clientPlatformV1.getStatus()
     assert.deepEqual(status?.payload, { host: "xray.app" })
     assert.deepEqual(status?.context, { blockchain: "cardano", network: "preprod" })
@@ -73,6 +75,7 @@ describe("scope-versioned Mini App Bridge", () => {
       host.sent.map(({ type, scope, version, method }) => ({ type, scope, version, method })),
       [
         { type: "xray.bridge.request", scope: "platform", version: "v1", method: "getTheme" },
+        { type: "xray.bridge.request", scope: "platform", version: "v1", method: "getLocale" },
         { type: "xray.bridge.request", scope: "platform", version: "v1", method: "getStatus" },
         { type: "xray.bridge.request", scope: "cardano", version: "v1", method: "getTip" },
         { type: "xray.bridge.request", scope: "cardano-cip30", version: "v1", method: "isEnabled" },
@@ -85,21 +88,34 @@ describe("scope-versioned Mini App Bridge", () => {
     installWindow()
     const host = createMockHost()
 
-    const [theme, currency, hideBalances, tip, account, explorer, signed, submitted, signedAndSubmitted, signedData] =
-      await Promise.all([
-        clientPlatformV1.getTheme(),
-        clientPlatformV1.getCurrency(),
-        clientPlatformV1.getHideBalances(),
-        clientCardanoV1.getTip(),
-        clientCardanoV1.getAccountState(),
-        clientCardanoV1.getExplorer(),
-        clientCardanoV1.signTx("tx"),
-        clientCardanoV1.submitTx("tx"),
-        clientCardanoV1.signAndSubmitTx("tx"),
-        clientCardanoV1.signData("addr", "data"),
-      ])
+    const [
+      theme,
+      currency,
+      locale,
+      hideBalances,
+      tip,
+      account,
+      explorer,
+      signed,
+      submitted,
+      signedAndSubmitted,
+      signedData,
+    ] = await Promise.all([
+      clientPlatformV1.getTheme(),
+      clientPlatformV1.getCurrency(),
+      clientPlatformV1.getLocale(),
+      clientPlatformV1.getHideBalances(),
+      clientCardanoV1.getTip(),
+      clientCardanoV1.getAccountState(),
+      clientCardanoV1.getExplorer(),
+      clientCardanoV1.signTx("tx"),
+      clientCardanoV1.submitTx("tx"),
+      clientCardanoV1.signAndSubmitTx("tx"),
+      clientCardanoV1.signData("addr", "data"),
+    ])
     assert.equal(theme?.payload, "light")
     assert.equal(currency?.payload, "usd")
+    assert.equal(locale?.payload, "en")
     assert.equal(hideBalances?.payload, false)
     assert.equal(tip?.payload?.blockNo, 10_000_000)
     assert.equal(account?.payload?.paymentAddress, "addr1_mock_payment_address")
@@ -144,6 +160,7 @@ describe("scope-versioned Mini App Bridge", () => {
     const context = { blockchain: "cardano", network: "preview" } as const
     const stops = [
       hostPlatformV1.handle(client.clientWindow, "getTheme", () => ({ result: "dark", context })),
+      hostPlatformV1.handle(client.clientWindow, "getLocale", () => ({ result: "en", context })),
       hostCardanoV1.handle(client.clientWindow, "getTip", () => ({
         result: {
           hash: "a".repeat(64),
@@ -167,6 +184,19 @@ describe("scope-versioned Mini App Bridge", () => {
       version: "v1",
       requestId: themeRequestId,
       result: "dark",
+      context,
+    })
+
+    const localeRequestId = client.send("platform", "getLocale", null)
+    const locale = await client.waitFor(
+      (message) => message.type === "xray.bridge.response" && message.requestId === localeRequestId
+    )
+    assert.deepEqual(locale, {
+      type: "xray.bridge.response",
+      scope: "platform",
+      version: "v1",
+      requestId: localeRequestId,
+      result: "en",
       context,
     })
 
@@ -245,7 +275,38 @@ describe("scope-versioned Mini App Bridge", () => {
     installWindow()
     const host = createMockHost({ autoRespond: false })
     assert.equal(await clientPlatformV1.getTheme(5), null)
+    assert.equal(await clientPlatformV1.getLocale(5), null)
     host.destroy()
+  })
+
+  it("accepts nonempty locales and rejects invalid locale results", async () => {
+    const target = installWindow()
+    const host = createMockHost({ target, state: { locale: "en-US" } })
+    assert.equal((await clientPlatformV1.getLocale())?.payload, "en-US")
+    host.destroy()
+
+    const invalidHost = createMockHost({ target, autoRespond: false })
+    const expectInvalidResultToTimeout = async (result: unknown) => {
+      const pending = clientPlatformV1.getLocale(10)
+      const requestId = invalidHost.sent.at(-1)?.requestId
+      assert.equal(typeof requestId, "string")
+      dispatchMessageEvent(
+        target,
+        {
+          type: "xray.bridge.response",
+          scope: "platform",
+          version: "v1",
+          requestId: requestId!,
+          result,
+          context: invalidHost.state.context,
+        },
+        invalidHost.hostWindow
+      )
+      assert.equal(await pending, null)
+    }
+    await expectInvalidResultToTimeout("")
+    await expectInvalidResultToTimeout(42)
+    invalidHost.destroy()
   })
 
   it("filters events by source, scope, version, event, payload, and context", () => {
