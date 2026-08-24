@@ -42,19 +42,19 @@ export const getTransactionBuilder = (
 }
 
 export const assetsToValue = (value?: CardanoTypes.Value, assets?: CardanoTypes.Asset[]): CardanoLib.Value => {
-  const multiAsset = CardanoLib.MultiAsset.new()
+  const coin = value ?? 0n
+  if (!assets?.length) return CardanoLib.Value.from_coin(coin)
 
-  if (assets) {
-    for (const asset of assets) {
-      const policyId = ScriptHash.from_hex(asset.policyId)
-      const assetName = CardanoLib.AssetName.from_raw_bytes(fromHex(asset.assetName || ""))
-      const policyAssets = multiAsset.get_assets(policyId) ?? CardanoLib.MapAssetNameToCoin.new()
-      policyAssets.insert(assetName, asset.quantity)
-      multiAsset.insert_assets(policyId, policyAssets)
-    }
+  const multiAsset = CardanoLib.MultiAsset.new()
+  for (const asset of assets) {
+    const policyId = ScriptHash.from_hex(asset.policyId)
+    const assetName = CardanoLib.AssetName.from_raw_bytes(fromHex(asset.assetName || ""))
+    const policyAssets = multiAsset.get_assets(policyId) ?? CardanoLib.MapAssetNameToCoin.new()
+    policyAssets.insert(assetName, asset.quantity)
+    multiAsset.insert_assets(policyId, policyAssets)
   }
 
-  return CardanoLib.Value.new(value || 0n, multiAsset)
+  return CardanoLib.Value.new(coin, multiAsset)
 }
 
 export const utxoToCore = (utxo: CardanoTypes.Utxo): CardanoLib.TransactionUnspentOutput => {

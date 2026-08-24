@@ -51,3 +51,7 @@ const key = cardanoLib.crypto.PrivateKey.from_bech32(privateKeyBech32)
 
 The application entry does not duplicate low-level `cips`, `crypto`, `plutus`, or ledger primitives. Import
 `/cardano/lib` only when those APIs are required.
+
+Transaction conversions construct ADA-only values with the coin-only CBOR form; the `[coin, multiasset]` form is
+reserved for values containing tokens. Caller-supplied transaction CBOR remains lossless during inspection and
+signing. Rebuild an existing transaction explicitly if its ADA-only outputs contain an empty multi-asset map.

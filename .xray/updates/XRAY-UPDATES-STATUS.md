@@ -20,6 +20,7 @@ Target: cardano
 | `0006` | Group Cardano application exports | [Instruction](./implementations/cardano/0006-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/cardano/0006-IMPL-RESULT.md) | `LOCAL` | Grouped application and low-level boundaries, tests, docs, and every active downstream build pass. |
 | `0007` | Isolate Cardano Lib exports | [Instruction](./implementations/cardano/0007-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/cardano/0007-IMPL-RESULT.md) | `LOCAL` | Strict application/library exports and all downstream validations pass and await human review. |
 | `0008` | Group Cardano utilities | [Instruction](./implementations/cardano/0008-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/cardano/0008-IMPL-RESULT.md) | `LOCAL` | Grouped utility exports, internal ownership cleanup, downstream migration, and complete validation await human review. |
+| `0009` | Construct canonical ADA-only values | [Instruction](./implementations/cardano/0009-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/cardano/0009-IMPL-RESULT.md) | `LOCAL` | Canonical conversion boundaries, Eternl regression coverage, lossless signing, and downstream XRAY App validation pass. |
 
 ## Mini App Bridge implementation status
 
