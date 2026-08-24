@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react"
 import { createRemoteStore, useRemoteStore } from "../../../react/remote-store.js"
 import * as client from "./client.js"
+import type { AccountState } from "./contract.js"
 
 const required = async <Value>(load: () => Promise<{ payload: Value } | null>) => {
   const response = await load()
@@ -12,9 +13,45 @@ const tipStore = createRemoteStore(
   () => required(client.getTip),
   (receive) => client.listen("tip", ({ payload }) => receive(payload))
 )
+
+const equalAccountStateValue = (left: unknown, right: unknown): boolean => {
+  if (Object.is(left, right)) return true
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) => equalAccountStateValue(value, right[index]))
+    )
+  }
+  if (typeof left !== "object" || left === null || typeof right !== "object" || right === null) return false
+  const leftRecord = left as Record<string, unknown>
+  const rightRecord = right as Record<string, unknown>
+  const leftKeys = Object.keys(leftRecord)
+  const rightKeys = Object.keys(rightRecord)
+  return (
+    leftKeys.length === rightKeys.length &&
+    leftKeys.every(
+      (key) =>
+        Object.prototype.hasOwnProperty.call(rightRecord, key) &&
+        equalAccountStateValue(leftRecord[key], rightRecord[key])
+    )
+  )
+}
+
+const ACCOUNT_STATE_RETRY_DELAYS = [250, 500, 1_000, 2_000] as const
+
 const accountStateStore = createRemoteStore(
   () => required(client.getAccountState),
-  (receive) => client.listen("accountState", ({ payload }) => receive(payload))
+  (receive) => client.listen("accountState", ({ payload }) => receive(payload)),
+  {
+    equals: equalAccountStateValue,
+    retry: {
+      delays: ACCOUNT_STATE_RETRY_DELAYS,
+      shouldRetry: (value: AccountState) => value?.balanceStatus === "initializing",
+      exhaustedError: () => new Error("XRAY Cardano account balance did not become ready"),
+    },
+  }
 )
 const explorerStore = createRemoteStore(
   () => required(client.getExplorer),

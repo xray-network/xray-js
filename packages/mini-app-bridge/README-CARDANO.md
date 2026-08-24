@@ -25,6 +25,11 @@ const stop = clientCardanoV1.listen("accountState", ({ payload, context }) => {
 Calls return correlated `{ payload, context, requestId }` responses or `null` on timeout. Every successful Cardano
 response and event has a non-null Cardano context.
 
+Every non-null account snapshot has a required `balanceStatus` discriminator. `initializing` and `error` carry the
+account addresses with null `state` and `delegation`; `ready` carries non-null `state` and nullable `delegation`.
+Hosts answer `getAccountState` with the current snapshot and use `accountState` events only for future changes; an
+initial event is not required.
+
 Explorer identifiers are host-controlled nonempty strings. Existing values include `cardanoscan`, `cexplorer`,
 `adastat`, and `xray`, but clients must handle unfamiliar identifiers generically. Adding another identifier does not
 change the Cardano v1 schema or require a new protocol version.
@@ -57,10 +62,17 @@ const tip = cardanoV1.useTip()
 const account = cardanoV1.useAccountState()
 const explorer = cardanoV1.useExplorer()
 const signing = cardanoV1.useSignTx()
+
+if (account.data?.balanceStatus === "initializing") return <Spinner />
+if (account.data?.balanceStatus === "error" || account.error) return <AccountError />
+if (account.data?.balanceStatus === "ready") return <Balance state={account.data.state} />
 ```
 
 Remote hooks expose `{ data, loading, error, refresh }`. Interactive hooks expose their named operation plus
-`pending`, `result`, `error`, and `reset`. No handshake, Provider, capability check, or adapter factory is required.
+`pending`, `result`, `error`, and `reset`. `useAccountState()` subscribes before its initial request and retries only an
+`initializing` balance after 250, 500, 1000, and 2000 milliseconds. It shares that bounded sequence across consumers,
+stops on ready/error or unmount, and reports exhaustion through `error`; components must not add timers or a separate
+bootstrap listener. No handshake, Provider, capability check, or adapter factory is required.
 
 The XRAY App host remains responsible for trusted origins, selected-account validity, and authorization of signing and
 submission requests.

@@ -119,6 +119,7 @@ describe("scope-versioned Mini App Bridge", () => {
     assert.equal(hideBalances?.payload, false)
     assert.equal(tip?.payload?.blockNo, 10_000_000)
     assert.equal(account?.payload?.paymentAddress, "addr1_mock_payment_address")
+    assert.equal(account?.payload?.balanceStatus, "ready")
     assert.equal(explorer?.payload, "cexplorer")
     assert.equal(signed?.payload.success, true)
     assert.equal(submitted?.payload.success, true)
@@ -446,6 +447,53 @@ describe("scope-versioned Mini App Bridge", () => {
       host: "xray.app",
       account: { blockchain: "cardano", network: "mainnet" },
     })
+    host.destroy()
+  })
+
+  it("bootstraps a directly opened Cardano account through one React store", async () => {
+    installWindow()
+    const host = createMockHost({
+      state: {
+        accountState: {
+          paymentAddress: "addr1_mock_payment_address",
+          stakingAddress: "stake1_mock_staking_address",
+          balanceStatus: "initializing",
+          state: null,
+          delegation: null,
+        },
+      },
+    })
+    const store = bridgeReact.cardanoV1.stores.accountState
+    let notifications = 0
+    const stop = store.subscribe(() => {
+      notifications += 1
+    })
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    assert.equal(store.getSnapshot().data?.balanceStatus, "initializing")
+
+    host.state.accountState = {
+      paymentAddress: "addr1_mock_payment_address",
+      stakingAddress: "stake1_mock_staking_address",
+      balanceStatus: "ready",
+      state: { utxos: [], balance: { value: 2_000_000n, assets: [] } },
+      delegation: null,
+    }
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    const readySnapshot = store.getSnapshot().data
+    assert(readySnapshot?.balanceStatus === "ready")
+    assert.equal(readySnapshot.state.balance.value, 2_000_000n)
+    assert.equal(host.sent.filter(({ method }) => method === "getAccountState").length, 2)
+
+    const beforeDuplicate = notifications
+    host.emit("cardano", "accountState", {
+      paymentAddress: "addr1_mock_payment_address",
+      stakingAddress: "stake1_mock_staking_address",
+      balanceStatus: "ready",
+      state: { utxos: [], balance: { value: 2_000_000n, assets: [] } },
+      delegation: null,
+    })
+    assert.equal(notifications, beforeDuplicate)
+    stop()
     host.destroy()
   })
 

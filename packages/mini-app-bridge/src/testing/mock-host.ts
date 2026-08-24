@@ -53,6 +53,7 @@ export const mockTip: Tip = {
 export const mockAccountState: AccountState = {
   paymentAddress: "addr1_mock_payment_address",
   stakingAddress: "stake1_mock_staking_address",
+  balanceStatus: "ready",
   state: { utxos: [], balance: { value: 1_000_000_000n, assets: [] } },
   delegation: { delegation: "pool1_mock_pool", rewards: 5_000_000n },
 }

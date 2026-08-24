@@ -50,18 +50,33 @@ export const balanceAssetSchema = utxoAssetSchema.extend({
   assetNameAscii: z.string(),
 })
 
-export const accountStateSchema = z
-  .object({
-    paymentAddress: z.string(),
-    stakingAddress: z.string().nullable(),
-    state: z
-      .object({
-        utxos: z.array(utxoSchema),
-        balance: z.object({ value: z.bigint(), assets: z.array(balanceAssetSchema) }),
-      })
-      .nullable(),
-    delegation: z.object({ delegation: z.string().nullable(), rewards: z.bigint() }).nullable(),
+const accountIdentitySchema = z.object({
+  paymentAddress: z.string(),
+  stakingAddress: z.string().nullable(),
+})
+
+const unavailableAccountStateSchema = (balanceStatus: "initializing" | "error") =>
+  accountIdentitySchema.extend({
+    balanceStatus: z.literal(balanceStatus),
+    state: z.null(),
+    delegation: z.null(),
   })
+
+const readyAccountStateSchema = accountIdentitySchema.extend({
+  balanceStatus: z.literal("ready"),
+  state: z.object({
+    utxos: z.array(utxoSchema),
+    balance: z.object({ value: z.bigint(), assets: z.array(balanceAssetSchema) }),
+  }),
+  delegation: z.object({ delegation: z.string().nullable(), rewards: z.bigint() }).nullable(),
+})
+
+export const accountStateSchema = z
+  .discriminatedUnion("balanceStatus", [
+    unavailableAccountStateSchema("initializing"),
+    readyAccountStateSchema,
+    unavailableAccountStateSchema("error"),
+  ])
   .nullable()
 export type AccountState = z.infer<typeof accountStateSchema>
 
