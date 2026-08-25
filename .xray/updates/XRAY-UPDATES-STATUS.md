@@ -48,6 +48,7 @@ Target: mini-app-bridge
 | `0015` | Open Cardano explorer identifiers | [Instruction](./implementations/mini-app-bridge/0015-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0015-IMPL-RESULT.md) | `LOCAL` | Open nonempty explorer identifiers and full SDK validation pass and await human review. |
 | `0016` | Expose platform locale | [Instruction](./implementations/mini-app-bridge/0016-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0016-IMPL-RESULT.md) | `LOCAL` | Typed request-only locale contract, mocks, tests, docs, and full SDK validation pass and await human review. |
 | `0017` | Stabilize Cardano account bootstrap | [Instruction](./implementations/mini-app-bridge/0017-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0017-IMPL-RESULT.md) | `LOCAL` | Typed readiness, bounded one-hook retry, deduplication, stale-result protection, tests, docs, and coordinated validation pass and await human review. |
+| `0018` | Return signed Cardano CBOR | [Instruction](./implementations/mini-app-bridge/0018-IMPL-INSTR.md) | `REVIEW` | [Result](./implementations/mini-app-bridge/0018-IMPL-RESULT.md) | `LOCAL` | Complete signed-CBOR result, typed errors, tests, documentation, and coordinated validation pass and await human review. |
 
 ## Repository implementation status
 

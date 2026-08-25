@@ -13,7 +13,10 @@ const account = await clientCardanoV1.getAccountState()
 const explorer = await clientCardanoV1.getExplorer()
 
 const signed = await clientCardanoV1.signTx(transactionCbor)
-const submitted = await clientCardanoV1.submitTx(transactionCbor)
+if (!signed) throw new Error("XRAY Cardano host is unavailable")
+if (!signed.payload.success) throw new Error(signed.payload.error)
+
+const submitted = await clientCardanoV1.submitTx(signed.payload.cbor)
 const result = await clientCardanoV1.signAndSubmitTx(transactionCbor)
 const signature = await clientCardanoV1.signData(address, data)
 
@@ -24,6 +27,11 @@ const stop = clientCardanoV1.listen("accountState", ({ payload, context }) => {
 
 Calls return correlated `{ payload, context, requestId }` responses or `null` on timeout. Every successful Cardano
 response and event has a non-null Cardano context.
+
+Native Cardano `signTx` returns the complete signed transaction CBOR and its hash. The hash is only the transaction
+identifier; pass `payload.cbor` to a later `submitTx` call. `signAndSubmitTx` keeps both steps inside XRAY and returns
+the submission result. The independent Cardano CIP-30 adapter follows CIP-30 instead: its `signTx` returns only a
+witness set, which the caller must merge into the original transaction before submission.
 
 Every non-null account snapshot has a required `balanceStatus` discriminator. `initializing` and `error` carry the
 account addresses with null `state` and `delegation`; `ready` carries non-null `state` and nullable `delegation`.

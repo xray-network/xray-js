@@ -88,31 +88,18 @@ describe("scope-versioned Mini App Bridge", () => {
     installWindow()
     const host = createMockHost()
 
-    const [
-      theme,
-      currency,
-      locale,
-      hideBalances,
-      tip,
-      account,
-      explorer,
-      signed,
-      submitted,
-      signedAndSubmitted,
-      signedData,
-    ] = await Promise.all([
-      clientPlatformV1.getTheme(),
-      clientPlatformV1.getCurrency(),
-      clientPlatformV1.getLocale(),
-      clientPlatformV1.getHideBalances(),
-      clientCardanoV1.getTip(),
-      clientCardanoV1.getAccountState(),
-      clientCardanoV1.getExplorer(),
-      clientCardanoV1.signTx("tx"),
-      clientCardanoV1.submitTx("tx"),
-      clientCardanoV1.signAndSubmitTx("tx"),
-      clientCardanoV1.signData("addr", "data"),
-    ])
+    const [theme, currency, locale, hideBalances, tip, account, explorer, signedAndSubmitted, signedData] =
+      await Promise.all([
+        clientPlatformV1.getTheme(),
+        clientPlatformV1.getCurrency(),
+        clientPlatformV1.getLocale(),
+        clientPlatformV1.getHideBalances(),
+        clientCardanoV1.getTip(),
+        clientCardanoV1.getAccountState(),
+        clientCardanoV1.getExplorer(),
+        clientCardanoV1.signAndSubmitTx("tx"),
+        clientCardanoV1.signData("addr", "data"),
+      ])
     assert.equal(theme?.payload, "light")
     assert.equal(currency?.payload, "usd")
     assert.equal(locale?.payload, "en")
@@ -121,11 +108,19 @@ describe("scope-versioned Mini App Bridge", () => {
     assert.equal(account?.payload?.paymentAddress, "addr1_mock_payment_address")
     assert.equal(account?.payload?.balanceStatus, "ready")
     assert.equal(explorer?.payload, "cexplorer")
-    assert.equal(signed?.payload.success, true)
-    assert.equal(submitted?.payload.success, true)
     assert.equal(signedAndSubmitted?.payload.success, true)
     assert.equal(signedData?.payload.success, true)
     assert.equal(clientPlatformV1.routeChanged("/swap"), true)
+
+    const signed = await clientCardanoV1.signTx("unsigned-transaction-cbor")
+    assert.equal(signed?.payload.success, true)
+    assert(signed?.payload.success)
+    assert.equal(signed.payload.hash, "b".repeat(64))
+    assert.equal(signed.payload.cbor, "84a300")
+    const submitted = await clientCardanoV1.submitTx(signed.payload.cbor)
+    assert.equal(submitted?.payload.success, true)
+    const submitRequest = host.sent.find(({ scope, method }) => scope === "cardano" && method === "submitTx")
+    assert.equal(submitRequest?.payload, signed.payload.cbor)
 
     assert.equal(await clientCardanoCip30V1.isEnabled(), true)
     const wallet = await clientCardanoCip30V1.enable()
@@ -152,6 +147,16 @@ describe("scope-versioned Mini App Bridge", () => {
       host.sent.some(({ type }) => type.includes("handshake")),
       false
     )
+    host.destroy()
+  })
+
+  it("returns typed native Cardano signing failures", async () => {
+    installWindow()
+    const host = createMockHost({ state: { signTx: { success: false, error: "Signing was rejected" } } })
+
+    const signed = await clientCardanoV1.signTx("unsigned-transaction-cbor")
+
+    assert.deepEqual(signed?.payload, { success: false, error: "Signing was rejected" })
     host.destroy()
   })
 

@@ -1,4 +1,4 @@
-import type { AccountState, CardanoContext, Explorer, Tip } from "../adapters/cardano/v1/contract.js"
+import type { AccountState, CardanoContext, Explorer, SignTxResult, Tip } from "../adapters/cardano/v1/contract.js"
 import type { Currency, Locale, PlatformIdentity, Theme } from "../adapters/platform/v1/contract.js"
 import { setHostWindow } from "../transport/client.js"
 import {
@@ -19,7 +19,7 @@ export type MockHostState = {
   tip: Tip
   accountState: AccountState
   explorer: Explorer
-  signTx: { success: boolean; hash: string }
+  signTx: SignTxResult
   submitTx: { success: true; hash: string } | { success: false; error: string }
   signAndSubmitTx: { success: true; hash: string } | { success: false; error: string }
   signData: { success: true; data: string } | { success: false; error: string }
@@ -70,7 +70,7 @@ export const defaultMockHostState: MockHostState = {
   tip: mockTip,
   accountState: mockAccountState,
   explorer: "cexplorer",
-  signTx: { success: true, hash: "b".repeat(64) },
+  signTx: { success: true, hash: "b".repeat(64), cbor: "84a300" },
   submitTx: { success: true, hash: "c".repeat(64) },
   signAndSubmitTx: { success: true, hash: "d".repeat(64) },
   signData: { success: true, data: "deadbeef" },

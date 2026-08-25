@@ -83,7 +83,21 @@ export type AccountState = z.infer<typeof accountStateSchema>
 export const explorerSchema = z.string().min(1)
 export type Explorer = z.infer<typeof explorerSchema>
 
-export const signTxResultSchema = z.object({ success: z.boolean(), hash: z.string() })
+export const signTxResultSchema = z.discriminatedUnion("success", [
+  z
+    .object({
+      success: z.literal(true),
+      hash: z.string().min(1),
+      cbor: z.string().min(1),
+    })
+    .strict(),
+  z
+    .object({
+      success: z.literal(false),
+      error: z.string().min(1),
+    })
+    .strict(),
+])
 export type SignTxResult = z.infer<typeof signTxResultSchema>
 
 export const submitTxResultSchema = z.discriminatedUnion("success", [
