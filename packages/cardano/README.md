@@ -55,3 +55,12 @@ The application entry does not duplicate low-level `cips`, `crypto`, `plutus`, o
 Transaction conversions construct ADA-only values with the coin-only CBOR form; the `[coin, multiasset]` form is
 reserved for values containing tokens. Caller-supplied transaction CBOR remains lossless during inspection and
 signing. Rebuild an existing transaction explicitly if its ADA-only outputs contain an empty multi-asset map.
+
+## Intrinsic transaction inspection
+
+`transactions.inspect(cbor)` and `cardano.transactions.inspect(cbor)` synchronously return a deeply immutable,
+exact-integer view of every field contained in an ordinary transaction envelope. Inputs remain transaction-ID/index
+references because their addresses and values are not present in transaction CBOR. The result includes all outputs,
+certificate tags, validity slots, mint and withdrawals, collateral and governance fields, factual witness presence,
+auxiliary metadata and scripts, plus lossless CBOR for unsupported future fields. Inspection never calls a provider,
+classifies a transaction as fully signed, or performs JSON conversion.

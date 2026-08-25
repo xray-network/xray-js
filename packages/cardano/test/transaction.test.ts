@@ -88,6 +88,32 @@ const withEmptyAssetsOnFirstOutput = (transactionCbor: string): string => {
 }
 
 describe("Cardano transactions", () => {
+  it("inspects intrinsic transaction data synchronously through functional and client APIs", async () => {
+    const { cardano, account } = setup()
+    const unsigned = await cardano.transactions
+      .create()
+      .setChangeAddress(account.paymentAddress)
+      .payTo([{ address: testData.paymentAddressEnterprise, value: 2_000_000n }])
+      .spend([ownedUtxo])
+      .build()
+
+    const functional = transactions.inspect(unsigned.cbor)
+    const client = cardano.transactions.inspect(unsigned.cbor)
+    assert.deepEqual(client, functional)
+    assert.equal(functional.cbor, unsigned.cbor)
+    assert.equal(functional.hash, unsigned.hash)
+    assert.equal(typeof functional.fee, "bigint")
+    assert.equal(functional.inputs[0]?.transactionId, ownedUtxo.transaction.id)
+    assert.equal("address" in (functional.inputs[0] ?? {}), false)
+    assert.equal(functional.witnessState, "empty")
+    assert.equal(Object.isFrozen(functional), true)
+    assert.equal(Object.isFrozen(functional.outputs), true)
+
+    const signed = cardano.transactions.signWithPrivateKey(unsigned, account.getPrivateKey())
+    assert.equal(transactions.inspect(signed.cbor).witnessState, "present")
+    assert.throws(() => transactions.inspect("not-cbor"))
+  })
+
   it("constructs canonical ADA-only values across primitive and output boundaries", async () => {
     const coinCbor = "1a003d0900"
     assert.equal(transactions.assetsToValue(4_000_000n).to_cbor_hex(), coinCbor)

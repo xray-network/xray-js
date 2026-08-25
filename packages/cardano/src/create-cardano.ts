@@ -27,6 +27,7 @@ import {
   type UnsignedTransaction,
   type SignedTransaction,
 } from "./transactions/transaction.js"
+import { inspectTransaction, type TransactionInspection } from "./transactions/inspection.js"
 import * as addresses from "./utilities/addresses.js"
 import * as encoding from "./utilities/encoding.js"
 import type {
@@ -78,6 +79,7 @@ export interface Cardano {
   }
   readonly transactions: {
     create(): TransactionPlan
+    inspect(cbor: string): TransactionInspection
     fromCbor(transaction: string): UnsignedTransaction
     sign(
       transaction: UnsignedTransaction,
@@ -189,6 +191,7 @@ export const createCardano = (config: CardanoConfig = {}): Cardano => {
     }),
     transactions: Object.freeze({
       create: () => createTransactionPlan(context),
+      inspect: inspectTransaction,
       fromCbor: unsignedTransactionFromCbor,
       sign: signTransaction,
       signWithPrivateKey: signTransactionWithPrivateKey,
