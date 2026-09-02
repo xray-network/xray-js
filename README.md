@@ -20,6 +20,8 @@ The Mini App Bridge documentation includes focused guides for
 [Cardano v1](./packages/mini-app-bridge/README-CARDANO.md), and
 [Cardano CIP-30 v1](./packages/mini-app-bridge/README-CARDANO-CIP30.md).
 
+The standalone Rspress website package lives in [`docs/`](./docs/).
+
 ## Repository requirements
 
 Development requires Node.js 20.19 or newer and npm 10.8.x. Builds, typechecks, and tests are deterministic and run

@@ -1,0 +1,54 @@
+html:root {
+  --rp-font-family-base: "-apple-system-body", "ui-sans-serif", "-apple-system", "system-ui", "Segoe UI", "Helvetica", "Apple Color Emoji", "Arial", "sans-serif", "Segoe UI Emoji", "Segoe UI Symbol";
+  --rp-font-family-mono: "ui-monospace", "SFMono-Regular", "SF Mono", "Menlo", "Consolas", "Liberation Mono", "monospace";
+  --rp-c-brand: #1940ed;
+  --rp-c-brand-light: #3f5ff0;
+  --rp-c-brand-lighter: #c3cdfa;
+  --rp-c-brand-dark: #0f2fbf;
+  --rp-c-brand-darker: #0b228b;
+  --rp-c-brand-tint: rgb(25 64 237 / 12%);
+  --rp-radius: 20px;
+  --rp-radius-small: 10px;
+  --rp-radius-large: 20px;
+}
+
+:where(html:not(.rp-dark)) {
+  --rp-c-bg: #ffffff;
+  --rp-c-bg-soft: #f6f7f2;
+  --rp-c-bg-mute: #f3f4f6;
+  --rp-c-bg-alt: #ffffff;
+  --rp-c-divider: #d1d5db;
+  --rp-c-divider-light: #e5e7eb;
+  --rp-c-text-0: #000000;
+  --rp-c-text-1: #1e2232;
+  --rp-c-text-2: #55556d;
+  --rp-c-text-3: #6e758d;
+  --rp-c-text-4: #9ca3af;
+  --rp-c-link: #1940ed;
+}
+
+:where(html.rp-dark, html.dark) {
+  --rp-c-brand: #5e69ff;
+  --rp-c-brand-light: #8fa5ff;
+  --rp-c-brand-lighter: #bfd6ff;
+  --rp-c-brand-dark: #4c56e6;
+  --rp-c-brand-darker: #363cbf;
+  --rp-c-brand-tint: rgb(94 105 255 / 18%);
+  --rp-c-bg: #000000;
+  --rp-c-bg-soft: #1e2232;
+  --rp-c-bg-mute: #1f2937;
+  --rp-c-bg-alt: #000000;
+  --rp-c-divider: #374151;
+  --rp-c-divider-light: #1f2937;
+  --rp-c-text-0: #ffffff;
+  --rp-c-text-1: #f9fafb;
+  --rp-c-text-2: #f3f4f6;
+  --rp-c-text-3: #d1d5db;
+  --rp-c-text-4: #9ca3af;
+  --rp-c-link: #5e69ff;
+}
+
+html,
+body {
+  font-family: var(--rp-font-family-base);
+}

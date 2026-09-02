@@ -10,6 +10,8 @@
 
 # production
 /build
+/docs/build
+/docs/.rspress
 /publish
 dist/
 
