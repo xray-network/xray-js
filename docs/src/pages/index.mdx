@@ -1,0 +1,43 @@
+import { CodeBlock, HeroArtwork, HeroDiagram, Link } from '@rspress/core/theme';
+
+<div className="spectre-home rp-not-doc">
+  <section className="spectre-hero" aria-labelledby="xray-js-title">
+    <div className="spectre-hero-grid">
+      <HeroArtwork />
+      <HeroDiagram />
+      <div className="spectre-hero-copy">
+        <h1 id="xray-js-title">Connect JavaScript applications to XRAY.</h1>
+        <p className="spectre-lead">A modular ESM SDK for the XRAY runtime, Cardano application APIs, and scope-versioned communication between mini apps and hosts.</p>
+        <div className="spectre-actions">
+          <a className="spectre-button spectre-button--primary" href="#packages">Explore packages <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m12 5 7 7-7 7M19 12H5" /></svg></a>
+          <Link className="spectre-button spectre-button--secondary" href="https://github.com/xray-network/xray-js">View on GitHub</Link>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section className="spectre-start" id="packages" aria-labelledby="packages-title">
+    <div className="spectre-section-heading"><div><span className="spectre-eyebrow">01 / Runtime</span><h2 id="packages-title" data-outline>Install the public SDK, then import a supported subpath</h2></div><Link className="spectre-text-link" href="https://github.com/xray-network/xray-js/tree/main/packages/runtime">Runtime docs <span aria-hidden="true">↗</span></Link></div>
+    <p>The package root stays intentionally empty so applications load only the features and blockchain support they select.</p>
+    <div className="spectre-install-panel">
+      <CodeBlock title="Install XRAY JS"><pre tabIndex={0}><code>npm install @xray-network/xray-js</code></pre></CodeBlock>
+      <div className="spectre-install-result"><span className="spectre-check" aria-hidden="true">✓</span><p>ESM-only packages expose explicit, tree-shakeable feature boundaries.</p></div>
+    </div>
+  </section>
+
+  <section className="spectre-workflow" aria-labelledby="sdk-title">
+    <div className="spectre-section-heading"><div><span className="spectre-eyebrow">02 / SDK</span><h2 id="sdk-title" data-outline>Three focused packages, one typed application surface</h2></div></div>
+    <p>Choose the runtime, Cardano client, or bridge independently and compose only what the application needs.</p>
+    <ol className="spectre-workflow-list">
+      <li><span className="spectre-step" aria-hidden="true">01</span><div className="spectre-workflow-content"><div className="spectre-workflow-title"><h3>Runtime</h3><span className="spectre-state">CORE</span></div><p>Use the public aggregate package and supported feature subpaths.</p></div></li>
+      <li><span className="spectre-step" aria-hidden="true">02</span><div className="spectre-workflow-content"><div className="spectre-workflow-title"><h3>Cardano</h3><span className="spectre-state spectre-state--review">CHAIN</span></div><p>Connect Cardano applications through a typed client and runtime adapters.</p></div></li>
+      <li><span className="spectre-step" aria-hidden="true">03</span><div className="spectre-workflow-content"><div className="spectre-workflow-title"><h3>Mini App Bridge</h3><span className="spectre-state spectre-state--accepted">BRIDGE</span></div><p>Exchange scope-versioned requests across iframe and host boundaries.</p></div></li>
+    </ol>
+  </section>
+
+  <nav className="spectre-resources" aria-label="Explore XRAY JS packages">
+    <Link className="spectre-resource" href="https://github.com/xray-network/xray-js/tree/main/packages/cardano"><span className="spectre-resource-label">APPLICATION API <span aria-hidden="true">↗</span></span><h2>Cardano client</h2><p>Typed Cardano application methods, runtime examples, and low-level primitives.</p></Link>
+    <Link className="spectre-resource" href="https://github.com/xray-network/xray-js/tree/main/packages/mini-app-bridge"><span className="spectre-resource-label">TRANSPORT <span aria-hidden="true">↗</span></span><h2>Mini App Bridge</h2><p>Platform, Cardano, and CIP-30 scopes with adapters and React bindings.</p></Link>
+  </nav>
+  <div className="spectre-home-footer"><span>XRAY JS <span aria-hidden="true">/</span> Explicit APIs for connected applications.</span><Link href="https://github.com/xray-network/xray-js">GitHub <span aria-hidden="true">→</span></Link></div>
+</div>
