@@ -3,7 +3,8 @@
 Implementation-Workflow-Version: v1
 
 Sequences are four digits and begin at `0001`. Flat mode has one repository-wide sequence;
-monorepo mode has one independent sequence per target.
+monorepo mode has one independent sequence per target. Both modes allocate IDs above the highest
+active or archived ID in their sequence. Archiving never resets numbering.
 
 In flat mode, `<target>` in headings and `Implementation-ID` is the repository slug, but instruction
 and result files remain directly under `implementations/`. In monorepo mode, `<target>` is the
