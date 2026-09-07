@@ -29,7 +29,7 @@ export function createHeroRenderer(canvas: HTMLCanvasElement, background: HTMLCa
   let width = 0, height = 0, pixelRatio = 1, tileSize = 1
   let minRow = 0, maxRow = -1, minColumn = 0, maxColumn = -1
   let mouseX = 0, mouseY = 0, left = 0, top = 0
-  let neutral = "#55556d", blue = "#1940ed"
+  let neutral = "#6e758d", blue = "#1940ed"
   let spriteRatio = 0, spriteBlue = "", spriteNeutral = ""
   const canAnimate = () => !disposed && !reducedMotion.matches && !document.hidden && inView && width > 0 && height > 0
 
@@ -233,7 +233,7 @@ export function createHeroRenderer(canvas: HTMLCanvasElement, background: HTMLCa
   }
   const readTheme = () => {
     const style = getComputedStyle(canvas)
-    const nextNeutral = style.getPropertyValue("--xr-fg-muted").trim() || neutral
+    const nextNeutral = style.getPropertyValue("--xr-gray-500").trim() || neutral
     const nextBlue = style.getPropertyValue("--spectre-symbol-color").trim() || style.getPropertyValue("--xr-link").trim() || blue
     if (neutral === nextNeutral && blue === nextBlue) return
     neutral = nextNeutral

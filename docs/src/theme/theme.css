@@ -560,10 +560,6 @@ html :where(a, button, input):focus-visible {
   .spectre-hero-copy .spectre-actions {
     justify-content: center;
   }
-
-  .spectre-hero-art canvas:first-child {
-    opacity: .7;
-  }
 }
 
 .spectre-section-heading,
