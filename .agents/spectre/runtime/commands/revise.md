@@ -1,6 +1,6 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 9e42795ea1d0d6e6ebc8ba96e654b083a21f87ad917b082a9ae77f8cf50c18e8
+Source-SHA256: 43985d87bc69d11e5899dc3c7e8f9bb5a53962a0621a491aa61a2ba9667c5bc7
 
 ## 6. Evidence modes and inputs
 
@@ -8,7 +8,7 @@ Every instruction declares exactly one evidence mode:
 
 | Mode | Normative inputs |
 | --- | --- |
-| `DIRECT` | One or more immutable provider snapshots or artifacts. |
+| `DIRECT` | One or more immutable numbered provider snapshots and their resolved artifacts. |
 | `DERIVED` | One or more `ACCEPTED` implementation results. |
 | `HYBRID` | Provider evidence and `ACCEPTED` implementation results. |
 | `LOCAL` | Repository requirements and owned source only. |
@@ -19,7 +19,8 @@ Every normative input must be an explicit row in the instruction's input table. 
 - A derived input is valid only while its active or archived decision row is `ACCEPTED` and the
   linked result matches the implementation ID. Resolve relocated inputs through the §9 archive
   path map; archiving does not revoke acceptance or require rewriting the consuming instruction.
-- A provider input names an immutable snapshot and, when practical, exact artifact paths.
+- A provider input names an immutable numbered snapshot using the pin format and resolution rules
+  in `references.md`. A provider root, latest alias, branch, tag or `HEAD` alone is not an input pin.
 - A local input names an exact tracked path, requirement, decision, or human-approved statement.
 - An accepted result exports a semantic contract. It does not authorize copying source, private
   internals, dependencies, licenses, or nominal types from another target.
@@ -54,7 +55,7 @@ For an explicit `/spectre revise <record>: <changes>` invocation (or its host-na
    compatibility boundary, and validation design. If they materially expand scope or introduce an
    independently reviewable capability, stop without mutation and require a new `/spectre plan`.
 4. Implement only the requested bounded changes. Do not create or renumber an instruction, result,
-   ledger row, provider snapshot, fallback, compatibility layer, or revision-history
+   ledger row, provider capture, fallback, compatibility layer, or revision-history
    structure.
 5. Rerun every affected instruction check plus relevant completion checks. Never claim a command
    ran if it did not.

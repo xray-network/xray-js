@@ -1,6 +1,6 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 9e42795ea1d0d6e6ebc8ba96e654b083a21f87ad917b082a9ae77f8cf50c18e8
+Source-SHA256: 43985d87bc69d11e5899dc3c7e8f9bb5a53962a0621a491aa61a2ba9667c5bc7
 
 `list` output includes target, implementation ID, title, state, evidence mode, whether a result
 is recorded, and location (`ACTIVE` or an archive ID). Default listing reads rows only from root `SPECTRE.md`
@@ -16,6 +16,5 @@ recognize the optional state token and final flag, and list the selected ledger 
 
 `list` resolves target descriptions from repository metadata and ledger headings, without inspecting
 record contents or provider evidence. It does not create records, modify source, or
-change lifecycle state. `help`, `status`, and `validate` likewise authorize no tracked-file or
-lifecycle changes, and validation reports remain ephemeral unless a separate authorized workflow
-requires them to be recorded.
+change lifecycle state. `help` and `status` likewise authorize no tracked-file or lifecycle changes.
+Required validation is performed within the selected workflow, not through another public command.

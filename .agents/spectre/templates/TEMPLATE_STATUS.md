@@ -48,7 +48,9 @@ Rules:
 - Evidence mode matches the instruction.
 - States are `PLANNED`, `REVIEW`, `ACCEPTED`, `REJECTED`, or `CANCELLED`.
 - `REVIEW`, `ACCEPTED`, and `REJECTED` require a result link.
-- `PLANNED` and `CANCELLED` may use `—` for Result.
+- Unstarted `PLANNED` and `CANCELLED` may use `—` for Result.
+- Started or blocked `PLANNED` work links its partial result; Decision proof describes actual progress
+  or the blocker. Passing implementation work must have its result and move to `REVIEW`.
 - Decision proof gives the exact reason for the current state.
 - Provider inventories and global plans do not belong here.
 - Archiving removes only selected terminal rows, preserving metadata and target sections. Keep

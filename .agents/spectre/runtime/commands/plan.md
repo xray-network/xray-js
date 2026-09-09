@@ -1,6 +1,6 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 9e42795ea1d0d6e6ebc8ba96e654b083a21f87ad917b082a9ae77f8cf50c18e8
+Source-SHA256: 43985d87bc69d11e5899dc3c7e8f9bb5a53962a0621a491aa61a2ba9667c5bc7
 
 ## 4. Repository discovery and target selection
 
@@ -45,7 +45,7 @@ Every instruction declares exactly one evidence mode:
 
 | Mode | Normative inputs |
 | --- | --- |
-| `DIRECT` | One or more immutable provider snapshots or artifacts. |
+| `DIRECT` | One or more immutable numbered provider snapshots and their resolved artifacts. |
 | `DERIVED` | One or more `ACCEPTED` implementation results. |
 | `HYBRID` | Provider evidence and `ACCEPTED` implementation results. |
 | `LOCAL` | Repository requirements and owned source only. |
@@ -56,7 +56,8 @@ Every normative input must be an explicit row in the instruction's input table. 
 - A derived input is valid only while its active or archived decision row is `ACCEPTED` and the
   linked result matches the implementation ID. Resolve relocated inputs through the §9 archive
   path map; archiving does not revoke acceptance or require rewriting the consuming instruction.
-- A provider input names an immutable snapshot and, when practical, exact artifact paths.
+- A provider input names an immutable numbered snapshot using the pin format and resolution rules
+  in `references.md`. A provider root, latest alias, branch, tag or `HEAD` alone is not an input pin.
 - A local input names an exact tracked path, requirement, decision, or human-approved statement.
 - An accepted result exports a semantic contract. It does not authorize copying source, private
   internals, dependencies, licenses, or nominal types from another target.
@@ -78,8 +79,11 @@ before allocating an ID or creating records.
    than the highest instruction, result, or ledger ID across both locations. Never fill gaps,
    reuse IDs, or restart after archiving, even when the active ledger is empty. Refuse incomplete
    or conflicting history; if the highest ID is `9999`, stop and report sequence exhaustion.
-3. Confirm that prerequisite results are `ACCEPTED` and provider snapshots pass their declared
-   integrity checks.
+3. Confirm that prerequisite results are `ACCEPTED` and provider snapshots pass their complete
+   resolved-inventory checks, including every reused file. Resolve pins under `references.md`;
+   incomplete captures or missing inherited artifacts block planning against that evidence. Do not
+   substitute a different capture. Check owned source and existing active/accepted plans before
+   proposing work; do not duplicate work already covered.
 4. Select one evidence mode and resolve all inputs.
 5. Bound one coherent objective. Split independently reviewable or deployable changes.
 6. Define every change, compatibility requirement, validation command, completion criterion,
