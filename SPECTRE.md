@@ -27,8 +27,8 @@ Target: mini-app-bridge
 
 | ID | Title | Instruction | State | Result | Evidence mode | Decision proof |
 | --- | --- | --- | --- | --- | --- | --- |
-
-No implementation records.
+| `0019` | Clarify bridge response outcomes | [Instruction](.agents/spectre/implementations/mini-app-bridge/0019-IMPL-INSTR.md) | `REVIEW` | [Result](.agents/spectre/implementations/mini-app-bridge/0019-IMPL-RESULT.md) | `LOCAL` | Implemented C01–C07; required validation passed; awaiting human review. |
+| `0020` | Simplify bridge source and types | [Instruction](.agents/spectre/implementations/mini-app-bridge/0020-IMPL-INSTR.md) | `REVIEW` | [Result](.agents/spectre/implementations/mini-app-bridge/0020-IMPL-RESULT.md) | `LOCAL` | Implemented C01–C05; required validation passed; awaiting human review. |
 
 ## Repository implementation status
 

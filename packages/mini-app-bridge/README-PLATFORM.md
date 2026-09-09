@@ -1,73 +1,71 @@
 # Mini App Bridge Platform v1
 
-Platform v1 owns XRAY host state that is independent of wallet operations. Its wire route is `scope: "platform"` and
-`version: "v1"`.
+Platform owns host settings and identity. Its route remains `scope: "platform"`, `version: "v1"`.
 
 ## Client
 
 ```ts
-import { clientPlatformV1 } from "@xray-network/xray-js/mini-app-bridge"
+import { clientPlatformV1, type PlatformResponse } from "@xray-network/xray-js/mini-app-bridge"
 
-const status = await clientPlatformV1.getStatus()
-const theme = await clientPlatformV1.getTheme()
-const currency = await clientPlatformV1.getCurrency()
+const status: PlatformResponse<"getStatus"> = await clientPlatformV1.getStatus()
+if (status.ok) {
+  console.log(status.payload.host) // xray.app
+  console.log(status.context) // Selected blockchain/network, or null.
+} else {
+  console.error(status.error.code, status.error.message)
+}
+
 const locale = await clientPlatformV1.getLocale()
-const hideBalances = await clientPlatformV1.getHideBalances()
+if (locale.ok) console.log(locale.payload)
 
 clientPlatformV1.routeChanged("/swap")
-const stop = clientPlatformV1.listen("status", ({ payload, context }) => {
-  console.log(payload, context)
+const stop = clientPlatformV1.listen("theme", (event) => {
+  console.log(event.scope, event.version, event.event, event.payload)
 })
 ```
 
-`getStatus()` returns the same correlated envelope as the other getters: `{ payload: { host: "xray.app" }, context,
-requestId }`. `context` is the selected `{ blockchain: "cardano", network }` or `null`; only the context is nullable.
-A `null` response means the platform host did not answer before the timeout. The status selects application behavior
-only; it is not a handshake, proof of trust, wallet grant, or operation authorization.
+Methods are `getTheme`, `getCurrency`, `getLocale`, `getHideBalances`, `getStatus`, and `routeChanged`.
+Use named `PlatformRequest<M>`, `PlatformResponse<M>`, and `PlatformEvent<E>` imports for message types.
+Getters return the complete correlated `ok` outcome. `getStatus` success payload is `{ host: "xray.app" }`; selected
+account information is in `context`. `context: null` is distinct from a failed request.
+
+`routeChanged` is a send-only notification: its boolean reports whether sending succeeded, not whether the host accepted
+the route. Events are `theme`, `currency`, `hideBalances`, `status`, and `routeChanged`. Locale is a nonempty host-owned
+identifier such as `en-US`; it is request-only and has no event or React hook.
 
 ## Host
 
 ```ts
 import { hostPlatformV1 } from "@xray-network/xray-js/mini-app-bridge"
 
-const account = { blockchain: "cardano", network: "preview" } as const
-const identity = { host: "xray.app" } as const
-
-const stopLocale = hostPlatformV1.handle(iframe.contentWindow, "getLocale", () => ({
-  result: "en",
-  context: account,
-}))
-
+declare const iframe: HTMLIFrameElement
+const context = { blockchain: "cardano", network: "preview" } as const
 const stop = hostPlatformV1.handle(iframe.contentWindow, "getStatus", () => ({
-  result: identity,
-  context: account,
+  ok: true,
+  payload: { host: "xray.app" },
+  context,
 }))
-
-hostPlatformV1.publish(iframe.contentWindow, "status", identity, account)
+hostPlatformV1.publish(iframe.contentWindow, "status", { host: "xray.app" }, context)
 ```
 
-`listen()` receives all validated platform requests for manual relays. `handle()` installs an automatic typed handler,
-`respond()` sends a manual correlated result, and `publish()` sends an event. Registering any platform listener or
-handler marks `platform/v1` as supported for that iframe. Unknown methods receive `UNSUPPORTED_METHOD`; unknown
-scope/version pairs receive `UNSUPPORTED_SCOPE_VERSION`.
-
-Platform methods are `getTheme`, `getCurrency`, `getLocale`, `getHideBalances`, `getStatus`, and `routeChanged`. Locale
-is a host-owned, nonempty BCP 47 identifier such as `en`; it is request-only and has no Platform v1 event or React
-hook. Events are `theme`, `currency`, `hideBalances`, `status`, and `routeChanged`.
+`listen` supports manual relays. `respond(iframe, method, requestId, outcome)` accepts the same success/failure outcome
+as `handle`. Registering a listener or handler marks this adapter route as supported. Unknown methods and routes receive
+typed errors. A supported method with only a manual listener waits for that listener to respond.
 
 ## React
 
-```tsx
+```ts
 import { platformV1 } from "@xray-network/xray-js/mini-app-bridge/react"
 
-const { data, loading, error, refresh } = platformV1.useStatus()
+export function useHostStatus() {
+  const { data, loading, error, refresh } = platformV1.useStatus()
+  return { host: data?.host, account: data?.account, loading, error, refresh }
+}
 ```
 
-`useTheme`, `useCurrency`, `useHideBalances`, and `useStatus` request lazily, share one store per value, subscribe only
-to platform v1 events, and clean up the host listener after the last component unmounts. React projects the wire
-envelope into `{ host, account: context }` for convenience. `data.account: null` means the
-XRAY host answered without a selected account; `data: undefined` is not loaded, while `error` records an unavailable or
-failed host request.
+`useTheme`, `useCurrency`, `useHideBalances`, and `useStatus` expose `{ data, loading, error, refresh }`. Stores load
+lazily, share subscriptions, and stop remote listeners after the last consumer unsubscribes. Status data projects
+`{ host, account: context }`. `data.account: null` means no selected account; `data: undefined` means not loaded.
+Failures expose their bridge code/message/data in `error`.
 
-Scope, version, and the self-reported `host` marker are routing or identification metadata, not consent or trust. The
-embedding XRAY App must validate origins and enforce permissions.
+The host marker and route metadata do not prove trust or grant access. See the [shared contract and prerelease update](./README.md).

@@ -42,6 +42,7 @@ export const createRemoteStore = <Value>(
   const listeners = new Set<() => void>()
   const scheduler = options.scheduler ?? defaultScheduler
   let stopRemote: (() => void) | null = null
+  let disposeTimer: unknown
   let pending: Promise<void> | null = null
   let pendingId = 0
   let retryTimer: unknown
@@ -79,6 +80,23 @@ export const createRemoteStore = <Value>(
     cancelRetry()
     retryIndex = 0
     retryExhausted = false
+  }
+
+  const cancelDispose = () => {
+    if (disposeTimer === undefined) return
+    scheduler.clearTimeout(disposeTimer)
+    disposeTimer = undefined
+  }
+
+  const dispose = () => {
+    disposeTimer = undefined
+    if (listeners.size > 0) return
+    stopRemote?.()
+    stopRemote = null
+    generation += 1
+    pending = null
+    resetRetry()
+    set({ data: snapshot.data, loading: false, error: snapshot.error })
   }
 
   const scheduleRetry = (value: Value) => {
@@ -146,6 +164,7 @@ export const createRemoteStore = <Value>(
     getSnapshot: () => snapshot,
     subscribe: (listener) => {
       listeners.add(listener)
+      cancelDispose()
       if (!stopRemote) {
         stopRemote = listen((data) => receive(data, "event"))
         if (snapshot.data === undefined || (options.retry?.shouldRetry(snapshot.data) && !snapshot.loading)) {
@@ -154,17 +173,13 @@ export const createRemoteStore = <Value>(
       }
       return () => {
         listeners.delete(listener)
-        if (listeners.size > 0) return
-        stopRemote?.()
-        stopRemote = null
-        generation += 1
-        pending = null
-        resetRetry()
-        set({ data: snapshot.data, loading: false, error: snapshot.error })
+        if (listeners.size > 0 || disposeTimer !== undefined) return
+        disposeTimer = scheduler.setTimeout(dispose, 0)
       }
     },
     refresh,
     reset: () => {
+      cancelDispose()
       stopRemote?.()
       stopRemote = null
       generation += 1

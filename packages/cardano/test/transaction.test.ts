@@ -110,6 +110,7 @@ describe("Cardano transactions", () => {
     assert.equal(Object.isFrozen(functional.outputs), true)
 
     const signed = cardano.transactions.signWithPrivateKey(unsigned, account.getPrivateKey())
+    assert.equal(signed.witnessSet.length > 0, true)
     assert.equal(transactions.inspect(signed.cbor).witnessState, "present")
     assert.throws(() => transactions.inspect("not-cbor"))
   })
@@ -224,6 +225,7 @@ describe("Cardano transactions", () => {
     assert.equal(signed.hash.length, 64)
     assert.equal(locallySigned.kind, "signed")
     assert.equal(typeof signed.cbor, "string")
+    assert.equal(typeof signed.witnessSet, "string")
     assert.ok(signed.json)
     assert.equal(await cardano.transactions.submit(signed), "submitted-1")
     assert.equal(provider.submittedTransactions.length, 1)

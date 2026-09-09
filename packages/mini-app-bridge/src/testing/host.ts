@@ -1,13 +1,13 @@
-import type { AccountState, CardanoContext, Explorer, SignTxResult, Tip } from "../adapters/cardano/v1/contract.js"
-import type { Currency, Locale, PlatformIdentity, Theme } from "../adapters/platform/v1/contract.js"
-import { setHostWindow } from "../transport/client.js"
+import type { AccountState, CardanoContext, Explorer, SignTxResult, Tip } from "../adapters/cardano.js"
+import type { Currency, Locale, PlatformIdentity, Theme } from "../adapters/platform.js"
+import { setHostWindow } from "../client.js"
 import {
   requestMessageSchema,
   type BridgeErrorPayload,
   type RequestMessage,
   type SuccessResponseMessage,
-} from "../transport/messages.js"
-import { dispatchMessageEvent } from "./events.js"
+} from "../messages.js"
+import { dispatchMessageEvent } from "./client.js"
 
 export type MockHostState = {
   status: PlatformIdentity
@@ -20,9 +20,8 @@ export type MockHostState = {
   accountState: AccountState
   explorer: Explorer
   signTx: SignTxResult
-  submitTx: { success: true; hash: string } | { success: false; error: string }
-  signAndSubmitTx: { success: true; hash: string } | { success: false; error: string }
-  signData: { success: true; data: string } | { success: false; error: string }
+  submitTx: { hash: string }
+  signData: { data: string }
   cip30: {
     isEnabled: boolean
     enable: boolean
@@ -70,10 +69,9 @@ export const defaultMockHostState: MockHostState = {
   tip: mockTip,
   accountState: mockAccountState,
   explorer: "cexplorer",
-  signTx: { success: true, hash: "b".repeat(64), cbor: "84a300" },
-  submitTx: { success: true, hash: "c".repeat(64) },
-  signAndSubmitTx: { success: true, hash: "d".repeat(64) },
-  signData: { success: true, data: "deadbeef" },
+  signTx: { hash: "b".repeat(64), cbor: "84a300", witnessSet: "a10081825820" },
+  submitTx: { hash: "c".repeat(64) },
+  signData: { data: "deadbeef" },
   cip30: {
     isEnabled: true,
     enable: true,
@@ -111,7 +109,6 @@ const responseFor = (state: MockHostState, request: RequestMessage): unknown => 
       getExplorer: state.explorer,
       signTx: state.signTx,
       submitTx: state.submitTx,
-      signAndSubmitTx: state.signAndSubmitTx,
       signData: state.signData,
     } as const
     return values[request.method as keyof typeof values]
@@ -180,7 +177,9 @@ export const createMockHost = (options: MockHostOptions = {}): MockHost => {
               scope: request.scope,
               version: request.version,
               requestId: request.requestId,
-              result,
+              method: request.method,
+              ok: true,
+              payload: result,
               context,
             } satisfies SuccessResponseMessage,
             hostWindow
@@ -201,8 +200,23 @@ export const createMockHost = (options: MockHostOptions = {}): MockHost => {
         { type: "xray.bridge.event", scope, version: "v1", event, payload, context },
         hostWindow
       ),
-    fail: (requestId, error, scope = "cardano-cip30", version = "v1") =>
-      dispatchMessageEvent(target, { type: "xray.bridge.response", scope, version, requestId, error }, hostWindow),
+    fail: (requestId, error, scope, version) => {
+      const request = sent.find((request) => request.requestId === requestId)
+      if (!request) throw new Error(`Unknown mock request: ${requestId}`)
+      dispatchMessageEvent(
+        target,
+        {
+          type: "xray.bridge.response",
+          scope: scope ?? request.scope,
+          version: version ?? request.version,
+          method: request.method,
+          requestId,
+          ok: false,
+          error,
+        },
+        hostWindow
+      )
+    },
     destroy: () => setHostWindow(null),
   }
 }

@@ -23,15 +23,18 @@ export interface SignedTransaction {
   readonly kind: "signed"
   readonly cbor: string
   readonly hash: string
+  readonly witnessSet: string
   readonly json: unknown
 }
 
 export const signedTransactionFromCbor = (cbor: string): SignedTransaction => {
   const transaction = CardanoLib.Transaction.from_cbor_hex(cbor)
+  const parts = getTransactionParts(transaction)
   return Object.freeze({
     kind: "signed" as const,
     cbor: transaction.to_cbor_hex(),
-    hash: CardanoLib.hash_transaction(getTransactionParts(transaction).body).to_hex(),
+    hash: CardanoLib.hash_transaction(parts.body).to_hex(),
+    witnessSet: parts.witnessSet.to_cbor_hex(),
     json: transaction.to_js_value(),
   })
 }

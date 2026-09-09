@@ -17,6 +17,16 @@ import {
   setHostWindow,
 } from "@xray-network/xray-js-mini-app-bridge/testing"
 
+const success = <T extends { ok: boolean }>(response: T): Extract<T, { ok: true }> => {
+  assert.equal(response.ok, true)
+  return response as Extract<T, { ok: true }>
+}
+
+const failure = <T extends { ok: boolean }>(response: T): Extract<T, { ok: false }> => {
+  assert.equal(response.ok, false)
+  return response as Extract<T, { ok: false }>
+}
+
 const installWindow = () => {
   const target = new EventTarget() as unknown as Window
   Object.defineProperty(globalThis, "window", { configurable: true, value: target })
@@ -45,6 +55,7 @@ describe("scope-versioned Mini App Bridge", () => {
       "hostCardanoCip30V1",
       "hostCardanoV1",
       "hostPlatformV1",
+      "protocol",
     ])
     assert.deepEqual(Object.keys(bridgeReact).sort(), ["cardanoCip30V1", "cardanoV1", "platformV1"])
     assert.equal("client" in bridge, false)
@@ -62,13 +73,13 @@ describe("scope-versioned Mini App Bridge", () => {
     installWindow()
     const host = createMockHost()
 
-    assert.equal((await clientPlatformV1.getTheme())?.payload, "light")
-    assert.equal((await clientPlatformV1.getLocale())?.payload, "en")
-    const status = await clientPlatformV1.getStatus()
+    assert.equal(success(await clientPlatformV1.getTheme()).payload, "light")
+    assert.equal(success(await clientPlatformV1.getLocale()).payload, "en")
+    const status = success(await clientPlatformV1.getStatus())
     assert.deepEqual(status?.payload, { host: "xray.app" })
     assert.deepEqual(status?.context, { blockchain: "cardano", network: "preprod" })
     assert.equal(typeof status?.requestId, "string")
-    assert.equal((await clientCardanoV1.getTip())?.payload?.blockNo, 10_000_000)
+    assert.equal(success(await clientCardanoV1.getTip()).payload?.blockNo, 10_000_000)
     assert.equal(await clientCardanoCip30V1.isEnabled(), true)
 
     assert.deepEqual(
@@ -88,19 +99,20 @@ describe("scope-versioned Mini App Bridge", () => {
     installWindow()
     const host = createMockHost()
 
-    const [theme, currency, locale, hideBalances, tip, account, explorer, signedAndSubmitted, signedData] =
-      await Promise.all([
-        clientPlatformV1.getTheme(),
-        clientPlatformV1.getCurrency(),
-        clientPlatformV1.getLocale(),
-        clientPlatformV1.getHideBalances(),
-        clientCardanoV1.getTip(),
-        clientCardanoV1.getAccountState(),
-        clientCardanoV1.getExplorer(),
-        clientCardanoV1.signAndSubmitTx("tx"),
-        clientCardanoV1.signData("addr", "data"),
-      ])
-    assert.equal(theme?.payload, "light")
+    const [theme, currency, locale, hideBalances, tip, account, explorer, signedData] = await Promise.all([
+      clientPlatformV1.getTheme(),
+      clientPlatformV1.getCurrency(),
+      clientPlatformV1.getLocale(),
+      clientPlatformV1.getHideBalances(),
+      clientCardanoV1.getTip(),
+      clientCardanoV1.getAccountState(),
+      clientCardanoV1.getExplorer(),
+      clientCardanoV1.signData("addr", "data"),
+    ])
+    assert(
+      theme.ok && currency.ok && locale.ok && hideBalances.ok && tip.ok && account.ok && explorer.ok && signedData.ok
+    )
+    assert.equal(theme.payload, "light")
     assert.equal(currency?.payload, "usd")
     assert.equal(locale?.payload, "en")
     assert.equal(hideBalances?.payload, false)
@@ -108,17 +120,17 @@ describe("scope-versioned Mini App Bridge", () => {
     assert.equal(account?.payload?.paymentAddress, "addr1_mock_payment_address")
     assert.equal(account?.payload?.balanceStatus, "ready")
     assert.equal(explorer?.payload, "cexplorer")
-    assert.equal(signedAndSubmitted?.payload.success, true)
-    assert.equal(signedData?.payload.success, true)
+    assert.equal(signedData.ok, true)
     assert.equal(clientPlatformV1.routeChanged("/swap"), true)
 
     const signed = await clientCardanoV1.signTx("unsigned-transaction-cbor")
-    assert.equal(signed?.payload.success, true)
-    assert(signed?.payload.success)
+    assert.equal(signed.ok, true)
+    assert(signed.ok)
     assert.equal(signed.payload.hash, "b".repeat(64))
     assert.equal(signed.payload.cbor, "84a300")
+    assert.equal(signed.payload.witnessSet, "a10081825820")
     const submitted = await clientCardanoV1.submitTx(signed.payload.cbor)
-    assert.equal(submitted?.payload.success, true)
+    assert.equal(submitted.ok, true)
     const submitRequest = host.sent.find(({ scope, method }) => scope === "cardano" && method === "submitTx")
     assert.equal(submitRequest?.payload, signed.payload.cbor)
 
@@ -152,11 +164,12 @@ describe("scope-versioned Mini App Bridge", () => {
 
   it("returns typed native Cardano signing failures", async () => {
     installWindow()
-    const host = createMockHost({ state: { signTx: { success: false, error: "Signing was rejected" } } })
-
-    const signed = await clientCardanoV1.signTx("unsigned-transaction-cbor")
-
-    assert.deepEqual(signed?.payload, { success: false, error: "Signing was rejected" })
+    const host = createMockHost({ autoRespond: false })
+    const pending = clientCardanoV1.signTx("unsigned-transaction-cbor")
+    host.fail(host.sent.at(-1)!.requestId, { code: "USER_REJECTED", message: "Signing was rejected" })
+    const signed = failure(await pending)
+    assert.deepEqual(signed.error, { code: "USER_REJECTED", message: "Signing was rejected" })
+    assert.equal(signed.method, "signTx")
     host.destroy()
   })
 
@@ -165,10 +178,11 @@ describe("scope-versioned Mini App Bridge", () => {
     const client = createMockClient({ target })
     const context = { blockchain: "cardano", network: "preview" } as const
     const stops = [
-      hostPlatformV1.handle(client.clientWindow, "getTheme", () => ({ result: "dark", context })),
-      hostPlatformV1.handle(client.clientWindow, "getLocale", () => ({ result: "en", context })),
+      hostPlatformV1.handle(client.clientWindow, "getTheme", () => ({ ok: true, payload: "dark", context })),
+      hostPlatformV1.handle(client.clientWindow, "getLocale", () => ({ ok: true, payload: "en", context })),
       hostCardanoV1.handle(client.clientWindow, "getTip", () => ({
-        result: {
+        ok: true,
+        payload: {
           hash: "a".repeat(64),
           epochNo: 1,
           absSlot: 2,
@@ -189,7 +203,9 @@ describe("scope-versioned Mini App Bridge", () => {
       scope: "platform",
       version: "v1",
       requestId: themeRequestId,
-      result: "dark",
+      method: "getTheme",
+      ok: true,
+      payload: "dark",
       context,
     })
 
@@ -202,7 +218,9 @@ describe("scope-versioned Mini App Bridge", () => {
       scope: "platform",
       version: "v1",
       requestId: localeRequestId,
-      result: "en",
+      method: "getLocale",
+      ok: true,
+      payload: "en",
       context,
     })
 
@@ -277,22 +295,22 @@ describe("scope-versioned Mini App Bridge", () => {
     stop()
   })
 
-  it("preserves client timeout behavior for a host that does not answer", async () => {
+  it("returns TIMEOUT for a host that does not answer", async () => {
     installWindow()
     const host = createMockHost({ autoRespond: false })
-    assert.equal(await clientPlatformV1.getTheme(5), null)
-    assert.equal(await clientPlatformV1.getLocale(5), null)
+    assert.equal(failure(await clientPlatformV1.getTheme(5)).error.code, "TIMEOUT")
+    assert.equal(failure(await clientPlatformV1.getLocale(5)).error.code, "TIMEOUT")
     host.destroy()
   })
 
   it("accepts nonempty locales and rejects invalid locale results", async () => {
     const target = installWindow()
     const host = createMockHost({ target, state: { locale: "en-US" } })
-    assert.equal((await clientPlatformV1.getLocale())?.payload, "en-US")
+    assert.equal(success(await clientPlatformV1.getLocale()).payload, "en-US")
     host.destroy()
 
     const invalidHost = createMockHost({ target, autoRespond: false })
-    const expectInvalidResultToTimeout = async (result: unknown) => {
+    const expectInvalidResponse = async (result: unknown) => {
       const pending = clientPlatformV1.getLocale(10)
       const requestId = invalidHost.sent.at(-1)?.requestId
       assert.equal(typeof requestId, "string")
@@ -303,15 +321,17 @@ describe("scope-versioned Mini App Bridge", () => {
           scope: "platform",
           version: "v1",
           requestId: requestId!,
-          result,
+          method: invalidHost.sent.at(-1)!.method,
+          ok: true,
+          payload: result,
           context: invalidHost.state.context,
         },
         invalidHost.hostWindow
       )
-      assert.equal(await pending, null)
+      assert.equal(failure(await pending).error.code, "INVALID_RESPONSE")
     }
-    await expectInvalidResultToTimeout("")
-    await expectInvalidResultToTimeout(42)
+    await expectInvalidResponse("")
+    await expectInvalidResponse(42)
     invalidHost.destroy()
   })
 
@@ -356,7 +376,7 @@ describe("scope-versioned Mini App Bridge", () => {
     const target = installWindow()
     const host = createMockHost({ target, state: { explorer: "future-explorer" } })
 
-    assert.equal((await clientCardanoV1.getExplorer())?.payload, "future-explorer")
+    assert.equal(success(await clientCardanoV1.getExplorer()).payload, "future-explorer")
 
     const store = bridgeReact.cardanoV1.stores.explorer
     const stop = store.subscribe(() => undefined)
@@ -372,7 +392,7 @@ describe("scope-versioned Mini App Bridge", () => {
     host.destroy()
 
     const invalidHost = createMockHost({ target, autoRespond: false })
-    const expectInvalidResultToTimeout = async (result: unknown) => {
+    const expectInvalidResponse = async (result: unknown) => {
       const pending = clientCardanoV1.getExplorer(10)
       const requestId = invalidHost.sent.at(-1)?.requestId
       assert.equal(typeof requestId, "string")
@@ -383,15 +403,17 @@ describe("scope-versioned Mini App Bridge", () => {
           scope: "cardano",
           version: "v1",
           requestId: requestId!,
-          result,
+          method: invalidHost.sent.at(-1)!.method,
+          ok: true,
+          payload: result,
           context: invalidHost.state.context,
         },
         invalidHost.hostWindow
       )
-      assert.equal(await pending, null)
+      assert.equal(failure(await pending).error.code, "INVALID_RESPONSE")
     }
-    await expectInvalidResultToTimeout("")
-    await expectInvalidResultToTimeout(42)
+    await expectInvalidResponse("")
+    await expectInvalidResponse(42)
     invalidHost.destroy()
   })
 

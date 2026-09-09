@@ -1,86 +1,85 @@
 # Mini App Bridge Cardano v1
 
-Cardano v1 owns XRAY's native Cardano operations. Its wire route is `scope: "cardano"` and `version: "v1"`; it is
-independent from the Cardano CIP-30 adapter.
+The native Cardano adapter uses `scope: "cardano"`, `version: "v1"`. It is separate from the standard CIP-30 wallet API.
 
 ## Client
 
 ```ts
-import { clientCardanoV1 } from "@xray-network/xray-js/mini-app-bridge"
+import { clientCardanoV1, type CardanoResponse } from "@xray-network/xray-js/mini-app-bridge"
 
-const tip = await clientCardanoV1.getTip()
+declare const transactionCbor: string
+const signed: CardanoResponse<"signTx"> = await clientCardanoV1.signTx(transactionCbor)
+if (signed.ok) {
+  const submitted = await clientCardanoV1.submitTx(signed.payload.cbor)
+  if (submitted.ok) console.log(submitted.payload.hash)
+  else console.error(submitted.error.code, submitted.error.message)
+} else {
+  console.error(signed.error.code, signed.error.message)
+}
+
 const account = await clientCardanoV1.getAccountState()
-const explorer = await clientCardanoV1.getExplorer()
-
-const signed = await clientCardanoV1.signTx(transactionCbor)
-if (!signed) throw new Error("XRAY Cardano host is unavailable")
-if (!signed.payload.success) throw new Error(signed.payload.error)
-
-const submitted = await clientCardanoV1.submitTx(signed.payload.cbor)
-const result = await clientCardanoV1.signAndSubmitTx(transactionCbor)
-const signature = await clientCardanoV1.signData(address, data)
-
-const stop = clientCardanoV1.listen("accountState", ({ payload, context }) => {
-  console.log(payload, context.network)
-})
+if (account.ok) console.log(account.payload, account.context.network)
+const stop = clientCardanoV1.listen("accountState", (event) => console.log(event.payload, event.context.network))
 ```
 
-Calls return correlated `{ payload, context, requestId }` responses or `null` on timeout. Every successful Cardano
-response and event has a non-null Cardano context.
+Methods are `getTip`, `getAccountState`, `getExplorer`, `signTx`, `submitTx`, and `signData`.
+Use named `CardanoRequest<M>`, `CardanoResponse<M>`, and `CardanoEvent<E>` imports for message types.
+All methods resolve to correlated responses with `ok`; errors have code/message/data and no success payload. There is no
+nested `success` flag. Success payloads are:
 
-Native Cardano `signTx` returns the complete signed transaction CBOR and its hash. The hash is only the transaction
-identifier; pass `payload.cbor` to a later `submitTx` call. `signAndSubmitTx` keeps both steps inside XRAY and returns
-the submission result. The independent Cardano CIP-30 adapter follows CIP-30 instead: its `signTx` returns only a
-witness set, which the caller must merge into the original transaction before submission.
+| Operation  | Payload                                                                 |
+| ---------- | ----------------------------------------------------------------------- |
+| `signTx`   | `{ hash, cbor, witnessSet }`, the signed transaction and its witnesses. |
+| `submitTx` | `{ hash }`. Submission does not request another signing approval.       |
+| `signData` | `{ data }`.                                                             |
 
-Every non-null account snapshot has a required `balanceStatus` discriminator. `initializing` and `error` carry the
-account addresses with null `state` and `delegation`; `ready` carries non-null `state` and nullable `delegation`.
-Hosts answer `getAccountState` with the current snapshot and use `accountState` events only for future changes; an
-initial event is not required.
+Pass native `signTx`'s `payload.cbor` to `submitTx`. The separate CIP-30 `signTx` returns only a witness set, which the
+caller must merge with the original transaction.
 
-Explorer identifiers are host-controlled nonempty strings. Existing values include `cardanoscan`, `cexplorer`,
-`adastat`, and `xray`, but clients must handle unfamiliar identifiers generically. Adding another identifier does not
-change the Cardano v1 schema or require a new protocol version.
+Successful responses/events require a Cardano context. Account and tip payloads can be null. A non-null account has
+`balanceStatus: "initializing"`, `"ready"`, or `"error"`. Initializing/error snapshots have account addresses but null
+state/delegation; ready snapshots have state and nullable delegation. A delivered error snapshot is still `ok: true`.
+Account quantities retain bigint values through structured cloning.
+
+Explorer identifiers are nonempty host-owned strings; handle unfamiliar values generically.
 
 ## Host
 
 ```ts
 import { hostCardanoV1 } from "@xray-network/xray-js/mini-app-bridge"
 
-const context = { blockchain: "cardano", network: "mainnet" } as const
-
-const stop = hostCardanoV1.handle(iframe.contentWindow, "getTip", async () => ({
-  result: await loadTip(),
-  context,
+declare const iframe: HTMLIFrameElement
+const context = { blockchain: "cardano", network: "preview" } as const
+const stop = hostCardanoV1.handle(iframe.contentWindow, "getTip", () => ({ ok: true, payload: null, context }))
+const stopSigning = hostCardanoV1.handle(iframe.contentWindow, "signTx", () => ({
+  ok: false,
+  error: { code: "USER_REJECTED", message: "Signing was rejected" },
 }))
-
-hostCardanoV1.publish(iframe.contentWindow, "accountState", accountState, context)
+hostCardanoV1.publish(iframe.contentWindow, "accountState", null, context)
 ```
 
-`listen()` supports manual relays; `handle()` sends validated correlated results; `respond()` sends a result manually;
-and `publish()` emits `tip`, `accountState`, or `explorer` changes. Unsupported methods and scope/version pairs receive
-typed bridge errors immediately. A handler may throw `BridgeError` to return a typed host failure.
+Use `USER_REJECTED` only when the host explicitly identifies refusal; use `OPERATION_FAILED` for another known native
+operation failure. Do not infer error codes from message strings. Unexpected handler exceptions become `HOST_ERROR`.
+Manual `respond` takes the same outcome as `handle`. Events are `tip`, `accountState`, and `explorer`.
 
 ## React
 
-```tsx
+```ts
 import { cardanoV1 } from "@xray-network/xray-js/mini-app-bridge/react"
 
-const tip = cardanoV1.useTip()
-const account = cardanoV1.useAccountState()
-const explorer = cardanoV1.useExplorer()
-const signing = cardanoV1.useSignTx()
-
-if (account.data?.balanceStatus === "initializing") return <Spinner />
-if (account.data?.balanceStatus === "error" || account.error) return <AccountError />
-if (account.data?.balanceStatus === "ready") return <Balance state={account.data.state} />
+export function useSigningAction() {
+  const { signTx, pending, result, error, reset } = cardanoV1.useSignTx()
+  return { signTx, pending, signedCbor: result?.ok ? result.payload.cbor : undefined, error, reset }
+}
 ```
 
-Remote hooks expose `{ data, loading, error, refresh }`. Interactive hooks expose their named operation plus
-`pending`, `result`, `error`, and `reset`. `useAccountState()` subscribes before its initial request and retries only an
-`initializing` balance after 250, 500, 1000, and 2000 milliseconds. It shares that bounded sequence across consumers,
-stops on ready/error or unmount, and reports exhaustion through `error`; components must not add timers or a separate
-bootstrap listener. No handshake, Provider, capability check, or adapter factory is required.
+Read hooks expose `{ data, loading, error, refresh }`. Interactive hooks expose their named method plus
+`pending`, `result`, `error`, and `reset`. Their method resolves to the complete response union; `result` retains it,
+and a failed outcome also populates `error`. Expected failures do not require try/catch.
 
-The XRAY App host remains responsible for trusted origins, selected-account validity, and authorization of signing and
-submission requests.
+`useAccountState` subscribes before loading, shares retries of initializing snapshots at 250, 500, 1000, and 2000 ms,
+and stops on ready/error or unmount. Retry exhaustion appears in hook error. Newer events take precedence over older
+request results. Interactive operations are never automatically retried.
+
+XRAY App remains responsible for trusted origins, account validity, and operation authorization.
+See the [shared contract and prerelease update](./README.md).

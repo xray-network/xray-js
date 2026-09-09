@@ -56,6 +56,7 @@ describe("Mini App Bridge boundaries", () => {
       "hostCardanoCip30V1",
       "hostCardanoV1",
       "hostPlatformV1",
+      "protocol",
     ])
     assert.deepEqual(Object.keys(miniAppBridgeReact).sort(), ["cardanoCip30V1", "cardanoV1", "platformV1"])
     assert.equal(typeof miniAppBridgeTesting.createMockHost, "function")

@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react"
+import { client } from "../adapters/cip30.js"
 
-export const createConnectorStore = <Connector>(install: () => Connector) => {
+const createConnectorStore = <Connector>(install: () => Connector) => {
   let connector: Connector | undefined
   const getSnapshot = () => connector
   const subscribe = (listener: () => void) => {
@@ -12,3 +13,7 @@ export const createConnectorStore = <Connector>(install: () => Connector) => {
   }
   return () => useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 }
+
+const useInstalledConnector = createConnectorStore(() => client.installConnector())
+
+export const useConnector = useInstalledConnector

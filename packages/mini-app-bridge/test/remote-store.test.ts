@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { createRemoteStore, type RemoteStoreScheduler } from "../src/react/remote-store.js"
+import { createRemoteStore, type RemoteStoreScheduler } from "../src/react/store.js"
 
 type State = Readonly<{ status: "initializing" | "ready" | "error"; value: number | null }>
 
@@ -8,12 +8,12 @@ class TestScheduler implements RemoteStoreScheduler {
   readonly delays: number[] = []
   readonly cleared: number[] = []
   private nextId = 1
-  private tasks = new Map<number, () => void>()
+  private tasks = new Map<number, { callback: () => void; delay: number }>()
 
   setTimeout = (callback: () => void, delay: number) => {
     const id = this.nextId++
     this.delays.push(delay)
-    this.tasks.set(id, callback)
+    this.tasks.set(id, { callback, delay })
     return id
   }
 
@@ -24,10 +24,10 @@ class TestScheduler implements RemoteStoreScheduler {
   }
 
   runNext() {
-    const task = this.tasks.entries().next().value as [number, () => void] | undefined
-    assert(task, "expected a scheduled retry")
+    const task = [...this.tasks.entries()].sort((left, right) => left[1].delay - right[1].delay)[0]
+    assert(task, "expected a scheduled task")
     this.tasks.delete(task[0])
-    task[1]()
+    task[1].callback()
   }
 
   get size() {
@@ -65,6 +65,44 @@ const createRetryStore = (
   )
 
 describe("remote store readiness policy", () => {
+  it("preserves an initial request during Strict Mode subscription replay", async () => {
+    const scheduler = new TestScheduler()
+    let loads = 0
+    let remoteStops = 0
+    let resolveLoad: ((value: number) => void) | undefined
+    const store = createRemoteStore(
+      () => {
+        loads += 1
+        return new Promise<number>((resolve) => {
+          resolveLoad = resolve
+        })
+      },
+      () => () => {
+        remoteStops += 1
+      },
+      { scheduler }
+    )
+
+    const stopFirst = store.subscribe(() => undefined)
+    assert.equal(loads, 1)
+
+    stopFirst()
+    assert.equal(scheduler.size, 1)
+
+    const stopSecond = store.subscribe(() => undefined)
+    assert.equal(scheduler.size, 0)
+    assert.equal(loads, 1)
+    assert.equal(remoteStops, 0)
+
+    resolveLoad?.(42)
+    await settle()
+    assert.equal(store.getSnapshot().data, 42)
+
+    stopSecond()
+    scheduler.runNext()
+    assert.equal(remoteStops, 1)
+  })
+
   it("uses the exact bounded schedule and exposes retry exhaustion", async () => {
     const scheduler = new TestScheduler()
     let loads = 0
@@ -103,12 +141,14 @@ describe("remote store readiness policy", () => {
     stopFirst()
     assert.equal(scheduler.size, 1)
     stopSecond()
+    assert.equal(scheduler.size, 2)
+    scheduler.runNext()
     assert.equal(scheduler.size, 0)
 
     const stopThird = store.subscribe(() => undefined)
     await settle()
     assert.equal(loads, 2)
-    assert.deepEqual(scheduler.delays, [250, 250])
+    assert.deepEqual(scheduler.delays, [250, 0, 250])
     stopThird()
   })
 

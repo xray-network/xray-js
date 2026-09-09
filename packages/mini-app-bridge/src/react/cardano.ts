@@ -1,11 +1,12 @@
+import type { Outcome } from "../types.js"
 import { useCallback, useState } from "react"
-import { createRemoteStore, useRemoteStore } from "../../../react/remote-store.js"
-import * as client from "./client.js"
-import type { AccountState } from "./contract.js"
+import { createRemoteStore, useRemoteStore } from "./store.js"
+import { client } from "../adapters/cardano.js"
+import type { AccountState } from "../adapters/cardano.js"
 
-const required = async <Value>(load: () => Promise<{ payload: Value } | null>) => {
+const required = async <Value>(load: () => Promise<Outcome<Value, unknown>>) => {
   const response = await load()
-  if (!response) throw new Error("XRAY Cardano host is unavailable")
+  if (!response.ok) throw response.error
   return response.payload
 }
 
@@ -62,53 +63,55 @@ export const useTip = () => useRemoteStore(tipStore)
 export const useAccountState = () => useRemoteStore(accountStateStore)
 export const useExplorer = () => useRemoteStore(explorerStore)
 
-const useInteractive = <Args extends unknown[], Result>(operation: (...args: Args) => Promise<Result>) => {
+/** Keep the asynchronous outcome transition shared by interactive hooks. */
+export const runInteractive = async <Result extends Outcome<unknown, unknown>>(
+  operation: () => Promise<Result>,
+  state: {
+    setPending: (pending: boolean) => void
+    setResult: (result: Result) => void
+    setError: (error: unknown) => void
+  }
+): Promise<Result> => {
+  state.setPending(true)
+  state.setError(undefined)
+  try {
+    const result = await operation()
+    state.setResult(result)
+    state.setError(result.ok ? undefined : result.error)
+    return result
+  } catch (error) {
+    state.setError(error)
+    throw error
+  } finally {
+    state.setPending(false)
+  }
+}
+
+const useInteractive = <Args extends unknown[], Result extends Outcome<unknown, unknown>>(
+  operation: (...args: Args) => Promise<Result>
+) => {
   const [pending, setPending] = useState(false)
   const [result, setResult] = useState<Result | undefined>()
   const [error, setError] = useState<unknown>()
   const execute = useCallback(
-    async (...args: Args) => {
-      setPending(true)
-      setError(undefined)
-      try {
-        const value = await operation(...args)
-        setResult(value)
-        return value
-      } catch (cause) {
-        setError(cause)
-        throw cause
-      } finally {
-        setPending(false)
-      }
-    },
+    (...args: Args) => runInteractive(() => operation(...args), { setPending, setResult, setError }),
     [operation]
   )
   return { execute, pending, result, error, reset: useCallback(() => setResult(undefined), []) }
 }
 
-const responsePayload = async <Value>(response: Promise<{ payload: Value } | null>) => {
-  const resolved = await response
-  if (!resolved) throw new Error("XRAY Cardano host is unavailable")
-  return resolved.payload
-}
-
 export const useSignTx = () => {
-  const operation = useCallback((tx: string) => responsePayload(client.signTx(tx)), [])
+  const operation = useCallback((tx: string) => client.signTx(tx), [])
   const { execute, ...state } = useInteractive(operation)
   return { signTx: execute, ...state }
 }
 export const useSubmitTx = () => {
-  const operation = useCallback((tx: string) => responsePayload(client.submitTx(tx)), [])
+  const operation = useCallback((tx: string) => client.submitTx(tx), [])
   const { execute, ...state } = useInteractive(operation)
   return { submitTx: execute, ...state }
 }
-export const useSignAndSubmitTx = () => {
-  const operation = useCallback((tx: string) => responsePayload(client.signAndSubmitTx(tx)), [])
-  const { execute, ...state } = useInteractive(operation)
-  return { signAndSubmitTx: execute, ...state }
-}
 export const useSignData = () => {
-  const operation = useCallback((address: string, data: string) => responsePayload(client.signData(address, data)), [])
+  const operation = useCallback((address: string, data: string) => client.signData(address, data), [])
   const { execute, ...state } = useInteractive(operation)
   return { signData: execute, ...state }
 }

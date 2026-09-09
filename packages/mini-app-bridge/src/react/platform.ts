@@ -1,10 +1,11 @@
-import { createRemoteStore, useRemoteStore } from "../../../react/remote-store.js"
-import * as client from "./client.js"
-import type { PlatformContext, PlatformIdentity, PlatformStatus } from "./contract.js"
+import type { Outcome } from "../types.js"
+import { createRemoteStore, useRemoteStore } from "./store.js"
+import { client } from "../adapters/platform.js"
+import type { PlatformContext, PlatformIdentity, PlatformStatus } from "../adapters/platform.js"
 
-const required = async <Value>(load: () => Promise<{ payload: Value } | null>) => {
+const required = async <Value>(load: () => Promise<Outcome<Value, unknown>>) => {
   const response = await load()
-  if (!response) throw new Error("XRAY platform host is unavailable")
+  if (!response.ok) throw response.error
   return response.payload
 }
 
@@ -32,7 +33,7 @@ const toPlatformStatus = ({
 const statusStore = createRemoteStore(
   async () => {
     const response = await client.getStatus()
-    if (!response) throw new Error("XRAY platform host is unavailable")
+    if (!response.ok) throw response.error
     return toPlatformStatus(response)
   },
   (receive) => client.listen("status", (message) => receive(toPlatformStatus(message)))

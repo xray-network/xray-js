@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { accountStateSchema } from "../src/adapters/cardano/v1/contract.js"
+import { accountStateSchema } from "../src/adapters/cardano.js"
 
 const identity = {
   paymentAddress: "addr1_payment",
