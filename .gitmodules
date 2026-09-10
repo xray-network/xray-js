@@ -1,3 +1,0 @@
-[submodule "rust/cardano-multiplatform-lib"]
-	path = rust/cardano-multiplatform-lib
-	url = https://github.com/dcSpark/cardano-multiplatform-lib.git

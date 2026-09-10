@@ -1,0 +1,61 @@
+{
+  "name": "@xray-network/xray-js-mini-app-bridge",
+  "version": "3.0.0",
+  "description": "Cross-chain XRAY Mini App Bridge with Cardano CIP-30 support",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/esm/index.js",
+  "module": "./dist/esm/index.js",
+  "browser": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "browser": "./dist/esm/index.js",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/esm/index.js"
+    },
+    "./testing": {
+      "types": "./dist/esm/testing/index.d.ts",
+      "browser": "./dist/esm/testing/index.js",
+      "import": "./dist/esm/testing/index.js",
+      "default": "./dist/esm/testing/index.js"
+    },
+    "./react": {
+      "types": "./dist/esm/react/index.d.ts",
+      "browser": "./dist/esm/react/index.js",
+      "import": "./dist/esm/react/index.js",
+      "default": "./dist/esm/react/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README-*.md"
+  ],
+  "scripts": {
+    "build": "npm run clean:build && tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "npm run clean:test && tsc -p test/tsconfig.json && node --test .test-dist/test/*.test.js",
+    "test:integration": "node -e \"process.exit(0)\"",
+    "clean:build": "rm -rf dist",
+    "clean:test": "rm -rf .test-dist",
+    "clean": "rm -rf dist .test-dist"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0"
+  }
+}

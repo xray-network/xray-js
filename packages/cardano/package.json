@@ -1,0 +1,51 @@
+{
+  "name": "@xray-network/xray-js-cardano",
+  "version": "4.0.0",
+  "description": "Cardano module for the XRAY JavaScript SDK",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/esm/index.js",
+  "module": "./dist/esm/index.js",
+  "browser": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "browser": "./dist/esm/index.js",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/esm/index.js"
+    },
+    "./testing": {
+      "types": "./dist/esm/testing.d.ts",
+      "browser": "./dist/esm/testing.js",
+      "import": "./dist/esm/testing.js",
+      "default": "./dist/esm/testing.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "npm run clean:build && tsc -p tsconfig.json",
+    "test": "npm run clean:test && tsc -p test/tsconfig.json && node --test .test-dist/*.test.js",
+    "test:integration": "npm run clean:test && tsc -p test/tsconfig.json && XRAY_LIVE_TESTS=1 node --test .test-dist/live.integration.test.js",
+    "typecheck": "tsc --noEmit -p test/tsconfig.json",
+    "clean:build": "rm -rf dist",
+    "clean:test": "rm -rf .test-dist",
+    "clean": "rm -rf dist .test-dist"
+  },
+  "dependencies": {
+    "@scure/bip39": "2.2.0",
+    "@xray-network/xray-cardano-lib-chain": "0.1.0",
+    "@xray-network/xray-cardano-lib-cip": "0.1.0",
+    "@xray-network/xray-cardano-lib-core": "0.1.0",
+    "@xray-network/xray-cardano-lib-crypto": "0.1.0",
+    "@xray-network/xray-cardano-lib-plutus": "0.1.0",
+    "cardano-koios-client": "^1.0.10",
+    "cardano-kupo-client": "^1.0.1",
+    "cardano-nftcdn-client": "^1.0.6",
+    "cardano-ogmios-client": "^1.0.0"
+  }
+}

@@ -1,0 +1,1023 @@
+@import "./tokens.css";
+
+/* Map the XRAY palette onto the native Rspress navigation and docs components. */
+html:root {
+  --rp-font-family-base: var(--xr-font-sans);
+  --rp-font-family-mono: var(--xr-font-mono);
+  --rp-c-brand: var(--xr-link);
+  --rp-c-brand-light: var(--xr-action-hover);
+  --rp-c-brand-lighter: var(--xr-blue-50);
+  --rp-c-brand-dark: var(--xr-action-pressed);
+  --rp-c-brand-darker: var(--xr-blue-700);
+  --rp-c-brand-tint: var(--xr-selection-bg);
+  --rp-c-bg: var(--xr-canvas);
+  --rp-c-bg-soft: var(--xr-surface);
+  --rp-c-bg-mute: var(--xr-chip);
+  --rp-c-bg-alt: var(--xr-panel);
+  --rp-c-divider: var(--xr-border-strong);
+  --rp-c-divider-light: var(--xr-border);
+  --rp-c-text-0: var(--xr-fg);
+  --rp-c-text-1: var(--xr-fg);
+  --rp-c-text-2: var(--xr-fg-secondary);
+  --rp-c-text-3: var(--xr-fg-muted);
+  --rp-c-text-4: var(--xr-fg-disabled);
+  --rp-c-link: var(--xr-link);
+  --rp-radius: var(--xr-radius-panel);
+  --rp-radius-small: var(--xr-radius);
+  --rp-radius-large: var(--xr-radius-panel);
+  --rp-sidebar-width: 265px;
+  --spectre-layout-width: 1440px;
+  --spectre-content-width: 768px;
+  --spectre-layout-gutter: 24px;
+  --spectre-header-height: 64px;
+  --spectre-tabs-height: 0px;
+  /* Native sidebar, outline, and anchor offsets include both fixed rows. */
+  --rp-nav-height: calc(var(--spectre-header-height) + var(--spectre-tabs-height));
+  --spectre-sidebar-bg: var(--xr-surface);
+  --spectre-sidebar-item: var(--xr-gray-500);
+  --spectre-symbol-color: var(--xr-blue-500);
+  --rp-content-padding-x: 48px;
+  --rp-content-padding-y: 64px;
+  --rp-outline-width: 200px;
+  --rp-sidebar-margin-left: 0px;
+  --rp-outline-margin-right: 0px;
+  --rp-code-block-bg: var(--xr-surface);
+  --rp-code-block-color: var(--xr-fg);
+  --rp-code-title-bg: var(--xr-chip);
+  --rp-code-block-border: 1px solid var(--xr-border);
+  --rp-code-block-shadow: none;
+  --rp-shadow-1: none;
+  --rp-shadow-2: none;
+  --rp-shadow-3: none;
+  --rp-shadow-4: none;
+  --rp-shadow-5: none;
+}
+
+html:root:is(.rp-dark, .dark) {
+  --spectre-sidebar-bg: color-mix(in srgb, var(--xr-gray-900) 30%, var(--xr-black));
+  --spectre-sidebar-item: var(--xr-gray-400);
+  --spectre-symbol-color: var(--xr-blue-400);
+}
+
+html,
+body {
+  font-family: var(--xr-font-sans);
+  background: var(--xr-canvas);
+}
+
+/* The visual reference uses surface steps and hairlines instead of shadows. */
+*,
+*::before,
+*::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html:root:has(.spectre-section-tabs) {
+  --spectre-header-height: 56px;
+  --spectre-tabs-height: 40px;
+}
+
+html .rp-nav {
+  height: var(--spectre-header-height);
+  padding-inline: max(
+    var(--spectre-layout-gutter),
+    calc((100% - var(--spectre-layout-width)) / 2)
+  );
+  background: var(--xr-canvas);
+  border-bottom-color: var(--xr-border);
+}
+
+html .rp-nav:has(+ .spectre-section-tabs) {
+  border-bottom-width: 0;
+}
+
+.spectre-section-tabs {
+  position: sticky;
+  top: calc(var(--spectre-header-height) + var(--rp-banner-height, 0px));
+  z-index: calc(var(--rp-z-index-nav) - 1);
+  flex-shrink: 0;
+  width: 100%;
+  height: var(--spectre-tabs-height);
+  box-sizing: border-box;
+  background: var(--xr-canvas);
+  border-bottom: 1px solid var(--xr-border);
+}
+
+.spectre-section-tabs__inner {
+  display: flex;
+  gap: 24px;
+  width: calc(100% - 2 * var(--spectre-layout-gutter));
+  max-width: var(--spectre-layout-width);
+  height: 100%;
+  margin-inline: auto;
+  overflow-x: auto;
+}
+
+html .spectre-section-tab {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-bottom: 2px solid transparent;
+  color: var(--xr-fg-muted);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.spectre-section-tab svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+html .spectre-section-tab:hover {
+  color: var(--xr-fg-secondary);
+}
+
+html .spectre-section-tab[aria-current="page"] {
+  color: var(--xr-link);
+  border-bottom-color: var(--xr-link);
+}
+
+/* Header contents, sidebar, and content align to one centered frame. */
+html .rp-doc-layout__container,
+html .rp-doc-layout__menu {
+  width: calc(100% - 2 * var(--spectre-layout-gutter));
+  max-width: var(--spectre-layout-width);
+  margin-inline: auto;
+}
+
+html .rp-doc-layout__doc {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+}
+
+html .rp-doc-layout__doc-container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc(var(--spectre-content-width) + 2 * var(--rp-content-padding-x));
+  margin-inline: auto;
+  font-size: 16px;
+}
+
+html .rp-doc-layout__doc-container .rp-doc {
+  font-size: 16px;
+}
+
+@media (min-width: 1280px) {
+  html .rp-doc-layout__outline {
+    flex: 0 0 var(--rp-outline-width);
+  }
+}
+
+html .rp-nav__title__link {
+  gap: 10px;
+  color: var(--xr-fg);
+  font: 700 14px/1 var(--xr-font-mono);
+  letter-spacing: .08em;
+}
+
+html .rp-nav__title__link {
+  min-height: 44px;
+}
+
+html .rp-nav__title__logo {
+  margin-right: 0;
+}
+
+html .rp-nav__title__logo-image {
+  width: 32px;
+  height: 32px;
+}
+
+html .rp-search-button {
+  border: 1px solid var(--xr-border);
+  border-radius: var(--xr-radius-pill);
+  background: var(--xr-surface);
+}
+
+html .rp-sidebar-section-header {
+  color: var(--xr-fg);
+  font: 600 11px/1.5 var(--xr-font-mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+html .rp-sidebar-section-header__left {
+  color: inherit;
+  font: inherit;
+}
+
+html .rp-doc-layout__sidebar {
+  background: var(--spectre-sidebar-bg);
+}
+
+html .rp-sidebar-item {
+  min-height: 36px;
+  padding: 6px 12px;
+  margin-top: 2px;
+  border-radius: 6px;
+  color: var(--spectre-sidebar-item);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+html .rp-sidebar-item:hover,
+html .rp-sidebar-item--pending {
+  color: var(--xr-fg-secondary);
+  background: var(--xr-chip);
+}
+
+html .rp-sidebar-item--active,
+html .rp-sidebar-item--active:hover {
+  color: var(--xr-link);
+  background: var(--xr-selection-bg);
+  font-weight: 700;
+}
+
+html .rp-sidebar-item[data-context="spectre-version"] {
+  margin-top: 24px;
+  color: var(--xr-fg-muted);
+  background: transparent;
+  font: 400 11px/24px var(--xr-font-mono);
+}
+
+html .rp-sidebar-item[data-context="spectre-version"]:hover {
+  color: var(--xr-link);
+  background: var(--xr-chip);
+}
+
+html .rp-sidebar-menu,
+html .rp-doc-layout__outline {
+  background: var(--xr-canvas);
+}
+
+html .rp-doc-layout__outline {
+  backdrop-filter: none;
+}
+
+html .rp-outline,
+html .rp-outline__title,
+html .rp-outline__action-row,
+html .rp-outline .rp-toc-item__text {
+  font-size: 14px;
+}
+
+html .rp-doc :where(h1, h2, h3):not(:where(.rp-not-doc *)) {
+  color: var(--xr-fg);
+  font-weight: 700;
+  letter-spacing: -.025em;
+}
+
+html .rp-doc :where(h1):not(:where(.rp-not-doc *)) {
+  font-size: 32px;
+  line-height: 1.15;
+}
+
+html .rp-doc :where(h2):not(:where(.rp-not-doc *)) {
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+html .rp-doc :where(h3):not(:where(.rp-not-doc *)) {
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+html .rp-doc :where(p, li):not(:where(.rp-not-doc *)) {
+  color: var(--xr-fg-secondary);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+html .rp-doc :where(strong):not(:where(.rp-not-doc *)) {
+  color: var(--xr-fg);
+}
+
+html .rp-doc :where(table):not(:where(.rp-not-doc *)) {
+  font-size: 16px;
+}
+
+html .rp-doc :where(th):not(:where(.rp-not-doc *)) {
+  background: var(--xr-surface);
+  color: var(--xr-fg);
+}
+
+html .rp-codeblock {
+  border-radius: var(--xr-radius-panel);
+}
+
+html .rp-codeblock__title {
+  color: var(--xr-fg-muted);
+  font-size: 12px;
+}
+
+html .rp-code-button-group__button {
+  border-color: var(--xr-border);
+  background: var(--xr-panel);
+  color: var(--xr-fg-secondary);
+}
+
+html .rp-code-copy-button {
+  opacity: 1;
+}
+
+html .rp-code-button-group__button:hover {
+  background: var(--xr-chip);
+  color: var(--xr-fg);
+}
+
+html .rp-codeblock__content--fold:after {
+  background: none;
+}
+
+html :where(a, button, input):focus-visible {
+  outline: 2px solid var(--xr-focus);
+  outline-offset: 3px;
+}
+
+@media (min-width: 769px) {
+  html .rp-doc-layout__sidebar {
+    display: flex;
+    flex-direction: column;
+    top: calc(var(--rp-nav-height) + 24px + var(--rp-banner-height, 0px));
+    height: calc(100dvh - var(--rp-nav-height) - 48px - var(--rp-banner-height, 0px));
+    max-height: calc(100dvh - var(--rp-nav-height) - 48px - var(--rp-banner-height, 0px));
+    margin: 24px 0;
+    left: auto;
+    padding: 10px 8px;
+    border: 0;
+    border-radius: var(--xr-radius);
+    background: var(--spectre-sidebar-bg);
+  }
+
+  html .rp-doc-layout__sidebar > * {
+    flex-shrink: 0;
+  }
+
+  html .rp-doc-layout__sidebar > [data-context="spectre-version"] {
+    margin-top: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  html:root {
+    --spectre-layout-gutter: 16px;
+    --rp-content-padding-x: 0px;
+  }
+}
+
+/* The homepage uses the native docs sidebar and mobile menu. */
+.spectre-home {
+  --spectre-home-radius: 6px;
+  max-width: var(--spectre-content-width);
+  margin-inline: auto;
+  color: var(--rp-c-text-2);
+  font-size: 16px;
+  line-height: 1.65;
+  padding-bottom: 12px;
+}
+
+.spectre-home *,
+.spectre-home *::before,
+.spectre-home *::after {
+  box-sizing: border-box;
+}
+
+.spectre-home p,
+.spectre-home h2,
+.spectre-home h3 {
+  margin: 0;
+}
+
+.spectre-home a {
+  text-decoration: none;
+}
+
+.spectre-home code {
+  font-family: var(--rp-font-family-mono);
+  font-size: .86em;
+}
+
+.spectre-home :not(pre) > code {
+  color: var(--rp-c-text-1);
+  padding: 2px 5px;
+  background: var(--rp-c-bg-mute);
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+
+.spectre-hero {
+  position: relative;
+  isolation: isolate;
+  padding: 0;
+  border-bottom: 1px solid var(--xr-border-strong);
+  container-type: inline-size;
+}
+
+.spectre-hero-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.spectre-hero-grid {
+  padding: 40px 0 44px;
+}
+
+.spectre-hero-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.spectre-hero-art {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.spectre-hero-art canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.spectre-hero-diagram {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(100%, 320px);
+  height: auto;
+  margin: 0 auto 32px;
+  overflow: visible;
+  pointer-events: none;
+  fill: none;
+}
+
+.spectre-hero-diagram text {
+  text-anchor: middle;
+  font-family: var(--xr-font-mono);
+}
+
+.spectre-diagram-arrows {
+  stroke: var(--xr-link);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.spectre-diagram-dashed {
+  stroke-dasharray: 3 4;
+}
+
+.spectre-diagram-caption {
+  fill: var(--xr-fg-muted);
+  font-size: 9px;
+}
+
+.spectre-diagram-icon {
+  stroke: var(--xr-fg-muted);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.spectre-diagram-frame {
+  fill: color-mix(in srgb, var(--xr-link) 8%, var(--xr-canvas));
+  fill-opacity: .65;
+  stroke: var(--xr-link);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 4;
+}
+
+.spectre-diagram-records > rect {
+  fill: color-mix(in srgb, var(--xr-link) 6%, transparent);
+  stroke: var(--xr-link);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.spectre-diagram-records .spectre-diagram-icon {
+  stroke: var(--xr-link);
+}
+
+.spectre-diagram-records text {
+  fill: var(--xr-link);
+  font-size: 10px;
+}
+
+@container (min-width: 780px) {
+  .spectre-hero-grid {
+    min-height: 484px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    align-items: center;
+  }
+
+  .spectre-hero-copy {
+    max-width: none;
+  }
+
+  .spectre-hero-diagram {
+    margin: 0;
+    justify-self: center;
+  }
+
+  .spectre-hero .spectre-hero-copy h1 {
+    font-size: 56px;
+  }
+
+  .spectre-home .spectre-hero-copy .spectre-lead {
+    font-size: 17px;
+  }
+}
+
+@container (max-width: 779px) {
+  .spectre-hero-copy {
+    text-align: center;
+  }
+
+  .spectre-hero .spectre-hero-copy h1,
+  .spectre-home .spectre-hero-copy .spectre-lead {
+    margin-inline: auto;
+  }
+
+  .spectre-hero-copy .spectre-actions {
+    justify-content: center;
+  }
+}
+
+.spectre-section-heading,
+.spectre-workflow-title,
+.spectre-resource-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.spectre-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--rp-c-text-3);
+  font: 500 10px/1.5 var(--rp-font-family-mono);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.spectre-hero h1 {
+  max-width: 760px;
+  margin: 0 0 24px;
+  color: var(--rp-c-text-0);
+  font-size: clamp(42px, 5.2vw, 68px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -.05em;
+}
+
+.spectre-hero .rp-header-anchor {
+  display: none;
+}
+
+.spectre-home .spectre-lead {
+  max-width: 550px;
+  font-size: 18px;
+  line-height: 1.65;
+}
+
+.spectre-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 32px 0 18px;
+}
+
+.spectre-button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border: 1px solid transparent;
+  border-radius: var(--xr-radius-pill);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 120ms var(--xr-ease), border-color 120ms var(--xr-ease);
+}
+
+.spectre-button--primary {
+  color: var(--xr-on-action);
+  background: var(--xr-action);
+}
+
+.spectre-button--primary:hover {
+  color: var(--xr-on-action);
+  background: var(--xr-action-hover);
+}
+
+.spectre-button--primary:active {
+  background: var(--xr-action-pressed);
+}
+
+.spectre-button--secondary {
+  color: var(--xr-fg);
+  background: var(--xr-canvas);
+  border-color: var(--xr-border-strong);
+}
+
+.spectre-button--secondary:hover {
+  background: var(--xr-hover);
+}
+
+.spectre-copy-prompt {
+  min-width: 170px;
+  font-family: inherit;
+  line-height: inherit;
+  cursor: pointer;
+}
+
+.spectre-copy-prompt:disabled {
+  cursor: progress;
+}
+
+.spectre-home .spectre-hero-note {
+  color: var(--rp-c-text-3);
+  font-size: 12px;
+}
+
+.spectre-start {
+  padding-top: 48px;
+  scroll-margin-top: 128px;
+}
+
+.spectre-start > p {
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--rp-c-divider-light);
+}
+
+.spectre-install-panel {
+  margin-top: 26px;
+  padding: 30px;
+  border: 1px solid var(--rp-c-divider-light);
+  border-radius: var(--spectre-home-radius);
+  background: var(--rp-c-bg-soft);
+}
+
+.spectre-section-heading {
+  align-items: end;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.spectre-section-heading h2 {
+  margin-top: 10px;
+  color: var(--rp-c-text-0);
+  font-size: clamp(25px, 2.6vw, 32px);
+  line-height: 1.25;
+  letter-spacing: -.035em;
+  font-weight: 500;
+}
+
+.spectre-start > p,
+.spectre-workflow > p {
+  font-size: 14px;
+}
+
+.spectre-text-link,
+.spectre-home-footer a {
+  color: var(--rp-c-link);
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.spectre-text-link:hover,
+.spectre-home-footer a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.spectre-home .rp-codeblock {
+  min-width: 0;
+  margin: 16px 0;
+  border: 1px solid var(--rp-c-divider-light);
+  border-radius: 4px;
+  background: var(--rp-c-bg);
+  text-align: left;
+}
+
+.spectre-start .rp-codeblock {
+  margin: 0 0 16px;
+}
+
+.spectre-start .rp-codeblock__title {
+  background: var(--xr-canvas);
+  border-bottom: 1px solid var(--xr-border);
+  font: 500 11px/1.5 var(--xr-font-mono);
+}
+
+.spectre-start .rp-codeblock__content {
+  background: var(--xr-canvas);
+}
+
+.spectre-home .rp-codeblock pre {
+  margin: 0;
+  padding: 18px 68px 18px 18px;
+  color: var(--rp-c-text-1);
+  background: transparent;
+  font: 400 13px/1.75 var(--rp-font-family-mono);
+}
+
+.spectre-home .rp-codeblock code {
+  display: block;
+  min-width: 0;
+  width: auto;
+  padding: 0;
+  font: inherit;
+}
+
+.spectre-home .rp-codeblock__content--wrap-code pre {
+  width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.spectre-home .rp-codeblock__content--wrap-code code {
+  word-break: normal !important;
+  overflow-wrap: anywhere;
+}
+
+.spectre-install-result {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.spectre-check {
+  color: var(--rp-c-brand);
+  font-weight: 700;
+}
+
+.spectre-workflow {
+  padding: 64px 0 48px;
+  scroll-margin-top: 128px;
+}
+
+.spectre-workflow-list {
+  margin: 28px 0 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.spectre-workflow-list > li {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 20px;
+  padding: 26px 0 10px;
+  border-top: 1px solid var(--rp-c-divider-light);
+}
+
+.spectre-step {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  background: var(--xr-surface);
+  border: 1px solid var(--xr-border);
+  border-radius: 4px;
+  color: var(--xr-fg-muted);
+  font: 600 11px/1 var(--rp-font-family-mono);
+}
+
+.spectre-workflow-title {
+  margin: 3px 0 7px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.spectre-workflow-title h3 {
+  color: var(--rp-c-text-0);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -.02em;
+}
+
+.spectre-workflow-content > p {
+  font-size: 16px;
+}
+
+.spectre-state {
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  background: var(--xr-chip);
+  border-radius: var(--xr-radius-pill);
+  color: var(--rp-c-text-3);
+  font: 500 10px/1.5 var(--rp-font-family-mono);
+  letter-spacing: .035em;
+}
+
+.spectre-state--planned {
+  color: var(--xr-planned-fg);
+  background: var(--xr-planned-bg);
+}
+
+.spectre-state--review {
+  color: var(--xr-review-fg);
+  background: var(--xr-review-bg);
+}
+
+.spectre-state--accepted {
+  color: var(--xr-success-fg);
+  background: var(--xr-success-bg);
+}
+
+.spectre-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px;
+  border-radius: var(--spectre-home-radius);
+  background: var(--xr-surface);
+  font-size: 16px;
+}
+
+.spectre-callout-mark {
+  color: var(--xr-link);
+  font: 400 24px/1.2 var(--xr-font-mono);
+}
+
+.spectre-callout strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--rp-c-text-1);
+}
+
+.spectre-resources {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--xr-border-strong);
+  border-radius: var(--spectre-home-radius);
+}
+
+.spectre-resource {
+  display: block;
+  padding: 28px;
+  border-radius: var(--spectre-home-radius);
+  background: var(--xr-panel);
+  color: var(--rp-c-text-2);
+  transition: background-color 120ms var(--xr-ease), border-color 120ms var(--xr-ease);
+}
+
+.spectre-resource + .spectre-resource {
+  border-left: 1px solid var(--xr-border-strong);
+}
+
+.spectre-resource:hover {
+  background: var(--xr-surface);
+  border-color: var(--xr-border-strong);
+}
+
+.spectre-home .spectre-resource:focus-visible {
+  outline-offset: -4px;
+}
+
+.spectre-resource-label {
+  color: var(--rp-c-text-3);
+  font: 500 11px/1.5 var(--rp-font-family-mono);
+}
+
+.spectre-resource-label > span {
+  color: var(--rp-c-link);
+  font-size: 17px;
+}
+
+.spectre-resource h2 {
+  margin: 32px 0 10px;
+  color: var(--rp-c-text-0);
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: -.025em;
+}
+
+.spectre-resource p {
+  font-size: 16px;
+}
+
+.spectre-home-footer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rp-c-divider-light);
+  color: var(--rp-c-text-3);
+  font-size: 11px;
+}
+
+.spectre-home a:focus-visible {
+  outline: 2px solid var(--xr-focus);
+  outline-offset: 4px;
+}
+
+.spectre-home pre:focus-visible {
+  outline: 2px solid var(--xr-focus);
+  outline-offset: -3px;
+}
+
+@media (max-width: 520px) {
+  .spectre-hero {
+    padding-top: 8px;
+  }
+
+  .spectre-resources {
+    grid-template-columns: 1fr;
+  }
+
+  .spectre-resource + .spectre-resource {
+    border-left: 0;
+    border-top: 1px solid var(--xr-border-strong);
+  }
+
+  .spectre-start {
+    padding-top: 32px;
+  }
+
+  .spectre-install-panel {
+    padding: 18px;
+  }
+
+  .spectre-home .spectre-lead {
+    font-size: 16px;
+  }
+
+  .spectre-workflow {
+    padding-top: 36px;
+  }
+
+  .spectre-workflow-list > li {
+    grid-template-columns: 28px minmax(0, 1fr);
+    column-gap: 8px;
+    row-gap: 0;
+  }
+
+  .spectre-step {
+    width: 28px;
+    height: 28px;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .spectre-workflow-content,
+  .spectre-workflow-title {
+    display: contents;
+  }
+
+  .spectre-workflow-title .spectre-state {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    justify-self: start;
+  }
+
+  .spectre-workflow-title h3,
+  .spectre-workflow-content > p,
+  .spectre-workflow-content > .rp-codeblock {
+    grid-column: 1 / -1;
+  }
+
+  .spectre-workflow-title h3 {
+    margin-top: 14px;
+    margin-bottom: 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spectre-button,
+  .spectre-resource {
+    animation: none;
+    transition: none;
+  }
+}

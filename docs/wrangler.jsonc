@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wiki-xray-js-docs",
+  "compatibility_date": "2026-09-02",
+  "assets": {
+    "directory": "./build",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  },
+  "routes": [
+    { "pattern": "wiki.xraynetwork.io/xray-js", "zone_name": "xraynetwork.io" },
+    { "pattern": "wiki.xraynetwork.io/xray-js/*", "zone_name": "xraynetwork.io" }
+  ]
+}

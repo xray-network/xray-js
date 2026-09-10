@@ -1,10 +1,19 @@
-/node_modules
-.cache
-package.json
+# Dependencies
+node_modules/
+
+# Generated output and caches
+dist/
+build/
+publish/
+coverage/
+.test-dist/
+.cache/
+.vitepress/cache/
+docs/api/
+
+# Repository evidence is maintained by the XRAY workflow
+.xray/
+
+# Generated manifests and vendored source
 package-lock.json
-dist
-docs/node_modules
-docs/build
-docs/.vitepress/cache
-docs/api
-src/utils/cborg
+src/utils/cborg/

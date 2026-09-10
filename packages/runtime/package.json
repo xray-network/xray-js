@@ -1,0 +1,73 @@
+{
+  "name": "@xray-network/xray-js",
+  "version": "4.0.0",
+  "description": "JavaScript SDK for XRAY/Network",
+  "author": "XRAY/Network <hello@xray.app>",
+  "license": "MIT",
+  "homepage": "https://xray.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xray-network/xray-js.git",
+    "directory": "packages/runtime"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "exports": {
+    "./cardano": {
+      "types": "./dist/esm/cardano.d.ts",
+      "browser": "./dist/esm/cardano.js",
+      "import": "./dist/esm/cardano.js",
+      "default": "./dist/esm/cardano.js"
+    },
+    "./cardano/lib": {
+      "types": "./dist/esm/cardano-lib.d.ts",
+      "browser": "./dist/esm/cardano-lib.js",
+      "import": "./dist/esm/cardano-lib.js",
+      "default": "./dist/esm/cardano-lib.js"
+    },
+    "./cardano/testing": {
+      "types": "./dist/esm/cardano-testing.d.ts",
+      "browser": "./dist/esm/cardano-testing.js",
+      "import": "./dist/esm/cardano-testing.js",
+      "default": "./dist/esm/cardano-testing.js"
+    },
+    "./mini-app-bridge": {
+      "types": "./dist/esm/mini-app-bridge.d.ts",
+      "browser": "./dist/esm/mini-app-bridge.js",
+      "import": "./dist/esm/mini-app-bridge.js",
+      "default": "./dist/esm/mini-app-bridge.js"
+    },
+    "./mini-app-bridge/react": {
+      "types": "./dist/esm/mini-app-bridge-react.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-react.js",
+      "import": "./dist/esm/mini-app-bridge-react.js",
+      "default": "./dist/esm/mini-app-bridge-react.js"
+    },
+    "./mini-app-bridge/testing": {
+      "types": "./dist/esm/mini-app-bridge-testing.d.ts",
+      "browser": "./dist/esm/mini-app-bridge-testing.js",
+      "import": "./dist/esm/mini-app-bridge-testing.js",
+      "default": "./dist/esm/mini-app-bridge-testing.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npm run clean:build && tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p test/tsconfig.json",
+    "test": "npm run clean:test && tsc -p test/tsconfig.json && node --test .test-dist/*.test.js",
+    "test:integration": "node -e \"process.exit(0)\"",
+    "clean:build": "rm -rf dist",
+    "clean:test": "rm -rf .test-dist",
+    "clean": "rm -rf dist .test-dist"
+  },
+  "dependencies": {
+    "@xray-network/xray-cardano-lib": "0.1.0",
+    "@xray-network/xray-js-cardano": "4.0.0",
+    "@xray-network/xray-js-mini-app-bridge": "3.0.0"
+  }
+}
