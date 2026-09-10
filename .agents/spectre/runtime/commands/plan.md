@@ -1,6 +1,6 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 43985d87bc69d11e5899dc3c7e8f9bb5a53962a0621a491aa61a2ba9667c5bc7
+Source-SHA256: 8e4bbe2866065d021bd27c61965a99d5566e2dc33148a5d239470c6e04e5ef11
 
 ## 4. Repository discovery and target selection
 
@@ -66,10 +66,11 @@ Every normative input must be an explicit row in the instruction's input table. 
 
 ## 8. Planning workflow
 
-Run this workflow only for an explicit `/spectre plan` invocation or its host-native equivalent.
-Planning and implementation are separate operations except for the required bootstrap installation
-record in §2. Planning does not authorize product-source changes. Resolve the target selector using §1 and §4
-before allocating an ID or creating records.
+Run this workflow only for an explicit `/spectre plan` invocation, its host-native equivalent, or
+one explicitly stated plan item in a normalized compound queue. Planning and implementation remain
+separate operations except for the required bootstrap installation record in §2; a queue may contain
+both only when the human stated both. Planning does not authorize product-source changes. Resolve the
+target selector using §1 and §4 before allocating an ID or creating records.
 
 1. Read repository guidance, relevant decisions, applicable source/tests/manifest/README, the
    applicable section in root `SPECTRE.md`, status and implementation templates, and candidate

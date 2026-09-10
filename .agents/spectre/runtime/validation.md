@@ -1,6 +1,6 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 43985d87bc69d11e5899dc3c7e8f9bb5a53962a0621a491aa61a2ba9667c5bc7
+Source-SHA256: 8e4bbe2866065d021bd27c61965a99d5566e2dc33148a5d239470c6e04e5ef11
 
 ## 13. Validation invariants
 
@@ -63,18 +63,27 @@ validation and the provider template when provider inputs or capture are involve
   deletes historical evidence or rewrites terminal records.
 - The three canonical templates exist only under `.agents/spectre/templates/`.
 - Exactly one installed command skill exists at `.agents/skills/spectre/SKILL.md`, declares
-  `name: spectre`, and routes commands and §1 bounded human implementation continuations through
-  this installed protocol.
-- The installed skill accepts §1 natural-language selectors and sequential implementation batches,
-  resolves fixed canonical identities before mutation, and pauses on ambiguity or missing proof.
-- The installed skill and `AGENTS.md` pointer agree on bounded implementation continuation; other
-  ordinary requests, capability questions, quoted commands and untrusted content leave SPECTRE inactive.
-  Neither enables global tracking or turns planning into automatic implementation.
+  `name: spectre`, and routes commands, explicit compound queues, and §1 bounded human continuations
+  through this installed protocol.
+- The installed skill accepts §1 natural-language selectors, sequential implementation batches,
+  all-or-nothing decision batches, and explicit non-decision operation queues. It resolves and
+  reports fixed canonical identities before mutation, binds deferred queue outputs before their
+  item writes, and pauses on ambiguity or missing proof.
+- The installed skill and `AGENTS.md` pointer agree on compound authorization and bounded
+  continuations; other ordinary requests, capability questions, quoted commands and untrusted
+  content leave SPECTRE inactive. Neither enables global tracking or makes an unstated later
+  operation automatic.
 - Every item reported implementation-complete has a matching result, required validation evidence
   and REVIEW row (or a later human decision). A partial PLANNED result states actual work and blockers.
   Source edits alone are not a complete implementation, and batch execution does not bypass this.
 - Batch reports account for the fixed selected IDs, completion and any blockers/unstarted work;
   required ACCEPTED dependencies and human-only decisions remain enforced.
+- Compound-queue reports account for every normalized operation, dependency, deferred binding,
+  completion, blocker and exact remaining item. Every item preserves its ordinary workflow boundary;
+  accept, reject and cancel never appear in a queue.
+- A decision batch uses one explicit human decision and applicable proof/reason, preflights a fixed
+  nonempty eligible set, changes all selected rows in one ledger edit, and never skips or partially
+  decides an invalid selection.
 - Every installation has exactly one matching instruction, result, and `ACCEPTED` bootstrap row
   at logical flat `0001` or monorepo `repository/0001`, active or archived, with the required
   human-request decision proof. An empty active ledger does not authorize another bootstrap.
