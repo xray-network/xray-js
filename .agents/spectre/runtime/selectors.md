@@ -1,19 +1,22 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 43985d87bc69d11e5899dc3c7e8f9bb5a53962a0621a491aa61a2ba9667c5bc7
+Source-SHA256: 8e4bbe2866065d021bd27c61965a99d5566e2dc33148a5d239470c6e04e5ef11
 
 ### Natural-language selectors
 
 `<record>` accepts `target/NNNN`, a unique bare ID, a title/description, or a contextual reference
-such as `this plan`. Target arguments accept slugs or repository/package descriptions; provider
-arguments accept slugs or descriptions of existing provider guides. An explicit command or the bounded
-implementation continuation above activates these selectors. Examples: `/spectre implement the health endpoint plan`,
-`/spectre reject last implementation: missing validation`, `/spectre archive the backend service`.
+such as `this plan`. `<records>` accepts one record or the bounded plural forms defined below. Target
+arguments accept slugs or repository/package descriptions; provider arguments accept slugs or
+descriptions of existing provider guides. An explicit command, compound request, or bounded
+continuation above activates these selectors. Examples: `/spectre implement the health endpoint plan`,
+`/spectre reject last implementation: missing validation`, `/spectre accept the three changes just
+completed: reviewed their results and checks`, `/spectre archive the backend service`.
 
-1. Parse one supported operation. A colon separates selector and objective/changes/proof/reason;
-   preserve the payload. Unambiguous natural phrasing such as `reject the login change because the
-   timeout check is missing` is valid. Ask if the split is unclear or required payload is missing.
-   `reject last implementation` therefore needs human rejection proof before a decision.
+1. Parse one supported operation, or normalize one explicitly authorized compound queue under the
+   rules above. A colon separates selector and objective/changes/proof/reason; preserve the payload.
+   Unambiguous natural phrasing such as `reject the login change because the timeout check is missing`
+   is valid. Ask if the split is unclear or required payload is missing. `reject last implementation`
+   therefore needs human rejection proof before a decision.
 2. Prefer exact IDs; never repair an invalid/missing explicit ID with a fuzzy match. Otherwise match
    ledger titles, then relevant instruction objectives/scope, repository names/paths, or provider
    descriptions. Bare IDs must identify one target. Clear spelling variations in descriptive prose
@@ -29,8 +32,8 @@ implementation continuation above activates these selectors. Examples: `/spectre
    contradictory chronology requires clarification. `last implemented`/`last reviewed` requires
    actual event-order evidence from conversation or repository history; creation order, file mtimes,
    ledger position, and archive timestamps do not establish completion/review order.
-5. Resolve exactly one record, target, or provider, except for the explicit implementation batch
-   selection below. If several meanings remain, show canonical
+5. Resolve exactly one record, target, or provider, except for the implementation and decision batch
+   selections below and deferred compound-queue outputs. If several meanings remain, show canonical
    IDs/slugs, titles, states, and locations and ask the human to distinguish them by words or ID.
    No match requires clarification. Never choose solely by similarity score or use a fallback.
 6. Check state/location eligibility after selecting identity. Never skip an accepted latest record
@@ -44,9 +47,11 @@ implementation continuation above activates these selectors. Examples: `/spectre
 
 Omitted `list`/`archive` target means all targets; omitted `help` operation means all commands. An unresolved supplied selector is never omitted scope.
 Archive accepts a whole existing target, not a record; ask before expanding `the login change` to
-its target. Planning discovers targets under §4; never invent a package/slug from a synonym. Check and capture
-require an existing provider guide. Help names an operation, not a repository target. Only `implement`
-accepts a batch of records; no selector grants batch decisions or combines different operations.
+its target. Planning discovers targets under §4; never invent a package/slug from a synonym. An
+ordinary capture command requires an existing provider guide; only explicit compound provider
+preparation may create a missing guide. Help names an operation, not a repository target. Only
+`implement`, `accept`, `reject`, and `cancel` accept bounded record sets. No selector combines
+different operations or places a human decision inside a compound queue.
 
 ### Implementation batch selectors
 
@@ -66,6 +71,22 @@ unordered set, order by declared dependencies, then target slug and numeric ID, 
 A prerequisite result that must be ACCEPTED remains an acceptance gate, even if its plan appears
 earlier in the batch. Resolve and recheck state eligibility per §9; never bypass it by filtering
 out an explicitly selected record. Continuation uses the bound IDs, not a fresh evaluation of `all`.
+
+### Decision batch selectors
+
+`/spectre accept <records>: <proof>`, `/spectre reject <records>: <proof>`, and `/spectre cancel
+<records>: <reason>` accept one record, a comma-separated list of canonical IDs, an inclusive range
+within one target, or a bounded natural plural description such as `the three implementations just
+completed` or `all REVIEW implementations in typescript`. They do not use `--batch`. An unqualified
+`all`, `these`, or `them` requires a uniquely established conversation or target scope. Cross-target
+sets use qualified IDs unless a bounded contextual set uniquely establishes every target.
+
+Resolve and freeze the complete nonempty set before mutation. Report every canonical ID, title,
+current state, and location. Reject duplicates, gaps in explicit ranges, missing or ambiguous
+records, archived records, and selections containing any state ineligible for that decision; never
+filter or silently skip them. The one human-supplied proof or reason must apply to every selected
+record. If it does not, require narrower decision commands. Decision order has no lifecycle meaning;
+use target slug and numeric ID for deterministic reporting and ledger validation.
 
 For `list`, parse the optional final explicit state before the final `--archived` flag, treating
 remaining words as one target selector. Quoted selectors such as `/spectre list "review"` are not
