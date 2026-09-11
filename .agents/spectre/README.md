@@ -1,8 +1,10 @@
 # xray-js SPECTRE
 
 This directory is the canonical home for the installed SPECTRE protocol, implementation
-instructions and results, and shared provider evidence. SPECTRE runs on explicit human `/spectre`
-commands (`$spectre` in Codex) and direct implementation follow-ups to identified SPECTRE plans.
+instructions and results, and shared provider evidence. SPECTRE runs when the current-human message
+mentions its standalone name, including `/spectre`, `$spectre`, `Spectre:`, or natural-language forms
+such as `using Spectre`. Every message must contain its own mention; requests that omit it remain
+ordinary work.
 The command router loads the shared runtime and only the selected operation's rules; the complete
 `SPECTRE-PROTOCOL.md` is the installation/reference source. Other ordinary requests leave these
 records untouched and do not require choosing a SPECTRE operation. The repository-root `../../SPECTRE.md` is the aggregate
@@ -25,7 +27,7 @@ active lifecycle ledger and project-facing implementation summary.
 - `implementations/<target>/NNNN-IMPL-INSTR.md` defines one bounded implementation.
 - `implementations/<target>/NNNN-IMPL-RESULT.md` records its outcome and exported change contract.
 - `/spectre implement --batch <records>` completes selected plans sequentially, including results
-  and REVIEW rows; an unambiguous "implement these one by one" follow-up authorizes the same flow.
+  and REVIEW rows; a follow-up such as `Spectre implement these one by one` authorizes the same flow.
 - `providers/<provider>/PROVIDER.md` is unversioned provider information: purpose, official sources,
   tracking policy, domain boundaries and summarization guidance. There is no provider versions tree.
 - `providers/<provider>/NNNN/SNAPSHOT.md` owns that capture's complete specification and logical

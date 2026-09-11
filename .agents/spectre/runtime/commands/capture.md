@@ -1,6 +1,6 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 8e4bbe2866065d021bd27c61965a99d5566e2dc33148a5d239470c6e04e5ef11
+Source-SHA256: 378106ef1048e32dae9d97a9bafdef94565fb1ee0dd5a833d6cf9ee2b633b8b7
 
 An ordinary `capture` command requires an existing unversioned provider guide. An explicit compound
 queue may first prepare a missing guide from a human-supplied provider identity and authoritative
@@ -20,8 +20,8 @@ implementations.
 
 ### Compound-queue provider preparation
 
-A compound request may explicitly direct SPECTRE to create a named missing provider from a
-human-supplied authoritative source and capture it later in the same queue. Normalize that request
+A compound request mentioning SPECTRE may explicitly request creation of a named missing provider from a
+human-supplied authoritative source and its capture later in the same queue. Normalize that request
 as a provider-preparation item immediately followed, subject to dependencies, by its capture item.
 This is the only non-command preparation item allowed in a compound queue and does not create a
 standalone provider command.

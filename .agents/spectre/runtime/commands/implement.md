@@ -1,6 +1,6 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 8e4bbe2866065d021bd27c61965a99d5566e2dc33148a5d239470c6e04e5ef11
+Source-SHA256: 378106ef1048e32dae9d97a9bafdef94565fb1ee0dd5a833d6cf9ee2b633b8b7
 
 ## 6. Evidence modes and inputs
 
@@ -45,8 +45,8 @@ Apply these implementation design rules:
 - Make architectural decisions for the long term. Do not accept a stopgap that only works for now
   and is meant to be replaced later.
 
-For `/spectre implement <record>`, a selected batch or compound-queue item, or an authorized
-implementation continuation, complete this workflow for one record:
+For `/spectre implement <record>`, a selected batch or compound-queue item, or an implementation
+continuation that explicitly mentions SPECTRE, complete this workflow for one record:
 
 1. Require one matching active `PLANNED` row and instruction. Refuse missing, duplicate,
    terminal, or mismatched identities. A previously recorded blocker must be resolved before
@@ -85,8 +85,9 @@ implementation continuation, complete this workflow for one record:
    acceptance gate. Preserve completed items in `REVIEW`; record the current item's actual progress
    and leave unstarted items unchanged. Report the blocker and the exact remaining IDs. Never
    silently skip a failed item, widen scope, or mark the whole batch complete.
-4. On an authorized continuation of this same bound batch, reconcile its IDs with the ledger and
-   existing changes. Validate records already completed in `REVIEW` and do not implement them again.
+4. On a continuation that explicitly mentions SPECTRE for this same bound batch, reconcile its IDs
+   with the ledger and existing changes. Validate records already completed in `REVIEW` and do not
+   implement them again.
    Human-decided terminal items remain immutable; verify and report them without reopening them.
    Resume eligible PLANNED work after its blockers are resolved. A new request explicitly selecting
    REVIEW work is still a revision and requires `revise`; inconsistent records block continuation.

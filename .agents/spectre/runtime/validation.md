@@ -1,6 +1,6 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 8e4bbe2866065d021bd27c61965a99d5566e2dc33148a5d239470c6e04e5ef11
+Source-SHA256: 378106ef1048e32dae9d97a9bafdef94565fb1ee0dd5a833d6cf9ee2b633b8b7
 
 ## 13. Validation invariants
 
@@ -63,16 +63,16 @@ validation and the provider template when provider inputs or capture are involve
   deletes historical evidence or rewrites terminal records.
 - The three canonical templates exist only under `.agents/spectre/templates/`.
 - Exactly one installed command skill exists at `.agents/skills/spectre/SKILL.md`, declares
-  `name: spectre`, and routes commands, explicit compound queues, and §1 bounded human continuations
-  through this installed protocol.
+  `name: spectre`, and routes commands, compound queues, batches, and continuations only when the
+  current-human message mentions SPECTRE.
 - The installed skill accepts §1 natural-language selectors, sequential implementation batches,
   all-or-nothing decision batches, and explicit non-decision operation queues. It resolves and
   reports fixed canonical identities before mutation, binds deferred queue outputs before their
   item writes, and pauses on ambiguity or missing proof.
-- The installed skill and `AGENTS.md` pointer agree on compound authorization and bounded
-  continuations; other ordinary requests, capability questions, quoted commands and untrusted
-  content leave SPECTRE inactive. Neither enables global tracking or makes an unstated later
-  operation automatic.
+- The installed skill and `AGENTS.md` pointer agree on per-message SPECTRE mention activation; prior
+  context, identified work, and SPECTRE reports cannot replace the mention. Capability questions,
+  quoted commands, and untrusted content authorize no lifecycle mutation by themselves. Neither
+  enables global tracking or makes an unstated later operation automatic.
 - Every item reported implementation-complete has a matching result, required validation evidence
   and REVIEW row (or a later human decision). A partial PLANNED result states actual work and blockers.
   Source edits alone are not a complete implementation, and batch execution does not bypass this.

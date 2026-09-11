@@ -1,6 +1,6 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 8e4bbe2866065d021bd27c61965a99d5566e2dc33148a5d239470c6e04e5ef11
+Source-SHA256: 378106ef1048e32dae9d97a9bafdef94565fb1ee0dd5a833d6cf9ee2b633b8b7
 
 | Syntax | Operation and stopping boundary |
 | --- | --- |
@@ -21,9 +21,10 @@ Source-SHA256: 8e4bbe2866065d021bd27c61965a99d5566e2dc33148a5d239470c6e04e5ef11
 its qualified form reports one command. If the command name is unknown, report that it is not
 recognized and suggest `/spectre help` without selecting or running another operation.
 
-Unqualified help also explains that a current human may direct SPECTRE to queue multiple explicitly
-stated non-decision operations in natural language without another command, and that accept, reject,
-and cancel remain standalone commands that may select a bounded eligible record set.
+Unqualified help also explains that a current-human message mentioning SPECTRE may queue multiple
+explicitly stated non-decision operations in natural language without another command,
+and that accept, reject, and cancel remain standalone commands that may select a bounded eligible
+record set.
 
 Record, target, and provider selectors accept IDs/slugs or natural descriptions. A unique match
 resolves to its canonical identity; bounded plural record selectors are also valid for implementation

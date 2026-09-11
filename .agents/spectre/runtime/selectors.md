@@ -1,14 +1,14 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 8e4bbe2866065d021bd27c61965a99d5566e2dc33148a5d239470c6e04e5ef11
+Source-SHA256: 378106ef1048e32dae9d97a9bafdef94565fb1ee0dd5a833d6cf9ee2b633b8b7
 
 ### Natural-language selectors
 
 `<record>` accepts `target/NNNN`, a unique bare ID, a title/description, or a contextual reference
 such as `this plan`. `<records>` accepts one record or the bounded plural forms defined below. Target
 arguments accept slugs or repository/package descriptions; provider arguments accept slugs or
-descriptions of existing provider guides. An explicit command, compound request, or bounded
-continuation above activates these selectors. Examples: `/spectre implement the health endpoint plan`,
+descriptions of existing provider guides. An authorized command, compound request, or continuation
+above activates these selectors. Examples: `/spectre implement the health endpoint plan`,
 `/spectre reject last implementation: missing validation`, `/spectre accept the three changes just
 completed: reviewed their results and checks`, `/spectre archive the backend service`.
 
@@ -58,8 +58,10 @@ different operations or places a human decision inside a compound queue.
 `/spectre implement --batch <records>` accepts a comma-separated list of canonical IDs, an inclusive
 range within one target such as `typescript/0025..0029`, or a bounded natural description such as
 `the seven plans just listed` or `all PLANNED plans in typescript`. An unambiguous plural
-implementation request such as `/spectre implement these plans one by one`, or the authorized
-conversation continuation, selects the same batch workflow without requiring the flag. Single-record
+implementation request selects the same batch workflow without requiring the flag. Valid forms
+include `/spectre implement these plans one by one`, `Spectre implement these plans one by one`,
+and `using Spectre, implement these plans one by one`.
+Single-record
 selectors retain their existing meaning. Reject unknown/repeated flags and mixed-operation payloads.
 
 Resolve and freeze the complete nonempty list before mutation; report each canonical ID, title,
