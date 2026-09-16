@@ -1,6 +1,6 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 378106ef1048e32dae9d97a9bafdef94565fb1ee0dd5a833d6cf9ee2b633b8b7
+Source-SHA256: dd914ac6745507d3c1c7bd11174a843e09c524291517d9c4da52101672bdb66d
 
 ## 6. Evidence modes and inputs
 

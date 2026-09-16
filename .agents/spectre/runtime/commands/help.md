@@ -1,13 +1,13 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 378106ef1048e32dae9d97a9bafdef94565fb1ee0dd5a833d6cf9ee2b633b8b7
+Source-SHA256: dd914ac6745507d3c1c7bd11174a843e09c524291517d9c4da52101672bdb66d
 
 | Syntax | Operation and stopping boundary |
 | --- | --- |
 | `/spectre plan <target>: <objective>` | Run the §8 planning workflow for one target, create the instruction and `PLANNED` row, and stop without modifying product source. |
 | `/spectre implement <record>` | Run the §9 implementation workflow for the identified `PLANNED` record, validate it, write its result, move it to `REVIEW`, and stop. |
 | `/spectre implement --batch <records>` | Resolve a fixed set of existing plans and run §9 sequentially, completing each result and `REVIEW` transition before the next item. Stop on a blocker or after the selected set; never accept work automatically. |
-| `/spectre revise <record>: <changes>` | Run the §9 revision workflow for the identified `REVIEW` record, change only that implementation within its instruction, rerun applicable validation, update its existing result, keep it in `REVIEW`, and stop. |
+| `/spectre revise <record>: <changes>` | Run the §9 revision workflow for one identified active record. Refine a `PLANNED` instruction without modifying product source and keep it `PLANNED`, or change a `REVIEW` implementation within its instruction, update its result, and keep it `REVIEW`. Then stop. |
 | `/spectre status <record>` | Find the unique record in the active ledger or archives, read its row, instruction, and result when present, and report status and location without changing files or state. |
 | `/spectre list [target] [state] [--archived]` | List active-ledger records by default, or archived records only with `--archived`. Optional target and state arguments filter that set; no arguments include every target and state in the active ledger. |
 | `/spectre accept <records>: <proof>` | Resolve one or a bounded set of `REVIEW` records and record the current human's acceptance in only their matching ledger decision fields. |

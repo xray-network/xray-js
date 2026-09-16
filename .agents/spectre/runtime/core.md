@@ -1,6 +1,6 @@
 <!-- Generated from SPECTRE-PROTOCOL.md; do not edit. -->
 Runtime-Version: 1.0.0
-Source-SHA256: 378106ef1048e32dae9d97a9bafdef94565fb1ee0dd5a833d6cf9ee2b633b8b7
+Source-SHA256: dd914ac6745507d3c1c7bd11174a843e09c524291517d9c4da52101672bdb66d
 
 The command prefix, operation, help-operation argument, lifecycle-state filter, and `--archived` flag are ASCII
 case-insensitive, as is the implementation `--batch` flag. Lowercase is canonical. Selectors follow `runtime/selectors.md` when required by the router. Preserve
@@ -127,12 +127,13 @@ PLANNED ──implement (includes validation)──> REVIEW ──human decision
     │                                  └──human decision──> REJECTED
     └────────human cancellation───────────────────────────> CANCELLED
 
+PLANNED ──revise instruction (no implementation)──────────> PLANNED
 REVIEW ──revise (includes validation and result update)──> REVIEW
 ```
 
 | State | Meaning | Who may enter it |
 | --- | --- | --- |
-| `PLANNED` | Instruction is ready; implementation has not reached REVIEW. Started or blocked work must be recorded in a partial result. | Human or agent. |
+| `PLANNED` | Instruction is ready; implementation has not reached REVIEW. It may be revised in place within the same bounded objective. Started or blocked work must be recorded in a partial result. | Human or agent. |
 | `REVIEW` | Work is implemented, validated, and recorded in a result; bounded revisions may keep it in review. | Human or agent. |
 | `ACCEPTED` | Human approved the completed implementation. | Human only. |
 | `REJECTED` | Human rejected the completed implementation. | Human only. |
@@ -155,9 +156,12 @@ and decision proof remain unchanged. Archiving is a storage operation, not a lif
 there is no `ARCHIVED` state. Correct terminal content with a new local sequence that references
 the prior record. Git history alone is not a substitute for this rule.
 
-A `PLANNED` instruction may be refined before implementation, provided its status row stays in
-sync and source work has not begun. Once implementation begins, material objective, scope, input,
-compatibility, or validation changes must be documented as deviations or replaced by a new plan.
+A `PLANNED` instruction may be refined by an explicit `revise` operation, provided it remains the
+same bounded implementation and its status row stays in sync. Revision does not authorize product
+source or test changes. If source work has begun, reconcile the partial result with the revised
+instruction and describe superseded requirements and existing work honestly. A change that creates
+an independently reviewable capability, changes ownership, or no longer fits the record's objective
+requires a new plan instead.
 There is no new in-progress lifecycle state: interrupted work remains `PLANNED` with its actual
 partial result and a ledger reason naming the blocker or unfinished work. Do not describe it as
 untouched or completed. Source, tests, results, and the ledger form one implementation deliverable.

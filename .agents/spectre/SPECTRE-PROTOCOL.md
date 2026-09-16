@@ -25,8 +25,9 @@ The standard separates these operations:
 1. **Plan** one bounded implementation and create its instruction in `PLANNED`.
 2. **Implement** one selected instruction or a bounded batch sequentially; complete validation,
    the matching result, and `REVIEW` for each item before proceeding.
-3. **Revise** one resolved implementation within its instruction, update its result, and keep it in
-   `REVIEW`.
+3. **Revise** one resolved active record: refine a `PLANNED` instruction without implementing it,
+   or change a `REVIEW` implementation within its instruction and update its result. Keep the
+   record in its current state.
 4. **Decide** as a human, moving one record or a bounded eligible set to `ACCEPTED` or `REJECTED`
    with proof, or to `CANCELLED` with a reason.
 5. **Archive** terminal implementations and their decision history, clearing their active ledger rows.
@@ -52,7 +53,7 @@ Commands do not create a parallel workflow or grant authority beyond the operati
 | `/spectre plan <target>: <objective>` | Run the §8 planning workflow for one target, create the instruction and `PLANNED` row, and stop without modifying product source. |
 | `/spectre implement <record>` | Run the §9 implementation workflow for the identified `PLANNED` record, validate it, write its result, move it to `REVIEW`, and stop. |
 | `/spectre implement --batch <records>` | Resolve a fixed set of existing plans and run §9 sequentially, completing each result and `REVIEW` transition before the next item. Stop on a blocker or after the selected set; never accept work automatically. |
-| `/spectre revise <record>: <changes>` | Run the §9 revision workflow for the identified `REVIEW` record, change only that implementation within its instruction, rerun applicable validation, update its existing result, keep it in `REVIEW`, and stop. |
+| `/spectre revise <record>: <changes>` | Run the §9 revision workflow for one identified active record. Refine a `PLANNED` instruction without modifying product source and keep it `PLANNED`, or change a `REVIEW` implementation within its instruction, update its result, and keep it `REVIEW`. Then stop. |
 | `/spectre status <record>` | Find the unique record in the active ledger or archives, read its row, instruction, and result when present, and report status and location without changing files or state. |
 | `/spectre list [target] [state] [--archived]` | List active-ledger records by default, or archived records only with `--archived`. Optional target and state arguments filter that set; no arguments include every target and state in the active ledger. |
 | `/spectre accept <records>: <proof>` | Resolve one or a bounded set of `REVIEW` records and record the current human's acceptance in only their matching ledger decision fields. |
@@ -743,12 +744,13 @@ PLANNED ──implement (includes validation)──> REVIEW ──human decision
     │                                  └──human decision──> REJECTED
     └────────human cancellation───────────────────────────> CANCELLED
 
+PLANNED ──revise instruction (no implementation)──────────> PLANNED
 REVIEW ──revise (includes validation and result update)──> REVIEW
 ```
 
 | State | Meaning | Who may enter it |
 | --- | --- | --- |
-| `PLANNED` | Instruction is ready; implementation has not reached REVIEW. Started or blocked work must be recorded in a partial result. | Human or agent. |
+| `PLANNED` | Instruction is ready; implementation has not reached REVIEW. It may be revised in place within the same bounded objective. Started or blocked work must be recorded in a partial result. | Human or agent. |
 | `REVIEW` | Work is implemented, validated, and recorded in a result; bounded revisions may keep it in review. | Human or agent. |
 | `ACCEPTED` | Human approved the completed implementation. | Human only. |
 | `REJECTED` | Human rejected the completed implementation. | Human only. |
@@ -771,9 +773,12 @@ and decision proof remain unchanged. Archiving is a storage operation, not a lif
 there is no `ARCHIVED` state. Correct terminal content with a new local sequence that references
 the prior record. Git history alone is not a substitute for this rule.
 
-A `PLANNED` instruction may be refined before implementation, provided its status row stays in
-sync and source work has not begun. Once implementation begins, material objective, scope, input,
-compatibility, or validation changes must be documented as deviations or replaced by a new plan.
+A `PLANNED` instruction may be refined by an explicit `revise` operation, provided it remains the
+same bounded implementation and its status row stays in sync. Revision does not authorize product
+source or test changes. If source work has begun, reconcile the partial result with the revised
+instruction and describe superseded requirements and existing work honestly. A change that creates
+an independently reviewable capability, changes ownership, or no longer fits the record's objective
+requires a new plan instead.
 There is no new in-progress lifecycle state: interrupted work remains `PLANNED` with its actual
 partial result and a ledger reason naming the blocker or unfinished work. Do not describe it as
 untouched or completed. Source, tests, results, and the ledger form one implementation deliverable.
@@ -912,23 +917,41 @@ Implementation commands:
 <!-- spectre:runtime commands/revise.md -->
 For an explicit `/spectre revise <record>: <changes>` invocation (or its host-native equivalent):
 
-1. Require exactly one matching `REVIEW` row, instruction, and result. Refuse `PLANNED`, terminal,
-   missing, duplicate, or mismatched records.
-2. Read the requested changes, complete instruction, existing result, current target source and
-   tests, and applicable repository guidance.
-3. Confirm the requested changes remain within the instruction's objective, declared inputs,
-   compatibility boundary, and validation design. If they materially expand scope or introduce an
-   independently reviewable capability, stop without mutation and require a new `/spectre plan`.
-4. Implement only the requested bounded changes. Do not create or renumber an instruction, result,
-   ledger row, provider capture, fallback, compatibility layer, or revision-history
-   structure.
-5. Rerun every affected instruction check plus relevant completion checks. Never claim a command
-   ran if it did not.
-6. Update the existing result in place with the final dispositions, outcome, actual changes,
-   validation, deviations, remaining review, and reproducibility. Record the human revision request
-   and any superseded review outcome honestly.
-7. Keep the ledger row and result link in `REVIEW`; update only its review proof when needed to
-   describe the revised work awaiting human decision. Stop without accepting or rejecting it.
+1. Require exactly one matching active `PLANNED` or `REVIEW` row and instruction. A `REVIEW` record
+   requires its matching result; a `PLANNED` record may have no result or one matching partial
+   result. Refuse terminal, archived, missing, duplicate, or mismatched records.
+2. Read the requested changes, complete instruction, any existing result, current target source and
+   tests, and applicable repository guidance. Determine the state before mutation and follow only
+   its branch below.
+3. Confirm the requested changes preserve the record's bounded objective and ownership. If they
+   introduce an independently reviewable capability, move the work to another target, or make the
+   original objective misleading, stop without mutation and require a new `/spectre plan`.
+4. For `PLANNED`:
+   - Refine the instruction to express the requested changes, including inputs, provider pins,
+     requirements, validation, completion criteria, and exclusions where affected. Preserve its
+     implementation ID and `Created` value. Preserve the Change ID for a requirement revised in
+     place, allocate new IDs only for added requirements, and never reuse a removed ID.
+   - Do not modify product source or tests, run implementation work, or create an empty result. If a
+     partial result already exists, reconcile it with the revised instruction: preserve actual work
+     and check outcomes, update dispositions for changed Change IDs, and identify superseded work
+     without claiming completion.
+   - Synchronize the ledger title, evidence mode, result link, and decision proof where affected,
+     while keeping the row `PLANNED` and retaining any unresolved blocker or unfinished-work reason.
+     Validate the revised record and its declared inputs, then stop. A later explicit `implement`
+     operation is required to change source or move the record to `REVIEW`.
+5. For `REVIEW`:
+   - Confirm the requested changes remain within the instruction's declared inputs, compatibility
+     boundary, and validation design. Otherwise stop without mutation and require a new plan.
+   - Implement only the requested bounded changes. Do not create or renumber an instruction,
+     result, ledger row, provider capture, fallback, compatibility layer, or revision-history
+     structure.
+   - Rerun every affected instruction check plus relevant completion checks. Never claim a command
+     ran if it did not.
+   - Update the existing result in place with the final dispositions, outcome, actual changes,
+     validation, deviations, remaining review, and reproducibility. Record the human revision
+     request and any superseded review outcome honestly.
+   - Keep the ledger row and result link in `REVIEW`; update only its review proof when needed to
+     describe the revised work awaiting human decision. Stop without accepting or rejecting it.
 
 Revision command:
 
@@ -1870,8 +1893,10 @@ record accepted bootstrap implementation 0001
 /spectre plan <target>: <objective> → PLANNED
         ↓
 human reviews the plan
+        ↕ /spectre revise <record>: <changes> (remains PLANNED)
         ↓
 /spectre implement <record> → REVIEW
+        ↺ /spectre revise <record>: <changes> (remains REVIEW)
         ↓
 /spectre accept or /spectre reject with decision proof
 ```
