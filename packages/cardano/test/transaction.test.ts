@@ -115,6 +115,31 @@ describe("Cardano transactions", () => {
     assert.throws(() => transactions.inspect("not-cbor"))
   })
 
+  it("refuses to inspect, load, or sign bodies whose repeated fields could be read two ways", async () => {
+    const { account } = setup()
+    const shown = `61${"aa".repeat(28)}`
+    const hidden = `61${"bb".repeat(28)}`
+    const input = `825820${"11".repeat(32)}00`
+    const output = (address: string, lovelace: string) => `82581d${address}${lovelace}`
+    const single = `a30081${input}0181${output(shown, "1a000f4240")}021a00029810`
+    const duplicated =
+      `a50081${input}0181${output(shown, "1a000f4240")}021a00029810` + `0181${output(hidden, "1a3b8b87c0")}021a000f4240`
+    const envelope = (body: string) => `84${body}a0f5f6`
+
+    assert.equal(transactions.inspect(envelope(single)).outputs.length, 1)
+    assert.throws(() => transactions.inspect(envelope(duplicated)), /unique field key|repeats field/)
+    assert.throws(() => transactions.unsignedTransactionFromCbor(envelope(duplicated)), /unique field key/)
+    const unsigned = transactions.unsignedTransactionFromCbor(envelope(single))
+    assert.throws(
+      () =>
+        transactions.signTransactionWithPrivateKey(
+          { ...unsigned, cbor: envelope(duplicated) },
+          account.getPrivateKey()
+        ),
+      /unique field key/
+    )
+  })
+
   it("constructs canonical ADA-only values across primitive and output boundaries", async () => {
     const coinCbor = "1a003d0900"
     assert.equal(transactions.assetsToValue(4_000_000n).to_cbor_hex(), coinCbor)

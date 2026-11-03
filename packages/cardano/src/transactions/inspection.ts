@@ -165,9 +165,13 @@ export type TransactionInspection = TransactionBodyInspection &
     auxiliaryData?: TransactionAuxiliaryDataInspection
   }>
 
+// Fail closed on repeated fields: showing one entry while signing bytes that carry another would
+// let the reviewed transaction differ from the signed one.
 const field = (node: CborValue, key: bigint): CborValue | undefined => {
   if (node.kind !== "map") throw new TypeError("Transaction component must be a CBOR map")
-  return node.entries.find(([candidate]) => candidate.kind === "unsigned" && candidate.value === key)?.[1]
+  const matches = node.entries.filter(([candidate]) => candidate.kind === "unsigned" && candidate.value === key)
+  if (matches.length > 1) throw new TypeError(`Transaction component repeats field ${key}`)
+  return matches[0]?.[1]
 }
 const sequence = (node: CborValue | undefined): readonly CborValue[] => {
   const value = node?.kind === "tag" && node.tag === 258n ? node.value : node
