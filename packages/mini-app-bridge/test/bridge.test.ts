@@ -469,6 +469,8 @@ describe("scope-versioned Mini App Bridge", () => {
     })
     stopFirst()
     stopSecond()
+    // Allow deferred cleanup to finish before checking that events are ignored.
+    await new Promise((resolve) => setTimeout(resolve, 0))
     host.emit("platform", "status", { host: "xray.app" }, null)
     assert.deepEqual(store.getSnapshot().data, {
       host: "xray.app",

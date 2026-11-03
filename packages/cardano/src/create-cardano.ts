@@ -109,13 +109,16 @@ export const createCardano = (config: CardanoConfig = {}): Cardano => {
     throw new Error("A custom network requires a slotConfig with a positive slotDuration")
   }
 
-  const graphUrl = (service: string) => `https://graph.xray.app/output/services/${service}/${networkName}/api/v1`
-  const provider = config.provider ?? createKoiosProvider(graphUrl("koios"))
+  const graphEndpoint = `${networkName}-api-v1`
+  const koiosUrl = config.clients?.koios?.url ?? `https://graph.xray.app/output/services/xray-koios/${graphEndpoint}`
+  const nftcdnUrl =
+    config.clients?.nftcdn?.url ?? `https://graph.xray.app/output/services/xray-nftcdn-cardano/${graphEndpoint}`
+  const provider = config.provider ?? createKoiosProvider(koiosUrl, config.clients?.koios?.headers)
   const clients: CardanoServiceClients = Object.freeze({
-    koios: KoiosClient(config.clients?.koios?.url ?? graphUrl("koios"), config.clients?.koios?.headers),
-    ogmios: OgmiosClient(config.clients?.ogmios?.url ?? graphUrl("ogmios"), config.clients?.ogmios?.headers),
-    kupo: KupoClient(config.clients?.kupo?.url ?? graphUrl("kupo"), config.clients?.kupo?.headers),
-    nftcdn: NftcdnClient(config.clients?.nftcdn?.url ?? graphUrl("nftcdn"), config.clients?.nftcdn?.headers),
+    koios: KoiosClient(koiosUrl, config.clients?.koios?.headers),
+    ogmios: config.clients?.ogmios ? OgmiosClient(config.clients.ogmios.url, config.clients.ogmios.headers) : undefined,
+    kupo: config.clients?.kupo ? KupoClient(config.clients.kupo.url, config.clients.kupo.headers) : undefined,
+    nftcdn: NftcdnClient(nftcdnUrl, config.clients?.nftcdn?.headers),
   })
   const protocolParameters = createProtocolParametersCache(provider, config.protocolParameters ?? "remote")
   const context: CardanoContext = Object.freeze({

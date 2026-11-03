@@ -79,8 +79,8 @@ export type KupoApiClient = ReturnType<typeof KupoClientInstance>
 export type NftcdnApiClient = ReturnType<typeof NftcdnClientInstance>
 export type CardanoServiceClients = {
   koios: KoiosApiClient
-  ogmios: OgmiosApiClient
-  kupo: KupoApiClient
+  ogmios?: OgmiosApiClient
+  kupo?: KupoApiClient
   nftcdn: NftcdnApiClient
 }
 

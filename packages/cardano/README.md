@@ -13,6 +13,18 @@ const cardano = createCardano({ network: "preview", provider })
 const tip = await cardano.chain.getTip()
 ```
 
+For mainnet, preprod, and preview, the default provider and Koios client use
+`https://graph.xray.app/output/services/xray-koios/{network}-api-v1`. The NFT CDN client uses
+`https://graph.xray.app/output/services/xray-nftcdn-cardano/{network}-api-v1`. These endpoint prefixes
+already select API v1; do not append another `/api/v1` segment.
+
+Override URLs and headers through `clients`. A configured Koios URL and headers also apply to the
+default provider; an explicit `provider` takes precedence. Custom networks need their own provider
+and any service URLs they use.
+
+Ogmios and Kupo have no default Graph endpoints. Set `clients.ogmios` and `clients.kupo` explicitly
+to enable them; otherwise `cardano.clients.ogmios` and `cardano.clients.kupo` are `undefined`.
+
 Client and transaction-plan creation are synchronous. Operations that can cross a provider or wallet boundary return
 promises:
 
