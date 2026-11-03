@@ -6,7 +6,7 @@ Cardano CIP-30 v1 owns the browser-wallet-compatible API. Its wire route is `sco
 ## Client
 
 ```ts
-import { clientCardanoCip30V1 } from "@xray-network/xray-js/mini-app-bridge"
+import { clientCardanoCip30V1 } from "@xray-network/xray-js-mini-app-bridge"
 
 const wallet = await clientCardanoCip30V1.enable()
 const networkId = await wallet.getNetworkId()
@@ -26,7 +26,7 @@ failures with CIP-30 `{ code, info }` data are rethrown with those CIP-30 fields
 ## Host
 
 ```ts
-import { hostCardanoCip30V1 } from "@xray-network/xray-js/mini-app-bridge"
+import { hostCardanoCip30V1 } from "@xray-network/xray-js-mini-app-bridge"
 
 declare const iframe: HTMLIFrameElement
 const origin = new URL(iframe.src).origin // The mini app's exact origin; never "*".
@@ -47,7 +47,7 @@ The host must still enforce iframe origin, trust, account access, and per-operat
 ## React
 
 ```tsx
-import { cardanoCip30V1 } from "@xray-network/xray-js/mini-app-bridge/react"
+import { cardanoCip30V1 } from "@xray-network/xray-js-mini-app-bridge/react"
 
 export function useWalletConnector() {
   return cardanoCip30V1.useConnector()
@@ -63,7 +63,7 @@ Use named `Cip30Request<M>`, `Cip30Response<M>`, and `Cip30Event<E>` imports to 
 For example, a successful network query has this wire response:
 
 ```ts
-import type { Cip30Response } from "@xray-network/xray-js/mini-app-bridge"
+import type { Cip30Response } from "@xray-network/xray-js-mini-app-bridge"
 
 const response: Cip30Response<"getNetworkId"> = {
   type: "xray.bridge.response",
@@ -82,4 +82,4 @@ failures containing validated `{ code, info }` data become CIP-30 exceptions, an
 with the original bridge code/message/data. Native Cardano methods expose the envelope directly.
 
 CIP-30 host handlers and manual `respond` calls use `{ ok: true, payload, context }` or `{ ok: false, error }`.
-Its wire version and export names stay unchanged. See the [shared contract and prerelease update](./README.md).
+Its wire version and export names stay unchanged. See the [shared contract](./README.md).

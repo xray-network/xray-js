@@ -5,7 +5,7 @@ The native Cardano adapter uses `scope: "cardano"`, `version: "v1"`. It is separ
 ## Client
 
 ```ts
-import { clientCardanoV1, type CardanoResponse } from "@xray-network/xray-js/mini-app-bridge"
+import { clientCardanoV1, type CardanoResponse } from "@xray-network/xray-js-mini-app-bridge"
 
 declare const transactionCbor: string
 const signed: CardanoResponse<"signTx"> = await clientCardanoV1.signTx(transactionCbor)
@@ -46,7 +46,7 @@ Explorer identifiers are nonempty host-owned strings; handle unfamiliar values g
 ## Host
 
 ```ts
-import { hostCardanoV1 } from "@xray-network/xray-js/mini-app-bridge"
+import { hostCardanoV1 } from "@xray-network/xray-js-mini-app-bridge"
 
 declare const iframe: HTMLIFrameElement
 const origin = new URL(iframe.src).origin // The mini app's exact origin; never "*".
@@ -66,7 +66,7 @@ Manual `respond` takes the same outcome as `handle`. Events are `tip`, `accountS
 ## React
 
 ```ts
-import { cardanoV1 } from "@xray-network/xray-js/mini-app-bridge/react"
+import { cardanoV1 } from "@xray-network/xray-js-mini-app-bridge/react"
 
 export function useSigningAction() {
   const { signTx, pending, result, error, reset } = cardanoV1.useSignTx()
@@ -83,4 +83,4 @@ and stops on ready/error or unmount. Retry exhaustion appears in hook error. New
 request results. Interactive operations are never automatically retried.
 
 XRAY App remains responsible for trusted origins, account validity, and operation authorization.
-See the [shared contract and prerelease update](./README.md).
+See the [shared contract](./README.md).

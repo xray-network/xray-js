@@ -7,12 +7,50 @@ Requests, responses, and events carry an adapter `scope` and `version`. Response
 so they identify both the operation and the particular call. The bridge has no handshake, Provider, capability list,
 or version negotiation. The embedding host owns origin checks, trust, selected-account validity, and authorization.
 
+## Installation
+
+```sh
+npm install @xray-network/xray-js-mini-app-bridge
+```
+
+Applications already using `@xray-network/xray-js` can use its equivalent `/mini-app-bridge`,
+`/mini-app-bridge/react`, and `/mini-app-bridge/testing` subpaths instead.
+
+## Requirements
+
+ESM-only, with TypeScript declarations included. Client and host helpers require browser
+windows and `postMessage`; shared protocol utilities and mocks can also be used in Node.js.
+React 18 or 19 is an optional peer dependency, needed only for the `/react` entry. Core imports
+do not load React. Browser mini apps run inside an iframe with a host implementing the v1 protocol.
+
+## Quickstart
+
+```ts
+import { clientPlatformV1 } from "@xray-network/xray-js-mini-app-bridge"
+
+const theme = await clientPlatformV1.getTheme()
+if (theme.ok)
+  console.log(theme.payload) // "light" or "dark"
+else console.error(theme.error.code, theme.error.message)
+```
+
+Run this inside a mini app embedded by a compatible host. Outside an iframe, the call returns
+`HOST_UNAVAILABLE`.
+
+## Entry points
+
+| Entry point                                     | Contents                                                                             |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `@xray-network/xray-js-mini-app-bridge`         | Adapter clients/hosts, inferred message types, errors, and shared `protocol` helpers |
+| `@xray-network/xray-js-mini-app-bridge/react`   | Optional React hooks and stores                                                      |
+| `@xray-network/xray-js-mini-app-bridge/testing` | Mock clients/hosts, host-window override, and message dispatch                       |
+
 ## Client
 
 Platform and native Cardano methods resolve to one outcome. Check `ok` before reading `payload` or `error`:
 
 ```ts
-import { clientPlatformV1, clientCardanoV1 } from "@xray-network/xray-js/mini-app-bridge"
+import { clientPlatformV1, clientCardanoV1 } from "@xray-network/xray-js-mini-app-bridge"
 
 declare const unsignedCbor: string
 const theme = await clientPlatformV1.getTheme()
@@ -48,7 +86,7 @@ small `Outcome<Payload, Context>` union; generic integrations can use `Contract`
 and `Event<C, E>` from the root or `protocol` namespace.
 
 ```ts
-import type { PlatformRequest, PlatformResponse } from "@xray-network/xray-js/mini-app-bridge"
+import type { PlatformRequest, PlatformResponse } from "@xray-network/xray-js-mini-app-bridge"
 
 type GetThemeRequest = PlatformRequest<"getTheme">
 type GetThemeResponse = PlatformResponse<"getTheme">
@@ -99,7 +137,7 @@ bridge access. `"*"`, opaque (`"null"`) origins, and URLs with a path are reject
 window can be bound to only one origin at a time.
 
 ```ts
-import { hostPlatformV1, hostCardanoV1 } from "@xray-network/xray-js/mini-app-bridge"
+import { hostPlatformV1, hostCardanoV1 } from "@xray-network/xray-js-mini-app-bridge"
 
 declare const iframe: HTMLIFrameElement
 const origin = new URL(iframe.src).origin // The mini app's exact origin; never "*".
@@ -119,7 +157,7 @@ hostPlatformV1.publish(iframe.contentWindow, origin, "theme", "dark", context)
 Hosts that own their message listener can reuse the `protocol` namespace instead of defining duplicate envelopes:
 
 ```ts
-import { protocol } from "@xray-network/xray-js/mini-app-bridge"
+import { protocol } from "@xray-network/xray-js-mini-app-bridge"
 
 declare const incoming: unknown // Supplied by the host after checking source and trusted origin.
 const contract = protocol.platformV1Contract
@@ -162,54 +200,12 @@ whether a signing/submission operation executed. The bridge does not retry these
 
 CIP-30 uses this envelope internally but its public wallet API returns standard values and throws wallet/bridge errors.
 
-## Source structure
-
-The SDK has 17 source files. Each flat adapter module keeps its schemas, inferred types, explicit client methods,
-and bound host together. The shared host binder uses one router and the same validation paths for every adapter.
-
-```text
-src/
-  index.ts          # Public core exports
-  protocol.ts       # Public schemas and message helpers
-  types.ts          # Plain contract and direct message types
-  messages.ts       # Envelope schemas, errors, parsers, and constructors
-  client.ts         # Client transport
-  host.ts           # Host router and adapter binding
-  adapters/
-    platform.ts
-    cardano.ts
-    cip30.ts        # Includes the wallet connector
-  react/
-    index.ts
-    store.ts
-    platform.ts
-    cardano.ts      # Includes interactive state transitions
-    cip30.ts        # Includes connector subscription
-  testing/
-    index.ts
-    client.ts      # Includes message-event dispatch
-    host.ts
-```
-
-Core imports do not load React. The `react` and `testing` entries remain separate. Internal transport imports
-`messages.ts` directly; `protocol.ts` is the public barrel and imports adapter contracts.
-
-## Guides and prerelease update
+## Documentation
 
 - [Platform v1](./README-PLATFORM.md)
 - [Native Cardano v1](./README-CARDANO.md)
 - [Cardano CIP-30 v1](./README-CARDANO-CIP30.md)
-
-This is an in-place change to an unreleased library. Existing `V1` exports, `version: "v1"`, and package versions are
-unchanged. The old wire `result`, top-level null responses, and nested native `payload.success` format are removed.
-There is no legacy parser, fallback, or parallel adapter version.
-
-Before release or combined use, update XRAY App's handlers/publications and mini-app response handling to this
-contract. Runtime imports stay the same. Replace namespace type imports such as `clientCardanoV1.Response<"signTx">`
-with the named import `CardanoResponse<"signTx">`; use the same named types for clients and hosts. The former
-`ClientResponse`, `ClientEvent`, `HostRequest`, `HostResult`, and `Adapter*` message aliases are removed without shims.
-XRAY App should reuse the shared protocol helpers and retain its origin, trust,
-account, and permission checks. This SDK change does not update XRAY App or consumer repositories.
+- [Aggregate SDK](https://github.com/xray-network/xray-js/blob/main/packages/runtime/README.md)
 
 ## Use without installing the SDK
 
@@ -266,8 +262,49 @@ for native calls. Outside an iframe, calls report `HOST_UNAVAILABLE`.
 
 The scripts check the parent window, configured origin, correlation metadata, and basic response/event envelopes.
 They intentionally omit the SDK's full domain schema validation; validate the payload fields your dapp uses.
-They require a host implementing the current v1 envelope described below. Requests default to 5 seconds, interactive
+They require a host implementing the current v1 envelope described above. Requests default to 5 seconds, interactive
 requests to 120 seconds; the CIP-30 example follows the adapter's existing deadlines. A timeout does not establish
 whether an operation ran, so the scripts never retry signing or submission. Native `signTx` returns a complete signed
 transaction in `payload.cbor` and its witness set in `payload.witnessSet`; CIP-30 `signTx` returns only the witness set
 to merge into the original transaction.
+
+## Development
+
+From a repository checkout, run `npm run check` at the SDK root after building the linked
+Cardano library. This builds, tests, and typechecks all SDK packages.
+
+## Source structure
+
+Each adapter module keeps its schemas, inferred types, explicit client methods,
+and bound host together. The shared host binder uses one router and the same validation paths for every adapter.
+
+```text
+src/
+  index.ts          # Public core exports
+  protocol.ts       # Public schemas and message helpers
+  types.ts          # Plain contract and direct message types
+  messages.ts       # Envelope schemas, errors, parsers, and constructors
+  client.ts         # Client transport
+  host.ts           # Host router and adapter binding
+  adapters/
+    platform.ts
+    cardano.ts
+    cip30.ts        # Includes the wallet connector
+  react/
+    index.ts
+    store.ts
+    platform.ts
+    cardano.ts      # Includes interactive state transitions
+    cip30.ts        # Includes connector subscription
+  testing/
+    index.ts
+    client.ts      # Includes message-event dispatch
+    host.ts
+```
+
+Core imports do not load React. The `react` and `testing` entries remain separate. Internal transport imports
+`messages.ts` directly; `protocol.ts` is the public barrel and imports adapter contracts.
+
+## License
+
+MIT. See [LICENSE](./LICENSE).

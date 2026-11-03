@@ -5,7 +5,7 @@ Platform owns host settings and identity. Its route remains `scope: "platform"`,
 ## Client
 
 ```ts
-import { clientPlatformV1, type PlatformResponse } from "@xray-network/xray-js/mini-app-bridge"
+import { clientPlatformV1, type PlatformResponse } from "@xray-network/xray-js-mini-app-bridge"
 
 const status: PlatformResponse<"getStatus"> = await clientPlatformV1.getStatus()
 if (status.ok) {
@@ -36,7 +36,7 @@ identifier such as `en-US`; it is request-only and has no event or React hook.
 ## Host
 
 ```ts
-import { hostPlatformV1 } from "@xray-network/xray-js/mini-app-bridge"
+import { hostPlatformV1 } from "@xray-network/xray-js-mini-app-bridge"
 
 declare const iframe: HTMLIFrameElement
 const origin = new URL(iframe.src).origin // The mini app's exact origin; never "*".
@@ -49,14 +49,14 @@ const stop = hostPlatformV1.handle(iframe.contentWindow, origin, "getStatus", ()
 hostPlatformV1.publish(iframe.contentWindow, origin, "status", { host: "xray.app" }, context)
 ```
 
-`listen` supports manual relays. `respond(iframe, method, requestId, outcome)` accepts the same success/failure outcome
+`listen` supports manual relays. `respond(iframe, origin, method, requestId, outcome)` accepts the same success/failure outcome
 as `handle`. Registering a listener or handler marks this adapter route as supported. Unknown methods and routes receive
 typed errors. A supported method with only a manual listener waits for that listener to respond.
 
 ## React
 
 ```ts
-import { platformV1 } from "@xray-network/xray-js/mini-app-bridge/react"
+import { platformV1 } from "@xray-network/xray-js-mini-app-bridge/react"
 
 export function useHostStatus() {
   const { data, loading, error, refresh } = platformV1.useStatus()
@@ -69,4 +69,4 @@ lazily, share subscriptions, and stop remote listeners after the last consumer u
 `{ host, account: context }`. `data.account: null` means no selected account; `data: undefined` means not loaded.
 Failures expose their bridge code/message/data in `error`.
 
-The host marker and route metadata do not prove trust or grant access. See the [shared contract and prerelease update](./README.md).
+The host marker and route metadata do not prove trust or grant access. See the [shared contract](./README.md).
