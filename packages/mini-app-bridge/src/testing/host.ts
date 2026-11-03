@@ -84,7 +84,7 @@ export const defaultMockHostState: MockHostState = {
     unusedAddresses: ["addr1_mock_unused"],
     changeAddress: "addr1_mock_change",
     rewardAddresses: ["stake1_mock_reward"],
-    signTx: "84a300_mock_signed_tx",
+    signTx: "a10080",
     signData: { key: "mock_key", signature: "mock_signature" },
     submitTx: "e".repeat(64),
   },

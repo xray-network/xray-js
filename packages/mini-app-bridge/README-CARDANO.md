@@ -49,13 +49,14 @@ Explorer identifiers are nonempty host-owned strings; handle unfamiliar values g
 import { hostCardanoV1 } from "@xray-network/xray-js/mini-app-bridge"
 
 declare const iframe: HTMLIFrameElement
+const origin = new URL(iframe.src).origin // The mini app's exact origin; never "*".
 const context = { blockchain: "cardano", network: "preview" } as const
-const stop = hostCardanoV1.handle(iframe.contentWindow, "getTip", () => ({ ok: true, payload: null, context }))
-const stopSigning = hostCardanoV1.handle(iframe.contentWindow, "signTx", () => ({
+const stop = hostCardanoV1.handle(iframe.contentWindow, origin, "getTip", () => ({ ok: true, payload: null, context }))
+const stopSigning = hostCardanoV1.handle(iframe.contentWindow, origin, "signTx", () => ({
   ok: false,
   error: { code: "USER_REJECTED", message: "Signing was rejected" },
 }))
-hostCardanoV1.publish(iframe.contentWindow, "accountState", null, context)
+hostCardanoV1.publish(iframe.contentWindow, origin, "accountState", null, context)
 ```
 
 Use `USER_REJECTED` only when the host explicitly identifies refusal; use `OPERATION_FAILED` for another known native

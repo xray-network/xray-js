@@ -1,4 +1,4 @@
-export { createMockClient } from "./client.js"
+export { createMockClient, MOCK_CLIENT_ORIGIN } from "./client.js"
 export type { MockClient, MockClientOptions } from "./client.js"
 export { createMockHost, defaultMockHostState, mockTip, mockAccountState } from "./host.js"
 export type { MockHost, MockHostOptions, MockHostState } from "./host.js"

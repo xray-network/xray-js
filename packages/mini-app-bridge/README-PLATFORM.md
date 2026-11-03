@@ -39,13 +39,14 @@ identifier such as `en-US`; it is request-only and has no event or React hook.
 import { hostPlatformV1 } from "@xray-network/xray-js/mini-app-bridge"
 
 declare const iframe: HTMLIFrameElement
+const origin = new URL(iframe.src).origin // The mini app's exact origin; never "*".
 const context = { blockchain: "cardano", network: "preview" } as const
-const stop = hostPlatformV1.handle(iframe.contentWindow, "getStatus", () => ({
+const stop = hostPlatformV1.handle(iframe.contentWindow, origin, "getStatus", () => ({
   ok: true,
   payload: { host: "xray.app" },
   context,
 }))
-hostPlatformV1.publish(iframe.contentWindow, "status", { host: "xray.app" }, context)
+hostPlatformV1.publish(iframe.contentWindow, origin, "status", { host: "xray.app" }, context)
 ```
 
 `listen` supports manual relays. `respond(iframe, method, requestId, outcome)` accepts the same success/failure outcome

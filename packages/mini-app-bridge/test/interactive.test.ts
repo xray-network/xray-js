@@ -25,7 +25,7 @@ it("interactive state retains complete signing outcomes and resolves expected fa
       error = value
     },
   }
-  const operation = runInteractive(() => clientCardanoV1.signTx("cbor"), state)
+  const operation = runInteractive(() => clientCardanoV1.signTx("84a0a0f5f6"), state)
   assert.deepEqual(pending, [true])
   assert.equal(error, undefined)
   const failure = { code: "USER_REJECTED", message: "Rejected", data: { reason: "user" } } as const
@@ -39,7 +39,7 @@ it("interactive state retains complete signing outcomes and resolves expected fa
   assert.deepEqual(pending, [true, false])
   host.destroy()
   const answering = createMockHost()
-  const signed = await runInteractive(() => clientCardanoV1.signTx("cbor"), state)
+  const signed = await runInteractive(() => clientCardanoV1.signTx("84a0a0f5f6"), state)
   assert(signed.ok)
   assert.equal(result, signed)
   assert.equal(error, undefined)

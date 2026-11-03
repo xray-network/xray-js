@@ -29,10 +29,11 @@ failures with CIP-30 `{ code, info }` data are rethrown with those CIP-30 fields
 import { hostCardanoCip30V1 } from "@xray-network/xray-js/mini-app-bridge"
 
 declare const iframe: HTMLIFrameElement
+const origin = new URL(iframe.src).origin // The mini app's exact origin; never "*".
 declare function authorizeWallet(extensions: { cip: number }[]): Promise<boolean>
 const context = { blockchain: "cardano", network: "preview" } as const
 
-const stop = hostCardanoCip30V1.handle(iframe.contentWindow, "enable", async ({ payload }) => ({
+const stop = hostCardanoCip30V1.handle(iframe.contentWindow, origin, "enable", async ({ payload }) => ({
   ok: true,
   payload: await authorizeWallet(payload.extensions),
   context,

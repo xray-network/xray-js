@@ -4,14 +4,21 @@ export type MockClientMessage = ResponseMessage | EventMessage
 
 export type MockClient = {
   clientWindow: Window
+  /** Origin stamped on every request; bind host handlers to it. */
+  origin: string
   received: MockClientMessage[]
   send: (scope: string, method: string, payload: unknown, requestId?: string, version?: string) => string
   waitFor: (predicate: (message: MockClientMessage) => boolean, timeout?: number) => Promise<MockClientMessage>
 }
 
-export type MockClientOptions = { target?: Window }
+export type MockClientOptions = { target?: Window; origin?: string }
 
-export const createMockClient = ({ target = window }: MockClientOptions = {}): MockClient => {
+export const MOCK_CLIENT_ORIGIN = "https://mini-app.test"
+
+export const createMockClient = ({
+  target = window,
+  origin = MOCK_CLIENT_ORIGIN,
+}: MockClientOptions = {}): MockClient => {
   const received: MockClientMessage[] = []
   const waiters: {
     predicate: (message: MockClientMessage) => boolean
@@ -35,12 +42,14 @@ export const createMockClient = ({ target = window }: MockClientOptions = {}): M
   let counter = 0
   return {
     clientWindow,
+    origin,
     received,
     send: (scope, method, payload, requestId = `mock-client-${++counter}`, version = "v1") => {
       dispatchMessageEvent(
         target,
         { type: "xray.bridge.request", scope, version, method, requestId, payload },
-        clientWindow
+        clientWindow,
+        origin
       )
       return requestId
     },
@@ -63,12 +72,12 @@ export const createMockClient = ({ target = window }: MockClientOptions = {}): M
 
 /**
  * Dispatch a `message` event on `target` that looks like it was posted by
- * `source`. `MessageEventInit.source` only accepts real Window/MessagePort
+ * `source` from `origin`. `MessageEventInit.source` only accepts real Window/MessagePort
  * instances in most DOM implementations, so the source is attached afterwards
  * via `defineProperty` — this works in browsers and jsdom alike.
  */
-export const dispatchMessageEvent = (target: Window, data: unknown, source: object) => {
-  const event = new MessageEvent("message", { data })
+export const dispatchMessageEvent = (target: Window, data: unknown, source: object, origin = "") => {
+  const event = new MessageEvent("message", { data, origin })
   Object.defineProperty(event, "source", { value: source })
   target.dispatchEvent(event)
 }

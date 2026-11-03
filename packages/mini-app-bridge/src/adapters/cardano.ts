@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type { Contract, Request, Response, Event, MethodName, EventName } from "../types.js"
 import { bindHost } from "../host.js"
+import { addressSchema, hexSchema, nonEmptyHexSchema } from "../messages.js"
 import {
   DEFAULT_INTERACTIVE_TIMEOUT,
   DEFAULT_REQUEST_TIMEOUT,
@@ -102,9 +103,9 @@ export const cardanoV1Contract = {
     getTip: { request: z.null(), result: tipSchema },
     getAccountState: { request: z.null(), result: accountStateSchema },
     getExplorer: { request: z.null(), result: explorerSchema },
-    signTx: { request: z.string(), result: signTxResultSchema },
-    submitTx: { request: z.string(), result: submitTxResultSchema },
-    signData: { request: z.object({ address: z.string(), data: z.string() }), result: signDataResultSchema },
+    signTx: { request: nonEmptyHexSchema, result: signTxResultSchema },
+    submitTx: { request: nonEmptyHexSchema, result: submitTxResultSchema },
+    signData: { request: z.object({ address: addressSchema, data: hexSchema }), result: signDataResultSchema },
   },
   events: {
     tip: tipSchema,

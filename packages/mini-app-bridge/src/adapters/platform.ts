@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type { Contract, Request, Response, Event, MethodName, EventName } from "../types.js"
 import { bindHost } from "../host.js"
+import { BRIDGE_LIMITS } from "../messages.js"
 import {
   DEFAULT_REQUEST_TIMEOUT,
   listen as listenEvent,
@@ -27,7 +28,7 @@ export const currencySchema = z.enum(["usd", "eur", "gbp", "jpy", "cny"])
 export const localeSchema = z.string().min(1)
 
 export const hideBalancesSchema = z.boolean()
-export const routeSchema = z.string()
+export const routeSchema = z.string().max(BRIDGE_LIMITS.route)
 
 export const platformV1Contract = {
   scope: "platform",

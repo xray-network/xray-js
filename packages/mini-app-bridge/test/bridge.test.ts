@@ -107,7 +107,7 @@ describe("scope-versioned Mini App Bridge", () => {
       clientCardanoV1.getTip(),
       clientCardanoV1.getAccountState(),
       clientCardanoV1.getExplorer(),
-      clientCardanoV1.signData("addr", "data"),
+      clientCardanoV1.signData("addr", "64617461"),
     ])
     assert(
       theme.ok && currency.ok && locale.ok && hideBalances.ok && tip.ok && account.ok && explorer.ok && signedData.ok
@@ -123,7 +123,7 @@ describe("scope-versioned Mini App Bridge", () => {
     assert.equal(signedData.ok, true)
     assert.equal(clientPlatformV1.routeChanged("/swap"), true)
 
-    const signed = await clientCardanoV1.signTx("unsigned-transaction-cbor")
+    const signed = await clientCardanoV1.signTx("84a0a0f5f6")
     assert.equal(signed.ok, true)
     assert(signed.ok)
     assert.equal(signed.payload.hash, "b".repeat(64))
@@ -145,12 +145,12 @@ describe("scope-versioned Mini App Bridge", () => {
     assert.deepEqual(await wallet.getUnusedAddresses(), ["addr1_mock_unused"])
     assert.equal(await wallet.getChangeAddress(), "addr1_mock_change")
     assert.deepEqual(await wallet.getRewardAddresses(), ["stake1_mock_reward"])
-    assert.equal(await wallet.signTx("tx"), "84a300_mock_signed_tx")
-    assert.deepEqual(await wallet.signData("addr", "data"), {
+    assert.equal(await wallet.signTx("84a0a0f5f6"), "a10080")
+    assert.deepEqual(await wallet.signData("addr", "64617461"), {
       key: "mock_key",
       signature: "mock_signature",
     })
-    assert.equal(await wallet.submitTx("tx"), "e".repeat(64))
+    assert.equal(await wallet.submitTx("84a0a0f5f6"), "e".repeat(64))
     assert.equal(
       host.sent.some(({ method }) => method === "enable"),
       true
@@ -165,7 +165,7 @@ describe("scope-versioned Mini App Bridge", () => {
   it("returns typed native Cardano signing failures", async () => {
     installWindow()
     const host = createMockHost({ autoRespond: false })
-    const pending = clientCardanoV1.signTx("unsigned-transaction-cbor")
+    const pending = clientCardanoV1.signTx("84a0a0f5f6")
     host.fail(host.sent.at(-1)!.requestId, { code: "USER_REJECTED", message: "Signing was rejected" })
     const signed = failure(await pending)
     assert.deepEqual(signed.error, { code: "USER_REJECTED", message: "Signing was rejected" })
@@ -178,9 +178,17 @@ describe("scope-versioned Mini App Bridge", () => {
     const client = createMockClient({ target })
     const context = { blockchain: "cardano", network: "preview" } as const
     const stops = [
-      hostPlatformV1.handle(client.clientWindow, "getTheme", () => ({ ok: true, payload: "dark", context })),
-      hostPlatformV1.handle(client.clientWindow, "getLocale", () => ({ ok: true, payload: "en", context })),
-      hostCardanoV1.handle(client.clientWindow, "getTip", () => ({
+      hostPlatformV1.handle(client.clientWindow, client.origin, "getTheme", () => ({
+        ok: true,
+        payload: "dark",
+        context,
+      })),
+      hostPlatformV1.handle(client.clientWindow, client.origin, "getLocale", () => ({
+        ok: true,
+        payload: "en",
+        context,
+      })),
+      hostCardanoV1.handle(client.clientWindow, client.origin, "getTip", () => ({
         ok: true,
         payload: {
           hash: "a".repeat(64),
@@ -224,7 +232,7 @@ describe("scope-versioned Mini App Bridge", () => {
       context,
     })
 
-    hostCardanoV1.publish(client.clientWindow, "tip", null, context)
+    hostCardanoV1.publish(client.clientWindow, client.origin, "tip", null, context)
     const event = await client.waitFor((message) => message.type === "xray.bridge.event")
     assert.deepEqual(event, {
       type: "xray.bridge.event",
@@ -240,7 +248,7 @@ describe("scope-versioned Mini App Bridge", () => {
   it("returns immediate typed routing errors and ignores wrong sources", async () => {
     const target = installWindow()
     const client = createMockClient({ target })
-    const stop = hostPlatformV1.listen(client.clientWindow, () => undefined)
+    const stop = hostPlatformV1.listen(client.clientWindow, client.origin, () => undefined)
 
     const unsupportedScope = client.send("cardano", "getTip", null)
     const scopeError = await client.waitFor(
@@ -288,7 +296,7 @@ describe("scope-versioned Mini App Bridge", () => {
   it("accepts supported unhandled methods without manufacturing a response", async () => {
     const target = installWindow()
     const client = createMockClient({ target })
-    const stop = hostPlatformV1.listen(client.clientWindow, () => undefined)
+    const stop = hostPlatformV1.listen(client.clientWindow, client.origin, () => undefined)
     client.send("platform", "getTheme", null, "accepted-unanswered")
     await new Promise((resolve) => setTimeout(resolve, 10))
     assert.equal(client.received.length, 0)

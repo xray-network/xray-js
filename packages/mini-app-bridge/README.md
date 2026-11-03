@@ -93,21 +93,27 @@ Automatic handlers and manual responses use `{ ok: true, payload, context }` or 
 correlation metadata and validates the result. `listen` receives complete validated requests; `respond` sends a
 manual outcome; `publish` sends an event.
 
+Every host helper takes the frame window and its exact origin. Requests are accepted only when both `event.source` and
+`event.origin` match, and every response or event is posted to that origin, so a frame that navigates elsewhere loses
+bridge access. `"*"`, opaque (`"null"`) origins, and URLs with a path are rejected with a `TypeError`, and one frame
+window can be bound to only one origin at a time.
+
 ```ts
 import { hostPlatformV1, hostCardanoV1 } from "@xray-network/xray-js/mini-app-bridge"
 
 declare const iframe: HTMLIFrameElement
+const origin = new URL(iframe.src).origin // The mini app's exact origin; never "*".
 const context = { blockchain: "cardano", network: "preview" } as const
-const stopTheme = hostPlatformV1.handle(iframe.contentWindow, "getTheme", () => ({
+const stopTheme = hostPlatformV1.handle(iframe.contentWindow, origin, "getTheme", () => ({
   ok: true,
   payload: "dark",
   context,
 }))
-const stopSigning = hostCardanoV1.handle(iframe.contentWindow, "signTx", () => ({
+const stopSigning = hostCardanoV1.handle(iframe.contentWindow, origin, "signTx", () => ({
   ok: false,
   error: { code: "USER_REJECTED", message: "Signing was rejected" },
 }))
-hostPlatformV1.publish(iframe.contentWindow, "theme", "dark", context)
+hostPlatformV1.publish(iframe.contentWindow, origin, "theme", "dark", context)
 ```
 
 Hosts that own their message listener can reuse the `protocol` namespace instead of defining duplicate envelopes:
@@ -126,8 +132,15 @@ if (request.method === "getTheme") {
 
 `protocol` exports all three contracts, envelope schemas/types, `parseRequest`, `parseResponse`, `parseEvent`,
 `createResponse`, `createErrorResponse`, and `createEvent`. Contract-aware parsers and constructors throw for invalid
-input; client calls convert expected failures into outcomes. Hosts must validate the trusted origin as well as the
-source window. The SDK's default transport performs the source check and does not replace host authorization.
+input; client calls convert expected failures into outcomes. Hosts that own their listener must validate the trusted
+origin as well as the source window and post replies to that origin. The SDK's host helpers perform both checks but do
+not replace host authorization.
+
+Request payloads are bounded: identifiers to 64 characters and request IDs to 128, routes to 2,048 characters,
+addresses to 256, and transaction, amount, and message data to 131,072 even-length hex characters (64 KiB). CIP-30
+pagination must use a non-negative integer `page` and a positive integer `limit`, and `enable` accepts at most 32
+extensions. Oversized or malformed calls fail locally with `INVALID_REQUEST` and are never posted. Unexpected host
+exceptions reach the frame only as `HOST_ERROR` with the message `Host request failed`.
 
 ## Errors
 

@@ -18,6 +18,7 @@ import {
   dispatchMessageEvent,
   setHostWindow,
   mockAccountState,
+  MOCK_CLIENT_ORIGIN,
 } from "@xray-network/xray-js-mini-app-bridge/testing"
 import { toBridgeErrorPayload } from "../src/messages.js"
 
@@ -198,11 +199,11 @@ describe("explicit bridge outcomes", () => {
   it("shares validation between manual responses, automatic hosts, and external relays", async () => {
     const target = installWindow()
     const client = createMockClient({ target })
-    const stop = hostPlatformV1.listen(client.clientWindow, (request) => {
+    const stop = hostPlatformV1.listen(client.clientWindow, client.origin, (request) => {
       assert.equal(request.type, "xray.bridge.request")
       assert.equal(request.scope, "platform")
       if (request.method === "getTheme")
-        hostPlatformV1.respond(client.clientWindow, request.method, request.requestId, {
+        hostPlatformV1.respond(client.clientWindow, client.origin, request.method, request.requestId, {
           ok: true,
           payload: "dark",
           context: null,
@@ -212,7 +213,7 @@ describe("explicit bridge outcomes", () => {
     assert.deepEqual(await client.waitFor((m) => m.type === "xray.bridge.response"), themeResponse)
     assert.throws(
       () =>
-        hostPlatformV1.respond(client.clientWindow, "getTheme", "bad", {
+        hostPlatformV1.respond(client.clientWindow, client.origin, "getTheme", "bad", {
           ok: true,
           payload: 42 as never,
           context: null,
@@ -229,7 +230,7 @@ describe("explicit bridge outcomes", () => {
       (e: unknown) => e instanceof BridgeError && e.code === "INVALID_RESPONSE"
     )
     stop()
-    const stopInvalid = hostPlatformV1.handle(client.clientWindow, "getTheme", () => ({
+    const stopInvalid = hostPlatformV1.handle(client.clientWindow, client.origin, "getTheme", () => ({
       ok: true,
       payload: 42 as never,
       context: null,
@@ -245,16 +246,29 @@ describe("explicit bridge outcomes", () => {
     const parent = new EventTarget() as unknown as Window
     const child = installWindow()
     const hostWindow = {
-      postMessage: (value: unknown) => dispatchMessageEvent(parent, structuredClone(value), childWindow),
+      postMessage: (value: unknown) =>
+        dispatchMessageEvent(parent, structuredClone(value), childWindow, MOCK_CLIENT_ORIGIN),
     } as Window
     const childWindow = {
       postMessage: (value: unknown) => dispatchMessageEvent(child, structuredClone(value), hostWindow),
     } as Window
     Object.defineProperty(globalThis, "window", { configurable: true, value: parent })
     const stops = [
-      hostPlatformV1.handle(childWindow, "getTheme", () => ({ ok: true, payload: "dark", context: null })),
-      hostCardanoV1.handle(childWindow, "getAccountState", () => ({ ok: true, payload: mockAccountState, context })),
-      hostCardanoCip30V1.handle(childWindow, "getNetworkId", () => ({ ok: true, payload: 0, context })),
+      hostPlatformV1.handle(childWindow, MOCK_CLIENT_ORIGIN, "getTheme", () => ({
+        ok: true,
+        payload: "dark",
+        context: null,
+      })),
+      hostCardanoV1.handle(childWindow, MOCK_CLIENT_ORIGIN, "getAccountState", () => ({
+        ok: true,
+        payload: mockAccountState,
+        context,
+      })),
+      hostCardanoCip30V1.handle(childWindow, MOCK_CLIENT_ORIGIN, "getNetworkId", () => ({
+        ok: true,
+        payload: 0,
+        context,
+      })),
     ]
     Object.defineProperty(globalThis, "window", { configurable: true, value: child })
     setHostWindow(hostWindow)
@@ -276,11 +290,11 @@ describe("explicit bridge outcomes", () => {
     const target = installWindow()
     const client = createMockClient({ target })
     for (const code of ["USER_REJECTED", "OPERATION_FAILED"] as const) {
-      const stop = hostCardanoV1.handle(client.clientWindow, "signTx", () => ({
+      const stop = hostCardanoV1.handle(client.clientWindow, client.origin, "signTx", () => ({
         ok: false,
         error: { code, message: "Signing failed", data: { reason: 1 } },
       }))
-      const id = client.send("cardano", "signTx", "cbor")
+      const id = client.send("cardano", "signTx", "84a0a0f5f6")
       const response = await client.waitFor((m) => m.type === "xray.bridge.response" && m.requestId === id)
       assert(response.type === "xray.bridge.response" && !response.ok)
       assert.equal(response.error.code, code)
@@ -288,7 +302,7 @@ describe("explicit bridge outcomes", () => {
       assert(!("payload" in response))
       stop()
     }
-    const stop = hostCardanoCip30V1.handle(client.clientWindow, "getBalance", () => {
+    const stop = hostCardanoCip30V1.handle(client.clientWindow, client.origin, "getBalance", () => {
       throw { code: -3, info: "Denied" }
     })
     const id = client.send("cardano-cip30", "getBalance", null)
@@ -298,6 +312,10 @@ describe("explicit bridge outcomes", () => {
     stop()
     assert.equal(toBridgeErrorPayload(new BridgeError("HOST_ERROR", "bad", () => null)).data, undefined)
     assert(!("stack" in toBridgeErrorPayload(new Error("Unexpected"))))
+    assert.deepEqual(toBridgeErrorPayload(new Error("db password=hunter2")), {
+      code: "HOST_ERROR",
+      message: "Host request failed",
+    })
     const host = createMockHost({ autoRespond: false })
     const pending = clientCardanoCip30V1.api.getBalance()
     host.fail(host.sent.at(-1)!.requestId, {
@@ -353,25 +371,25 @@ it("keeps bound manual responders and event publishers isolated across adapters"
   const target = installWindow()
   const client = createMockClient({ target })
   const stops = [
-    hostPlatformV1.listen(client.clientWindow, (request) => {
+    hostPlatformV1.listen(client.clientWindow, client.origin, (request) => {
       if (request.method === "getTheme")
-        hostPlatformV1.respond(client.clientWindow, request.method, request.requestId, {
+        hostPlatformV1.respond(client.clientWindow, client.origin, request.method, request.requestId, {
           ok: true,
           payload: "dark",
           context: null,
         })
     }),
-    hostCardanoV1.listen(client.clientWindow, (request) => {
+    hostCardanoV1.listen(client.clientWindow, client.origin, (request) => {
       if (request.method === "getExplorer")
-        hostCardanoV1.respond(client.clientWindow, request.method, request.requestId, {
+        hostCardanoV1.respond(client.clientWindow, client.origin, request.method, request.requestId, {
           ok: true,
           payload: "explorer",
           context,
         })
     }),
-    hostCardanoCip30V1.listen(client.clientWindow, (request) => {
+    hostCardanoCip30V1.listen(client.clientWindow, client.origin, (request) => {
       if (request.method === "getNetworkId")
-        hostCardanoCip30V1.respond(client.clientWindow, request.method, request.requestId, {
+        hostCardanoCip30V1.respond(client.clientWindow, client.origin, request.method, request.requestId, {
           ok: true,
           payload: 0,
           context,
@@ -394,9 +412,9 @@ it("keeps bound manual responders and event publishers isolated across adapters"
       assert.equal(response.method, method)
       assert.equal(response.version, "v1")
     }
-    hostPlatformV1.publish(client.clientWindow, "theme", "dark", null)
-    hostCardanoV1.publish(client.clientWindow, "explorer", "explorer", context)
-    hostCardanoCip30V1.publish(client.clientWindow, "networkId", 0, context)
+    hostPlatformV1.publish(client.clientWindow, client.origin, "theme", "dark", null)
+    hostCardanoV1.publish(client.clientWindow, client.origin, "explorer", "explorer", context)
+    hostCardanoCip30V1.publish(client.clientWindow, client.origin, "networkId", 0, context)
     assert.deepEqual(
       client.received
         .filter((message) => message.type === "xray.bridge.event")

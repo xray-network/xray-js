@@ -93,7 +93,7 @@ export const narrowEvent = (event: PlatformEvent | CardanoEvent | Cip30Event) =>
   event.requestId
 }
 
-export const examples = async (iframe: Window, unsignedCbor: string) => {
+export const examples = async (iframe: Window, origin: string, unsignedCbor: string) => {
   type GetThemeRequest = PlatformRequest<"getTheme">
   type GetThemeResponse = PlatformResponse<"getTheme">
   const request: GetThemeRequest = {
@@ -120,8 +120,8 @@ export const examples = async (iframe: Window, unsignedCbor: string) => {
   if (native.ok) console.log(native.payload.cbor)
   else console.error(native.error.code, native.error.message)
   const context = { blockchain: "cardano", network: "preview" } as const
-  const stop = hostPlatformV1.handle(iframe, "getTheme", () => ({ ok: true, payload: "dark", context }))
-  hostCardanoV1.handle(iframe, "signTx", () => ({
+  const stop = hostPlatformV1.handle(iframe, origin, "getTheme", () => ({ ok: true, payload: "dark", context }))
+  hostCardanoV1.handle(iframe, origin, "signTx", () => ({
     ok: false,
     error: { code: "USER_REJECTED", message: "Signing was rejected" },
   }))
@@ -134,7 +134,7 @@ export const examples = async (iframe: Window, unsignedCbor: string) => {
   // @ts-expect-error No additional adapter version is introduced.
   const badVersion: GetThemeRequest = { ...request, version: "v2" }
   // @ts-expect-error A host must return the selected method's payload.
-  hostPlatformV1.handle(iframe, "getTheme", () => ({ ok: true, payload: "usd", context }))
+  hostPlatformV1.handle(iframe, origin, "getTheme", () => ({ ok: true, payload: "usd", context }))
   // @ts-expect-error Shared response construction also enforces method payload types.
   protocol.createResponse(protocol.platformV1Contract, request, { ok: true, payload: "usd", context })
   return { aggregateRequest, aggregateResponse, badRequest, badResponse, badVersion, stop }
@@ -150,7 +150,7 @@ import type { ClientResponse } from "@xray-network/xray-js-mini-app-bridge"
 // @ts-expect-error Removed protocol alias.
 type RetiredAdapterResponse = protocol.AdapterResponse<typeof protocol.platformV1Contract>
 
-export const contractTypes = (iframe: Window) => {
+export const contractTypes = (iframe: Window, origin: string) => {
   const contract: Contract = protocol.platformV1Contract
   const request: Request<typeof protocol.cardanoV1Contract, "signTx"> = {
     type: "xray.bridge.request",
@@ -188,17 +188,17 @@ export const contractTypes = (iframe: Window) => {
   // @ts-expect-error Theme events do not carry network numbers.
   const wrongEvent: PlatformEvent = { ...event, payload: 0 }
   const context = { blockchain: "cardano", network: "preview" } as const
-  const stop = hostCardanoCip30V1.handle(iframe, "signTx", ({ payload }) => {
+  const stop = hostCardanoCip30V1.handle(iframe, origin, "signTx", ({ payload }) => {
     const tx: string = payload.tx
     return { ok: true, payload: tx, context }
   })
-  hostCardanoCip30V1.respond(iframe, "signTx", "sign", {
+  hostCardanoCip30V1.respond(iframe, origin, "signTx", "sign", {
     ok: true,
     // @ts-expect-error CIP-30 signing returns a witness string, not the native result.
     payload: { hash: "hash", cbor: "cbor", witnessSet: "witnesses" },
     context,
   })
   // @ts-expect-error Cardano events require Cardano context.
-  hostCardanoV1.publish(iframe, "tip", null, null)
+  hostCardanoV1.publish(iframe, origin, "tip", null, null)
   return { contract, response, event, outcome, scope, version, cip30Scope, wrongScope, wrongPair, wrongEvent, stop }
 }

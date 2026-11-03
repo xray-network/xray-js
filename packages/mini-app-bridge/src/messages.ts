@@ -12,17 +12,38 @@ import type {
 } from "./types.js"
 import { z } from "zod"
 
+/** Ceilings for frame-supplied values, so a hostile frame cannot pin the host on decode. */
+export const BRIDGE_LIMITS = Object.freeze({
+  identifier: 64,
+  requestId: 128,
+  route: 2_048,
+  address: 256,
+  // 64 KiB of CBOR or message bytes: four times the current maximum transaction size.
+  hex: 131_072,
+  extensions: 32,
+})
+
+export const hexSchema = z
+  .string()
+  .max(BRIDGE_LIMITS.hex)
+  .regex(/^(?:[0-9a-fA-F]{2})*$/, "Expected even-length hex")
+export const nonEmptyHexSchema = hexSchema.min(2)
+export const addressSchema = z.string().min(1).max(BRIDGE_LIMITS.address)
+
+const identifierSchema = z.string().min(1).max(BRIDGE_LIMITS.identifier)
+const requestIdSchema = z.string().min(1).max(BRIDGE_LIMITS.requestId)
+
 const routeSchema = {
-  scope: z.string().min(1),
-  version: z.string().min(1),
+  scope: identifierSchema,
+  version: identifierSchema,
 } as const
 
 export const requestMessageSchema = z
   .object({
     type: z.literal("xray.bridge.request"),
     ...routeSchema,
-    method: z.string().min(1),
-    requestId: z.string().min(1),
+    method: identifierSchema,
+    requestId: requestIdSchema,
     payload: z.unknown().refine((value) => value !== undefined),
   })
   .strict()
@@ -50,8 +71,8 @@ export const successResponseMessageSchema = z
   .object({
     type: z.literal("xray.bridge.response"),
     ...routeSchema,
-    requestId: z.string().min(1),
-    method: z.string().min(1),
+    requestId: requestIdSchema,
+    method: identifierSchema,
     ok: z.literal(true),
     payload: z.unknown().refine((value) => value !== undefined),
     context: z.unknown().refine((value) => value !== undefined),
@@ -62,8 +83,8 @@ export const errorResponseMessageSchema = z
   .object({
     type: z.literal("xray.bridge.response"),
     ...routeSchema,
-    requestId: z.string().min(1),
-    method: z.string().min(1),
+    requestId: requestIdSchema,
+    method: identifierSchema,
     ok: z.literal(false),
     error: bridgeErrorPayloadSchema,
   })
@@ -78,7 +99,7 @@ export const eventMessageSchema = z
   .object({
     type: z.literal("xray.bridge.event"),
     ...routeSchema,
-    event: z.string().min(1),
+    event: identifierSchema,
     payload: z.unknown().refine((value) => value !== undefined),
     context: z.unknown().refine((value) => value !== undefined),
   })
@@ -119,10 +140,8 @@ export const toBridgeErrorPayload = (error: unknown): BridgeErrorPayload => {
     const info = "info" in error && typeof error.info === "string" ? error.info : "Host request failed"
     return { code: "HOST_ERROR", message: info, data: { code: error.code, info } }
   }
-  return {
-    code: "HOST_ERROR",
-    message: error instanceof Error ? error.message : "Host request failed",
-  }
+  // Unexpected host exceptions may carry internal detail; frames only learn that the request failed.
+  return { code: "HOST_ERROR", message: "Host request failed" }
 }
 
 const owns = (record: object, key: string) => Object.prototype.hasOwnProperty.call(record, key)
